@@ -152,10 +152,8 @@ const Cache = (function () {
     function append(filename, content, place = 'end', limit = 100000) {
         let currentContent = read(filename);
         if (place == 'begin') {
-            // Новые данные в начало файла
             appendNewData(content, currentContent);
         } else if (place == 'end') {
-            // Новые данные в конец файла
             appendNewData(currentContent, content);
         }
 
@@ -446,7 +444,6 @@ const Source = (function () {
         // При limit = 49 и offset = 49, next != null
         // При limit = 49 и offset = 98, next = null
 
-        // Получить топ-90
         let limit = 45;
         let path = Utilities.formatString('me/top/tracks?limit=%s&time_range=%s_term', limit, strTopRange);
         return Request.getItemsByPath(path, 2);
@@ -729,8 +726,6 @@ const Request = (function () {
             let strIds = ids.splice(0, limit).join(',');
             let url = Utilities.formatString('%s/%s/?ids=%s', API_BASE_URL, objType, strIds);
             let response = get(url);
-            //let key = Object.keys(response)[0]; // tracks or artists or albums or audio_features
-            //Combiner.push(fullObj, response[key]);
             Combiner.push(fullObj, response);
         }
         return fullObj;
@@ -740,7 +735,7 @@ const Request = (function () {
         let response = fetch(url);
         let keys = Object.keys(response);
         if (keys.length == 1 && !response.items) {
-            response = response[keys[0]]; // tracks or artists or albums or audio_features
+            response = response[keys[0]];
         }
         return response;
     }
@@ -1002,7 +997,6 @@ const RangeTracks = (function () {
         }
         for (let key in args) {
             if ((typeof obj[key] === 'boolean' && !obj[key]) || BAN_KEYS.includes(key)) {
-                // explicit == false, key == genres, key == ban_genres, key = release_date, key = followed_include
                 continue;
             }
 
@@ -1496,9 +1490,7 @@ const Playlist = (function () {
 
     function getRandomCover() {
         let img = UrlFetchApp.fetch('https://picsum.photos/' + getRandomSize());
-        //if (img.getContent().length > 250000) {
         if (img.getAllHeaders()['content-length'] > 250000) {
-            // ~ 250 kb
             return getRandomCover();
         }
         return img.getContent();
@@ -1697,7 +1689,7 @@ const Order = (function () {
         }
 
         function sortMeta() {
-            // name, popularity, duration_ms, explicit, added_at
+            // name, popularity, duration_ms, explicit, added_at, played_at
             if (_key == 'name') {
                 _tracks.sort((x, y) => compareString(x, y));
             } else if (_key == 'added_at' || _key == 'played_at') {
