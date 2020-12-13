@@ -1,3 +1,4 @@
+// Описание параметров: https://github.com/Chimildic/Goofy/blob/main/guide/README.md#параметры
 function setProperties(){
     let userProperties = PropertiesService.getUserProperties();
     userProperties.setProperty('CLIENT_ID', 'вашеЗначение');
