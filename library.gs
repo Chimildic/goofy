@@ -793,7 +793,16 @@ const Request = (function () {
 
     function parseJSON(response) {
         let content = response.getContentText();
-        return content.length > 0 ? JSON.parse(content) : { msg: 'Пустое тело ответа', status: response.getResponseCode() };
+        return content.length > 0 ? tryParseJSON(content) : { msg: 'Пустое тело ответа', status: response.getResponseCode() };
+    }
+    
+    function tryParseJSON(content) {
+        try {
+            return JSON.parse(content);
+        } catch (e) {
+            console.error(e);
+            return [];
+        }
     }
 
     function parseQuery(obj) {
@@ -1909,7 +1918,7 @@ const Lastfm = (function () {
         let url = Utilities.formatString('%s/%s/%s', LASTFM_STATION, user, type);
         let stationTracks = [];
         for (let i = 0; i < countRequest; i++) {
-            let response = Request.parseJSON(UrlFetchApp.fetch(url));
+            let response = Request.parseJSON(requestGet(url));
             if (response.playlist) {
                 Combiner.push(stationTracks, response.playlist);
             }
@@ -1935,7 +1944,7 @@ const Lastfm = (function () {
         queryObj.api_key = LASTFM_API_KEY;
         queryObj.format = 'json';
         let url = LASTFM_API_BASE_URL + Request.parseQuery(queryObj);
-        return Request.parseJSON(UrlFetchApp.fetch(url));
+        return Request.parseJSON(requestGet(url));
     }
 
     function multisearchTracks(items) {
@@ -1955,6 +1964,18 @@ const Lastfm = (function () {
     
     function isNowPlayling(track){
         return track['@attr'] && track['@attr'].nowplaying === 'true';
+    }
+
+    function requestGet(url){
+        let params = { method: 'get', muteHttpExceptions: true, };
+        let response = UrlFetchApp.fetch(url, params);
+        if (response.getResponseCode() >= 300){
+            console.error('Ошибка', response.getResponseCode(), response);
+            Utilities.sleep(2000);
+            console.info('Попытка повторной отправки');
+            return UrlFetchApp.fetch(url, params);
+        }
+        return response;
     }
 
     return {
