@@ -271,7 +271,7 @@ const RecentTracks = (function () {
     const TRIGGER_EVERY_MINUTES = 15;
     const TRACK_ITEMS_LIMIT = 20000;
 
-    if (!ON_SPOTIFY_RECENT_TRACKS && !ON_LASTFM_RECENT_TRACKS){
+    if (!ON_SPOTIFY_RECENT_TRACKS && !ON_LASTFM_RECENT_TRACKS) {
         deleteTrigger();
         return;
     }
@@ -280,8 +280,8 @@ const RecentTracks = (function () {
         createTrigger();
     }
 
-    function deleteTrigger(){
-        if (hasTrigger()){
+    function deleteTrigger() {
+        if (hasTrigger()) {
             ScriptApp.deleteTrigger(getTrigger());
         }
     }
@@ -289,8 +289,8 @@ const RecentTracks = (function () {
     function hasTrigger() {
         return getTrigger();
     }
-    
-    function getTrigger(){
+
+    function getTrigger() {
         let triggers = ScriptApp.getProjectTriggers();
         for (let i = 0; i < triggers.length; i++) {
             if (TRIGGER_FUCTION_NAME === triggers[i].getHandlerFunction()) {
@@ -318,7 +318,7 @@ const RecentTracks = (function () {
         } else if (ON_LASTFM_RECENT_TRACKS) {
             tracks = Cache.read(LASTFM_FILENAME);
         }
-        if (limit){
+        if (limit) {
             Selector.keepFirst(tracks, limit);
         }
         return tracks;
@@ -795,7 +795,7 @@ const Request = (function () {
         let content = response.getContentText();
         return content.length > 0 ? tryParseJSON(content) : { msg: 'Пустое тело ответа', status: response.getResponseCode() };
     }
-    
+
     function tryParseJSON(content) {
         try {
             return JSON.parse(content);
@@ -996,16 +996,20 @@ const RangeTracks = (function () {
 })();
 
 const Filter = (function () {
-    function removeTracks(sourceArray, removedArray) {
+    function removeTracks(sourceArray, removedArray, invert = false) {
         let removedIds = removedArray.map((item) => item.id);
         let removedNames = removedArray.map((item) => getTrackKey(item));
-        let filteredTracks = sourceArray.filter((item) => !removedIds.includes(item.id) && !removedNames.includes(getTrackKey(item)));
+        let filteredTracks = sourceArray.filter((item) => {
+            return invert ^ (!removedIds.includes(item.id) && !removedNames.includes(getTrackKey(item)));
+        });
         Combiner.replace(sourceArray, filteredTracks);
     }
 
-    function removeArtists(sourceArray, removedArray) {
+    function removeArtists(sourceArray, removedArray, invert = false) {
         let removedIds = removedArray.map((item) => item.artists[0].id);
-        let filteredTracks = sourceArray.filter((item) => !removedIds.includes(item.artists[0].id));
+        let filteredTracks = sourceArray.filter((item) => {
+            return invert ^ (!removedIds.includes(item.artists[0].id));
+        });
         Combiner.replace(sourceArray, filteredTracks);
     }
 
@@ -1033,11 +1037,10 @@ const Filter = (function () {
         match(tracks, strRegex, true);
     }
 
-    function match(tracks, strRegex, invent = false) {
+    function match(tracks, strRegex, invert = false) {
         let regex = new RegExp(strRegex, 'i');
         let filteredTracks = tracks.filter((track) => {
-            let result = regex.test(track.name) || regex.test(track.album.name);
-            return invent ? !result : result;
+            return invert ^ (regex.test(track.name) || regex.test(track.album.name));
         });
         Combiner.replace(tracks, filteredTracks);
     }
@@ -1697,7 +1700,7 @@ const Order = (function () {
             return (x[_key] > y[_key]) - (x[_key] < y[_key]);
         }
     })();
-    
+
     function compareDate(x, y) {
         let xTime = new Date(x).getTime();
         let yTime = new Date(y).getTime();
@@ -1866,7 +1869,7 @@ const Lastfm = (function () {
 
     function getRecentTracks(user, limit) {
         let tracks = getLastfmRecentTracks(user, limit);
-        if (isNowPlayling(tracks[0])){
+        if (isNowPlayling(tracks[0])) {
             tracks.splice(0, 1);
         }
         return multisearchTracks(tracks);
@@ -1961,15 +1964,15 @@ const Lastfm = (function () {
         }
         return tracks;
     }
-    
-    function isNowPlayling(track){
+
+    function isNowPlayling(track) {
         return track['@attr'] && track['@attr'].nowplaying === 'true';
     }
 
-    function requestGet(url){
-        let params = { method: 'get', muteHttpExceptions: true, };
+    function requestGet(url) {
+        let params = { method: 'get', muteHttpExceptions: true };
         let response = UrlFetchApp.fetch(url, params);
-        if (response.getResponseCode() >= 300){
+        if (response.getResponseCode() >= 300) {
             console.error('Ошибка', response.getResponseCode(), response);
             Utilities.sleep(2000);
             console.info('Попытка повторной отправки');

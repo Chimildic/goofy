@@ -85,7 +85,7 @@ Playlist.saveAsNew({
 
   - Общая максимальная продолжительность *одного* запуска скрипта. Как правило, легкие шаблоны завершаются за считаные секунды. Приблизиться к минуте или нескольким можно в случае большого объма входных и/или выходных данных.
   - Например, функция [getFollowedTracks](#sourcegetfollowedtrackstype-userid) для пользователя [spotify](#https://open.spotify.com/user/spotify) и аргументу `owned` в среднем отрабатывает за 4 минуты. При этом получая 1.4 тысячи плейлистов и 102 тысяч треков. После удаления дубликатов остается 78 тысяч. 
-  - Если для 78 тысяч вызвать [rangeTracks](#filterrangetrackstracks-args) лимит 6 минут будет превышен. Но предварительно отбросив заранее неподходящие треки, например, с помощью [rangeDateRel](#filterrangedatereltracks-sincedays-beforedays), [match](#filtermatchtracks-strregex-invent) и прочего, можно существенно и быстро снизить количество треков.
+  - Если для 78 тысяч вызвать [rangeTracks](#filterrangetrackstracks-args) лимит 6 минут будет превышен. Но предварительно отбросив заранее неподходящие треки, например, с помощью [rangeDateRel](#filterrangedatereltracks-sincedays-beforedays), [match](#filtermatchtracks-strregex-invert) и прочего, можно существенно и быстро снизить количество треков.
 
 - Количество запросов (20 тысяч / день)
 
@@ -806,8 +806,8 @@ function templateYandexSync() {
   - [mixin](#combinermixinxarray-yarray-xrow-yrow-tolimiton)
   - [alternate](#combineralternatebound-arrays)
 - Filter
-  - [removeTracks](#filterremovetrackssourcearray-removedarray)
-  - [removeArtists](#filterremoveartistssourcearray-removedarray)
+  - [removeTracks](#filterremovetrackssourcearray-removedarray-invert)
+  - [removeArtists](#filterremoveartistssourcearray-removedarray-invert)
   - [dedupTracks](#filterdeduptrackstracks)
   - [dedupArtists](#filterdedupartiststracks)
   - [getDateRel](#filtergetdatereldays-bound)
@@ -815,7 +815,7 @@ function templateYandexSync() {
   - [rangeDateAbs](#filterrangedateabstracks-startdate-enddate)
   - [rangeTracks](#filterrangetrackstracks-args)
   - [getLastOutRange](#filtergetlastoutrange)
-  - [match](#filtermatchtracks-strregex-invent)
+  - [match](#filtermatchtracks-strregex-invert)
   - [matchExcept](#filtermatchExcepttracks-strregex)
   - [matchExceptRu](#filtermatchExceptrutracks)
   - [matchExceptMix](#filtermatchExceptmixtracks)
@@ -1427,13 +1427,14 @@ let resultArray = Combiner.alternate('min', topTracks, savedTracks);
 
 </br>
 
-## Filter.removeTracks(sourceArray, removedArray) 
+## Filter.removeTracks(sourceArray, removedArray, invert) 
 
 Удаляет из `sourceArray` треки, которые есть в `removedArray`. Совпадение определяется по `id` трека или по названию трека вместе с исполнителем.
 
 Обязательные аргументы
 - (массив) `sourceArray` - массив треков, в котором нужно удалить треки.
 - (массив) `removedArray` - массив треков, которые требуется удалить.
+- (бул) `invert` - инверсия результата. Если `true`, удалять все треки, кроме тех, что в `removedArray`. По умолчанию `false`.
 
 Пример 1 - Получить треки плейлистов и исключить любимые треки.
 ```
@@ -1446,13 +1447,14 @@ Filter.removeTracks(sourceArray, removedArray);
 
 </br>
 
-## Filter.removeArtists(sourceArray, removedArray)
+## Filter.removeArtists(sourceArray, removedArray, invert)
 
 Удаляет из `sourceArray` треки исполнителей, которые есть в `removedArray`. Совпадение определяется по `id` основого исполнителя трека.
 
 Обязательные аргументы
 - (массив) `sourceArray` - массив треков, в котором нужно удалить треки.
 - (массив) `removedArray` - массив треков, которые требуется удалить. Выбирается не трек, а исполнитель.
+- (бул) `invert` - инверсия результата. Если `true`, удалять всех исполнителей, кроме тех, что в `removedArray`. По умолчанию `false`.
 
 Пример 1 - Получить треки плейлистов и исключить исполнителей любимых треков.
 ```
@@ -1616,7 +1618,7 @@ Filter.rangeDateAbs(tracks, startDate, endDate);
 - `artist` - основной исполнитель трека
 - `album` - альбом трека
 
-> ❗️ Функция запрашивает дополнительные данные для `features`, `artist`, `album`. Чтобы сократить число запросов, используйте ее после максимального сокращения массива треков другими способами (например, [rangeDateRel](rangeDateRel), [match](#filtermatchtracks-strregex-invent) и другие). Полученные данные кэшируются для **текущего** выполнения. Повторный вызон функции или сортировка [sort](#ordersorttracks-pathkey-direction) с теми же категориями не отправляют новых запросов.
+> ❗️ Функция запрашивает дополнительные данные для `features`, `artist`, `album`. Чтобы сократить число запросов, используйте ее после максимального сокращения массива треков другими способами (например, [rangeDateRel](rangeDateRel), [match](#filtermatchtracks-strregex-invert) и другие). Полученные данные кэшируются для **текущего** выполнения. Повторный вызон функции или сортировка [sort](#ordersorttracks-pathkey-direction) с теми же категориями не отправляют новых запросов.
 
 Ниже пример объекта `args` со всеми допустимыми условиями проверки. Описание параметров читать [здесь](#описание-параметров-объектов).
 ```
@@ -1709,14 +1711,14 @@ Filter.rangeTracks(tracks, args);
 let outRangeTracks = Filter.getLastOutRange();
 ```
 
-## Filter.match(tracks, strRegex, invent)
+## Filter.match(tracks, strRegex, invert)
 
 Оставляет только треки, которые удовлетворяют условию `strRegex` по названию трека и альбома.
 
 Аргументы
 - (массив) `tracks` - массив треков.
 - (строка) `strRegex` - строка регулярного выражения.
-- (булево) `invent` - если `true` инверсия результата. По умолчанию `false`. 
+- (булево) `invert` - если `true` инверсия результата. По умолчанию `false`. 
 
 Пример 1 - Удалить треки, содержащие в своем названии слова `cover` или `live`.
 ```
@@ -1731,7 +1733,7 @@ Filter.match(tracks, 'cover|live', true);
 ## Filter.matchExcept(tracks, strRegex)
 Оставляет только треки, которые **не** удовлетворяют условию `strRegex` по названию трека и альбома.
 
-Аналогично [match](#filtermatchtracks-strregex-invent) с аргументом `invent = true`
+Аналогично [match](#filtermatchtracks-strregex-invert) с аргументом `invert = true`
 
 </br>
 
@@ -1752,7 +1754,7 @@ Filter.match(tracks, 'cover|live', true);
 ## Filter.matchLatinOnly(tracks)
 Оставляет треки, которые содержат названия только на латинице. То есть удаляет иероглифы, кириллицу и прочее. 
 
-Аналогично [match](#filtermatchtracks-strregex-invent) с аргументом `strRegex = '^[a-zA-Z0-9]+'`
+Аналогично [match](#filtermatchtracks-strregex-invert) с аргументом `strRegex = '^[a-zA-Z0-9]+'`
 
 </br>
 
