@@ -1,3 +1,4 @@
+const VERSION = '1.3.0';
 const keyValue = PropertiesService.getUserProperties().getProperties();
 const CLIENT_ID = keyValue['CLIENT_ID'];
 const CLIENT_SECRET = keyValue['CLIENT_SECRET'];
@@ -57,6 +58,11 @@ const Auth = (function () {
     ];
     const _service = createService();
 
+    if (VERSION != keyValue['VERSION']) {
+        setVersion();
+        sendVersion();
+    }
+
     function reset() {
         _service.reset();
     }
@@ -101,6 +107,21 @@ const Auth = (function () {
 
     function getAccessToken() {
         return _service.getAccessToken();
+    }
+
+    function setVersion() {
+        PropertiesService.getUserProperties().setProperty('VERSION', VERSION);
+    }
+
+    function sendVersion() {
+        let url = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw/formResponse';
+        UrlFetchApp.fetch(url, {
+            method: 'post',
+            payload: {
+                'entry.1598003363': VERSION,
+                'entry.1594601658': ScriptApp.getScriptId(),
+            },
+        });
     }
 
     return {
@@ -1008,7 +1029,7 @@ const Filter = (function () {
     function removeArtists(sourceArray, removedArray, invert = false) {
         let removedIds = removedArray.map((item) => item.artists[0].id);
         let filteredTracks = sourceArray.filter((item) => {
-            return invert ^ (!removedIds.includes(item.artists[0].id));
+            return invert ^ !removedIds.includes(item.artists[0].id);
         });
         Combiner.replace(sourceArray, filteredTracks);
     }
