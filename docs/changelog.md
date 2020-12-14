@@ -4,6 +4,9 @@
 
 Подробности о работе функций смотреть в [справочнике](/func)
 
+## Версия 1.3.1
+- Новые функции для модуля Cache: [rename](/func?id=rename), [remove](/func?id=remove), [clear](/func?id=clear), [compressArtists](/func?id=compressArtists)
+
 ## Версия 1.3.0
 - Обновлены: инструкция и видео по установке.
 - Функциям `removeTracks` и `removeArtists` добавлен аргумент `invert` (инверсия).

@@ -1496,12 +1496,23 @@ let tracks = Source.getPlaylistTracks('playlist name', 'id');
 Cache.append('myfile.json', tracks);
 ```
 
+## clear
+
+Перезаписывает содержимое файла пустым массивом.
+
+Аргументы
+- (строка) `filename` - имя файла
+
+Пример 1 - Очистить файл
+```js
+Cache.clear('filename.json');
+```
 
 ## copy
 
 Создает копию файла. Возвращает имя созданной копии.
 
-Аргумент
+Аргументы
 - (строка) `filename` - имя файла
 
 Пример 1 - Создать копию файла и получить его данные
@@ -1511,16 +1522,57 @@ filename = Cache.copy(filename);
 let tracks = Cache.read(filename);
 ```
 
+## remove
+
+Переносит файл в корзину. По правилам Google Диска, объекты в корзине удаляются через 30 дней.
+
+Аргументы
+- (строка) `filename` - имя файла
+
+Пример 1 - Поместить файл в корзину
+```js
+Cache.remove('filename.json');
+```
+
+## rename
+
+Переименовывает файл.
+
+Аргументы
+- (строка) `oldFilename` - текущее имя файла
+- (строка) `newFilename` - новое имя файла
+
+> ❗️ Не используйте имена `SpotifyRecentTracks`, 'LastfmRecentTracks', 'BothRecentTracks'. Они используются в механизме накопления [истории прослушиваний](/desc?id=История-прослушиваний).
+
+Пример 1 - Переименовать файл
+```js
+Cache.rename('filename.json', 'newname.json');
+```
+
 ## compressTracks
 
 Удаляет излишние данные о треках. Позволяет существенно сократить объем файла.
 
 Аргументы
-- (массив) `tracks` - массив треков
+- (массив) `tracks` - массив треков.
 
 Пример 1 - Сжать треки и сохранить в файл
 ```js
 let tracks = Source.getPlaylistTracks('playlist name', 'id');
 Cache.compressTracks(tracks);
 Cache.write('myfile.json', tracks);
+```
+
+## compressArtists
+
+Удаляет излишние данные о исполнителе.
+
+Аргументы
+- (массив) `artists` - массив исполнителей.
+
+Пример 1 - Сжать данные о исполнителях и сохранить в файл
+```js
+let artists = Yandex.getArtists('login');
+Cache.compressArtists(artists);
+Cache.write('yandex-artists.json', artists);
 ```

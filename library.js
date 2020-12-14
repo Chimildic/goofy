@@ -1,4 +1,4 @@
-const VERSION = '1.3.0';
+const VERSION = '1.3.1';
 const keyValue = PropertiesService.getUserProperties().getProperties();
 const CLIENT_ID = keyValue['CLIENT_ID'];
 const CLIENT_SECRET = keyValue['CLIENT_SECRET'];
@@ -141,8 +141,12 @@ const Cache = (function () {
         read: read,
         write: write,
         append: append,
+        clear: clear,
         copy: copy,
+        remove: remove,       
+        rename: rename,
         compressTracks: compressTracks,
+        compressArtists: compressArtists,
     };
 
     function read(filename) {
@@ -164,6 +168,10 @@ const Cache = (function () {
         }
     }
 
+    function clear(filename){
+        write(filename, []);
+    }
+
     function write(filename, content) {
         let file = getFile(filename);
         if (!file) {
@@ -175,10 +183,23 @@ const Cache = (function () {
     function copy(filename) {
         let file = getFile(filename);
         if (file) {
-            let newFile = file.makeCopy();
             filename = 'Copy' + formatExtension(filename.split('.')[0]);
-            newFile.setName(filename);
+            file.makeCopy().setName(filename);
             return filename;
+        }
+    }
+
+    function remove(filename){
+        let file = getFile(filename);
+        if (file){
+            file.setTrashed(true);
+        }
+    }
+
+    function rename(oldFilename, newFilename){
+        let file = getFile(oldFilename);
+        if (file){
+            file.setName(formatExtension(newFilename));
         }
     }
 
@@ -190,13 +211,11 @@ const Cache = (function () {
     }
 
     function createFile(filename) {
-        filename = formatExtension(filename);
-        return rootFolder.createFile(filename, '');
+        return rootFolder.createFile(formatExtension(filename), '');
     }
 
     function getFileIterator(filename) {
-        filename = formatExtension(filename);
-        return rootFolder.getFilesByName(filename);
+        return rootFolder.getFilesByName(formatExtension(filename));
     }
 
     function getJSON(file) {
@@ -278,6 +297,11 @@ const Cache = (function () {
             delete item.type;
             delete item.uri;
             delete item.external_urls;
+            delete item.images;
+
+            if (item.followers && item.followers.total){
+                item.followers = item.followers.total;
+            }
         });
     }
 })();
