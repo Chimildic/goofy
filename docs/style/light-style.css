@@ -121,7 +121,6 @@ body.ready-transition.ready-fix > *:not(.progress) {
     color: var(--base-color);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-smoothing: antialiased;
 }
 html,
 button,
@@ -677,7 +676,6 @@ pre[data-lang] {
     }
     .markdown-section .table-wrapper td::before {
         display: inline-block;
-        float: left;
         width: 8em;
         margin-left: -8em;
         font-weight: bold;
