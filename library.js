@@ -1,12 +1,12 @@
 const VERSION = '1.3.1';
 const keyValue = PropertiesService.getUserProperties().getProperties();
-const CLIENT_ID = keyValue['CLIENT_ID'];
-const CLIENT_SECRET = keyValue['CLIENT_SECRET'];
-const LASTFM_API_KEY = keyValue['LASTFM_API_KEY'];
-const ON_SPOTIFY_RECENT_TRACKS = 'true' === keyValue['ON_SPOTIFY_RECENT_TRACKS'];
-const ON_LASTFM_RECENT_TRACKS = 'true' === keyValue['ON_LASTFM_RECENT_TRACKS'];
-const LASTFM_RANGE_RECENT_TRACKS = parseInt(keyValue['LASTFM_RANGE_RECENT_TRACKS']);
-const LASTFM_LOGIN = keyValue['LASTFM_LOGIN'];
+const CLIENT_ID = keyValue.CLIENT_ID;
+const CLIENT_SECRET = keyValue.CLIENT_SECRET;
+const LASTFM_API_KEY = keyValue.LASTFM_API_KEY;
+const ON_SPOTIFY_RECENT_TRACKS = 'true' === keyValue.ON_SPOTIFY_RECENT_TRACKS;
+const ON_LASTFM_RECENT_TRACKS = 'true' === keyValue.ON_LASTFM_RECENT_TRACKS;
+const LASTFM_RANGE_RECENT_TRACKS = parseInt(keyValue.LASTFM_RANGE_RECENT_TRACKS);
+const LASTFM_LOGIN = keyValue.LASTFM_LOGIN;
 const API_BASE_URL = 'https://api.spotify.com/v1';
 
 function doGet() {
@@ -58,7 +58,7 @@ const Auth = (function () {
     ];
     const _service = createService();
 
-    if (VERSION != keyValue['VERSION']) {
+    if (VERSION != keyValue.VERSION) {
         setVersion();
         sendVersion();
     }
@@ -593,7 +593,7 @@ const Source = (function () {
         });
     }
 
-    function getFollowedItems(type = 'followed', userId = User.getId(), excludePlaylist) {
+    function getFollowedItems(type = 'followed', userId = User.getId(), excludePlaylist=[]) {
         let playlistArray = Playlist.getPlaylistArray(userId);
         if (type != 'all') {
             playlistArray = playlistArray.filter((playlist) => {
@@ -601,7 +601,7 @@ const Source = (function () {
                 return type == 'owned' ? owned : !owned;
             });
         }
-        if (excludePlaylist) {
+        if (excludePlaylist.length > 0) {
             let ids = excludePlaylist.map((item) => item.id);
             playlistArray = playlistArray.filter((item) => !ids.includes(item.id));
         }
@@ -1296,10 +1296,11 @@ const Combiner = (function () {
     const Alternation = (function () {
         function alternate(bound, ...arrays) {
             let limitLength = getLimitLength(bound, arrays);
-            let resultArray = [];
+            const resultArray = [];
             for (let i = 0; i < limitLength; i++) {
+                const index = i;
                 arrays.forEach((item) => {
-                    if (item[i]) resultArray.push(item[i]);
+                    if (item[index]) resultArray.push(item[index]);
                 });
             }
             return resultArray;
@@ -1359,8 +1360,9 @@ const Playlist = (function () {
         let url = Utilities.formatString('%s/%s', API_BASE_URL, path);
         let response = Request.get(url);
         while (true) {
+            const name = playlistName;
             let foundItem = response.items.find((item) => {
-                return item.name == playlistName;
+                return item.name == name;
             });
             if (!foundItem && response.next) {
                 response = Request.get(response.next);
@@ -1531,7 +1533,7 @@ const Playlist = (function () {
             public: data.hasOwnProperty('public') ? data.public : true,
         };
         if (data.description) {
-            payload.description = data.description;
+            payload.description = Selector.sliceFirst(data.description, LIMIT_DESCRIPTION);
         }
         return payload;
     }
@@ -1974,7 +1976,7 @@ const Lastfm = (function () {
         let requestCount = Math.ceil(limit / queryObj.limit);
         let response = [];
         for (let i = 0; i < requestCount; i++) {
-            Combiner.push(response, getPageTracks(queryObj)[methodKey]['track']);
+            Combiner.push(response, getPageTracks(queryObj)[methodKey].track);
             queryObj.page++;
         }
         return Selector.sliceFirst(response, limit);
