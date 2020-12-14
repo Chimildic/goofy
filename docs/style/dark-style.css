@@ -1943,7 +1943,7 @@ body .sidebar {
     --sidebar-nav-strong-font-weight: var(--strong-font-weight);
     --sidebar-nav-strong-margin: 1.5em 0 0.5em;
     --sidebar-nav-strong-padding: 0.25em 0;
-    --sidebar-nav-indent: 0.2rem;
+    --sidebar-nav-indent: 0.2em;
     --sidebar-nav-margin: 1.3rem 0 0;
     --sidebar-nav-link-border-style: solid;
     --sidebar-nav-link-border-width: 0;
