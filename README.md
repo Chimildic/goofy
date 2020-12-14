@@ -2,13 +2,13 @@
 Библиотека для взаимодействия [Spotify Web API](https://developer.spotify.com/documentation/web-api/) и [Google Apps Script](https://developers.google.com/apps-script). За основу положена идея сервиса [Smarter Playlists](http://smarterplaylists.playlistmachinery.com/about.html). Библиотека стремится устранить недостатки сервиса, добавить новые возможности и увеличить допустимые лимиты. Помимо Spotify, источником треков может быть Last.fm и Яндекс.Музыка.
 
 ## Быстрый старт
-- [Установка и настройка](https://github.com/Chimildic/Goofy/blob/main/guide/README.md#установка-и-настройка)
-- [Первый плейлист](https://github.com/Chimildic/Goofy/blob/main/guide/README.md#первый-плейлист)
+- [Установка и настройка](https://chimildic.github.io/Goofy/#/install)
+- [Первый плейлист](https://chimildic.github.io/Goofy/#/first-playlist)
 
 ## Возможности
-- [Подробное описание](https://github.com/Chimildic/Goofy/blob/main/guide/README.md#описание)
-- [Шаблоны плейлистов](https://github.com/Chimildic/Goofy/blob/main/guide/README.md#шаблоны)
-- [Справочник по функциям](https://github.com/Chimildic/Goofy/blob/main/guide/README.md#справочник)
+- [Подробное описание](https://chimildic.github.io/Goofy/#/desc)
+- [Шаблоны плейлистов](https://chimildic.github.io/Goofy/#/template)
+- [Справочник по функциям](https://chimildic.github.io/Goofy/#/func)
 
 ## Помощь
 
