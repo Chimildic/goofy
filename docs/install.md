@@ -8,73 +8,73 @@
 
 1. Перейдите в [Spotify Dashboard](https://developer.spotify.com/dashboard/). Нажмите `Log in` и авторизируйтесь в Spotify. Примите условия использования.
 
-   ![Условия использования](../img/install-step-dashboard-term.png)
+   ![Условия использования](/img/install-step-dashboard-term.png)
 
 2. Нажмите кнопку `Create an app`. Введите произвольное имя и описание. Поставьте галочки. Нажмите кнопку `Create`.
 
-   ![Создание приложения](../img/install-step-create-app.png)
+   ![Создание приложения](/img/install-step-create-app.png)
 
 3. Перейдите к [библиотеке в Apps Script](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing). Войдите в Google аккаунт, если потребуется.
 
 4. Выберите `Файл` - `Создать копию`. Откроется копия, созданная на вашем аккаунте. Переименуйте, если нужно (`Файл` - `Переименовать`).
 
-    ![Создать копию](../img/install-step-copy.png)
+    ![Создать копию](/img/install-step-copy.png)
 
 5. Перейдите в файл `config.gs`. Вставьте `CLIENT_ID` и `CLIENT_SECRET` вместо слов `вашеЗначение`. Значения брать в созданном приложении на шаге 2.
 
    Сохраните изменение `Файл` - `Сохранить` или `Ctrl + S`
 
-   ![Client ID и Client Secret](../img/install-step-client-id2.png)
+   ![Client ID и Client Secret](/img/install-step-client-id2.png)
 
 6. Запустите в редакторе выполнение функции `setProperties`. 
 
-   ![run setProperties](../img/install-run-setProperties.png)
+   ![run setProperties](/img/install-run-setProperties.png)
 
    Увидите всплывающее сообщение с необходимость предоставить права доступа. Согласитесь на выдачу.
 
-   ![запрос прав](../img/install-permission-request.png)
+   ![запрос прав](/img/install-permission-request.png)
 
    Выберите Google аккаунт, на котором создали копию библиотеки.
 
-   ![Выбор аккаунта](../img/install-step-account.png)
+   ![Выбор аккаунта](/img/install-step-account.png)
 
    Нажмите `Дополнительные настройки`, затем `Перейти на страницу "Копия Goofy (Ver. 1)"`
 
-   ![Выбор аккаунта](../img/install-step-warning.png)
+   ![Выбор аккаунта](/img/install-step-warning.png)
 
    Нажмите кнопку `Разрешить` внизу окна.
 
-   ![Выбор аккаунта](../img/install-step-grant-permissions.png)
+   ![Выбор аккаунта](/img/install-step-grant-permissions.png)
 
 7. Окно закроется. Выберите `Опубликовать` - `Развернуть как веб-приложение`
 
-   ![Развернуть веб-приложение](../img/install-step-webapp.png)
+   ![Развернуть веб-приложение](/img/install-step-webapp.png)
 
    В появившимся окне выделите и скопируйте всю ссылку в первом поле. Должно заканчиваться на `exec`.
 
-   ![Скопировать ссылку](../img/install-step-link.png)
+   ![Скопировать ссылку](/img/install-step-link.png)
 
    Закройте форму (кнопка `Отмена` или крестик).
 
 8. В **новой вкладке** перейдите по скопированной ссылке. На открывшийся странице скопируйте ссылку внизу страницы. Оканчивается на `usercallback`.
 
-   ![Callback-ссылка](../img/install-step-callback-link.png)
+   ![Callback-ссылка](/img/install-step-callback-link.png)
 
 9. Вернитесь в [Spotify Dashboad](https://developer.spotify.com/dashboard/). Нажмите кнопку `EDIT SETTINGS` у вашего приложения.
     
     Вставьте в поле `Redirect URIs` скопированную ссылку из шага 8. Нажмите кнопку `ADD`. Затем внизу кнопку `Save`.
     
-    ![Добавить callback](../img/install-step-dashboard-redirect.png)
+    ![Добавить callback](/img/install-step-dashboard-redirect.png)
 
 10. Перейдите на вкладку из шага 8 и обновите эту страницу (`F5`).
 
     Нажмите кнопку `Authorize`.
 
-    ![Callback-ссылка](../img/install-step-callback-link.png)
+    ![Callback-ссылка](/img/install-step-callback-link.png)
 
     Разрешите доступ к аккаунту Spotify.
 
-    ![Разрешения Spotify](../img/install-step-grant-spotify.png)
+    ![Разрешения Spotify](/img/install-step-grant-spotify.png)
 
     Должны появиться слова о успешном выполнении.
 
@@ -88,7 +88,7 @@
 2. Полученный `API key` присвоить параметру `LASTFM_API_KEY`. 
 3. Запустить в редакторе выполнение функции `setProperties`.
 
-![Lastfm account api](../img/lastfm_account_api3.png)
+![Lastfm account api](/img/lastfm_account_api3.png)
 
 ## Обновить библиотеку
 
