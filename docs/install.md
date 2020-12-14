@@ -92,7 +92,7 @@
 
 ## Обновить библиотеку
 
-1. Замените все содержимое файла `library.gs` на новое (Ctrl + A, Ctrl + V), которое берется [здесь](https://github.com/Chimildic/Goofy/blob/main/library.gs) или [здесь](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing) (Ctrl + A, Ctrl + C)
+1. Замените все содержимое файла `library.gs` на новое (Ctrl + A, Ctrl + V), которое берется [здесь](https://github.com/Chimildic/goofy/blob/main/library.js) или [здесь](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing) (Ctrl + A, Ctrl + C)
 2. Сохраните файл: `Файл` - `Сохранить` или Ctrl + S
 
 ## Обновить параметры
