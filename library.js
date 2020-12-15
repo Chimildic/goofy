@@ -23,33 +23,37 @@ function updateRecentTracks() {
 }
 
 const Source = (function () {
-    const TOP_RANGE = ['short', 'medium', 'long'];
+    return {
+        getTracks: getTracks,
+        getTracksRandom: getTracksRandom,
+        getPlaylistTracks: getPlaylistTracks,
+        getTopTracks: getTopTracks,
+        getRecentTracks: getRecentTracks,
+        getFollowedTracks: getFollowedTracks,
+        getTracksArtists: getTracksArtists,
+        getSavedTracks: getSavedTracks,
+        getSavedAlbumTracks: getSavedAlbumTracks,
+        getRecomTracks: getRecomTracks,
+        searchTrack: searchTrack,
+        searchArtist: searchArtist,
+    };
 
-    function getTopTracks(strTopRange) {
-        if (!strTopRange || !TOP_RANGE.includes(strTopRange)) {
-            strTopRange = 'medium';
-        }
-
-        // Баг со стороны Spotify: https://community.spotify.com/t5/Spotify-for-Developers/Bug-with-offset-for-method-quot-Get-User-s-Top-Artists-and/td-p/5032362
-        // Максимум можно получить топ-98
-        // При limit = 50 и offset = 50, next = null
-        // При limit = 49 и offset = 49, next != null
-        // При limit = 49 и offset = 98, next = null
-
-        let limit = 45;
-        let path = Utilities.formatString('me/top/tracks?limit=%s&time_range=%s_term', limit, strTopRange);
+    function getTopTracks(timeRange) {
+        timeRange = isValidTimeRange(timeRange) ? timeRange : 'medium';
+        // Баг Spotify: https://community.spotify.com/t5/Spotify-for-Developers/Bug-with-offset-for-method-quot-Get-User-s-Top-Artists-and/td-p/5032362
+        let path = Utilities.formatString('me/top/tracks?limit=%s&time_range=%s_term', 45, timeRange);
         return Request.getItemsByPath(path, 2);
     }
 
+    function isValidTimeRange(timeRange) {
+        return ['short', 'medium', 'long'].includes(timeRange);
+    }
+
     function getRecomTracks(queryObj) {
-        if (!queryObj.limit || queryObj > 100) {
-            queryObj.limit = 100;
-        }
-        if (!queryObj.market) {
-            queryObj.market = 'from_token';
-        }
+        queryObj.limit = queryObj.limit > 100 ? 100 : queryObj.limit || 100;
+        queryObj.market = queryObj.market || 'from_token';
         let query = Request.parseQuery(queryObj);
-        let url = Utilities.formatString('%s/recommendations?limit=100&%s', API_BASE_URL, query);
+        let url = Utilities.formatString('%s/recommendations?%s', API_BASE_URL, query);
         return Request.get(url).tracks;
     }
 
@@ -59,17 +63,14 @@ const Source = (function () {
     }
 
     function getFollowedTracks(params) {
-        if (!params) params = {};
+        params = params || {};
         let items = getFollowedItems(params.type, params.userId, params.exclude);
-        if (params.limit) {
-            Selector.keepRandom(items, params.limit);
-        }
-        return getTracks(items);
+        return getTracks(Selector.sliceRandom(items, params.limit));
     }
 
     function getTracksArtists(params) {
         let artists = getArtists(params.artist);
-        params.album = params.album ? params.album : {};
+        params.album = params.album || {};
         let albums = getArtistsAlbums(artists, params.album);
         let tracks = [];
         albums.forEach((album) => Combiner.push(tracks, getAlbumTracks(album, params.album.track_limit)));
@@ -89,19 +90,14 @@ const Source = (function () {
             artists = artists.filter((item) => !excludeIds.includes(item.id));
         }
         artists = artists.filter((artist) => {
-            if (artist.followers && typeof artist.followers === 'object') {
-                artist.followers = artist.followers.total;
-            }
+            artist.followers = artist.followers.total || artist.followers;
             return (
                 RangeTracks.isBelong(artist, paramsArtist) &&
                 RangeTracks.isBelongGenres(artist.genres, paramsArtist.genres) &&
                 !RangeTracks.isBelongBanGenres(artist.genres, paramsArtist.ban_genres)
             );
         });
-        if (paramsArtist.artist_limit) {
-            Selector.keepRandom(artists, paramsArtist.artist_limit);
-        }
-        return artists;
+        return Selector.sliceRandom(artists, paramsArtist.artist_limit);
     }
 
     function getArtistsById(artistsArray) {
@@ -115,49 +111,41 @@ const Source = (function () {
 
     function getArtistsAlbums(artists, paramsAlbum) {
         let albums = [];
-        let groups = paramsAlbum.groups ? paramsAlbum.groups : 'album,single';
+        let groups = paramsAlbum.groups || 'album,single';
         artists.forEach((artist) => {
             let path = Utilities.formatString('artists/%s/albums?country=from_token&include_groups=%s&limit=50', artist.id, groups);
             Combiner.push(albums, Request.getItemsByPath(path));
         });
         albums = albums.filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, paramsAlbum.release_date));
-        if (paramsAlbum.album_limit) {
-            Selector.keepRandom(albums, paramsAlbum.limit);
-        }
-        return albums;
+        return Selector.keepRandom(albums, paramsAlbum.album_limit);
     }
 
     function getAlbumTracks(album, limit) {
         let path = Utilities.formatString('albums/%s/tracks', album.id);
         let items = Request.getItemsByPath(path);
-        if (limit) {
-            Selector.keepRandom(items, limit);
-        }
+        Selector.keepRandom(items, limit);
         items.forEach((item) => (item.album = album));
         return items;
     }
 
     function getSavedAlbumTracks(limit) {
         let items = getSavedAlbumItems();
-        if (limit) {
-            Selector.keepRandom(items, limit);
-        }
+        Selector.keepRandom(items, limit);
         return extractAlbumTracks(items);
     }
 
-    function extractAlbumTracks(source) {
+    function extractAlbumTracks(albums) {
         let tracks = [];
-        source.forEach((item) => Combiner.push(tracks, item.tracks.items));
+        albums.forEach((album) => Combiner.push(tracks, album.tracks.items));
         return tracks;
     }
 
     function getSavedAlbumItems() {
         let albumItems = Request.getItemsByPath('me/albums?limit=50', 400);
         return albumItems.map((item) => {
-            let added_at = item.added_at;
-            item = item.album;
-            item.added_at = added_at;
-            return item;
+            let album = item.album;
+            album.added_at = item.added_at;
+            return album;
         });
     }
 
@@ -165,8 +153,8 @@ const Source = (function () {
         let playlistArray = Playlist.getPlaylistArray(userId);
         if (type != 'all') {
             playlistArray = playlistArray.filter((playlist) => {
-                let owned = playlist.owner.id == userId;
-                return type == 'owned' ? owned : !owned;
+                let isOwned = playlist.owner.id == userId;
+                return type == 'owned' ? isOwned : !isOwned;
             });
         }
         if (excludePlaylist.length > 0) {
@@ -214,27 +202,18 @@ const Source = (function () {
     }
 
     function getItemsByPlaylistObject(obj) {
-        if (obj && obj.tracks.total > 100) {
+        if (!obj || !obj.tracks || !obj.tracks.items) {
+            return [];
+        } else if (obj.tracks.total > 100) {
             return Request.getItemsByNext(obj.tracks);
         }
-        return obj ? obj.tracks.items : [];
+        return obj.tracks.items;
     }
 
     function getSavedTracks() {
-        return extractTracks(getSavedItems());
+        let items = Request.getItemsByPath('me/tracks?limit=50', 400);
+        return extractTracks(items);
     }
-
-    const getSavedItems = (function () {
-        let savedItems;
-        return getItems;
-
-        function getItems() {
-            if (!savedItems) {
-                savedItems = Request.getItemsByPath('me/tracks?limit=50', 400);
-            }
-            return savedItems;
-        }
-    })();
 
     function extractTracks(items) {
         if (!items || items.length == 0) {
@@ -261,31 +240,18 @@ const Source = (function () {
     }
 
     function searchBestMatch(text, type) {
-        let query = Request.parseQuery({
-            q: text,
-            type: type,
-            limit: '1',
-        });
-        let url = Utilities.formatString('%s/search/?%s', API_BASE_URL, query);
-        let response = Request.get(url);
-        let items = response.items;
+        let url = Utilities.formatString(
+            '%s/search/?%s',
+            API_BASE_URL,
+            Request.parseQuery({
+                q: text,
+                type: type,
+                limit: '1',
+            })
+        );
+        let items = Request.get(url).items;
         return items[0] ? items[0] : {};
     }
-
-    return {
-        getTracks: getTracks,
-        getTracksRandom: getTracksRandom,
-        getPlaylistTracks: getPlaylistTracks,
-        getTopTracks: getTopTracks,
-        getRecentTracks: getRecentTracks,
-        getFollowedTracks: getFollowedTracks,
-        getTracksArtists: getTracksArtists,
-        getSavedTracks: getSavedTracks,
-        getSavedAlbumTracks: getSavedAlbumTracks,
-        getRecomTracks: getRecomTracks,
-        searchTrack: searchTrack,
-        searchArtist: searchArtist,
-    };
 })();
 
 const RecentTracks = (function () {
@@ -932,6 +898,7 @@ const Selector = (function () {
     }
 
     function keepRandom(array, count) {
+        if (!count) return;
         Order.shuffle(array);
         keepFirst(array, count);
     }
@@ -963,6 +930,7 @@ const Selector = (function () {
     }
 
     function sliceRandom(array, count) {
+        if (!count) return array;
         let copyArray = sliceCopy(array);
         Order.shuffle(copyArray);
         return sliceFirst(copyArray, count);
