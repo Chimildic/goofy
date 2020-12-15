@@ -22,25 +22,24 @@ function updateRecentTracks() {
 }
 
 const User = (function () {
-    const KEY_USER_ID = 'userId';
-
-    function setId() {
-        let response = Request.get('https://api.spotify.com/v1/me');
-        PropertiesService.getUserProperties().setProperty(KEY_USER_ID, response.id);
-    }
-
-    function getId() {
-        let userId = PropertiesService.getUserProperties().getProperty(KEY_USER_ID);
-        if (userId == null) {
-            setId();
-            return getId();
-        }
-        return userId;
-    }
-
+    const USER_ID = 'userId';
     return {
         getId: getId,
     };
+
+    function getId() {
+        return keyValue[USER_ID] ? keyValue[USER_ID] : setId();
+    }
+
+    function setId() {
+        keyValue[USER_ID] = getUser().id;
+        PropertiesService.getUserProperties().setProperty(USER_ID, keyValue[USER_ID]);
+        return keyValue[USER_ID];
+    }
+
+    function getUser(){
+        return Request.get(API_BASE_URL + '/me');
+    }
 })();
 
 const Auth = (function () {
