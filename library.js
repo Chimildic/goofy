@@ -61,7 +61,7 @@ const Source = (function () {
     }
 
     function getRecentTracks(limit = 200) {
-        let tracks = extractTracks(RecentTracks.getRecentTrackItems());
+        let tracks = extractTracks(RecentTracks.readSpotifyRecentTrackItems());
         return Selector.sliceFirst(tracks, limit);
     }
 
@@ -262,26 +262,35 @@ const RecentTracks = (function () {
     const LASTFM_FILENAME = 'LastfmRecentTracks.json';
     const BOTH_SOURCE_FILENAME = 'BothRecentTracks.json';
     const TRIGGER_FUCTION_NAME = 'updateRecentTracks';
-    const TRIGGER_EVERY_MINUTES = 15;
-    const TRACK_ITEMS_LIMIT = 20000;
+    const MINUTES = 15;
+    const ITEMS_LIMIT = 20000;
 
     if (!ON_SPOTIFY_RECENT_TRACKS && !ON_LASTFM_RECENT_TRACKS) {
         deleteTrigger();
-        return;
-    }
-
-    if (!hasTrigger()) {
+    } else if (!getTrigger()) {
         createTrigger();
     }
 
+    return {
+        updateRecentTracks: updateRecentTracks,
+        readSpotifyRecentTrackItems: readSpotifyRecentTrackItems,
+        compress: compress,
+        get: getRecentTracks,
+    };
+
+    function readSpotifyRecentTrackItems() {
+        return Cache.read(SPOTIFY_FILENAME);
+    }
+
     function deleteTrigger() {
-        if (hasTrigger()) {
-            ScriptApp.deleteTrigger(getTrigger());
+        let trigger = getTrigger();
+        if (trigger) {
+            ScriptApp.deleteTrigger(trigger);
         }
     }
 
-    function hasTrigger() {
-        return getTrigger();
+    function createTrigger() {
+        ScriptApp.newTrigger(TRIGGER_FUCTION_NAME).timeBased().everyMinutes(MINUTES).create();
     }
 
     function getTrigger() {
@@ -291,73 +300,45 @@ const RecentTracks = (function () {
                 return triggers[i];
             }
         }
-        return undefined;
     }
 
-    function createTrigger() {
-        ScriptApp.newTrigger(TRIGGER_FUCTION_NAME).timeBased().everyMinutes(TRIGGER_EVERY_MINUTES).create();
-    }
-
-    function getSpotifyRecentTrackItemsFifty() {
-        let url = Utilities.formatString('%s/me/player/recently-played?limit=50', API_BASE_URL);
-        return Request.get(url).items;
-    }
-
-    function get(limit) {
+    function getRecentTracks(limit) {
         let tracks = [];
         if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
             tracks = Cache.read(BOTH_SOURCE_FILENAME);
         } else if (ON_SPOTIFY_RECENT_TRACKS) {
-            tracks = Source.getRecentTracks(TRACK_ITEMS_LIMIT);
+            tracks = Source.getRecentTracks(ITEMS_LIMIT);
         } else if (ON_LASTFM_RECENT_TRACKS) {
             tracks = Cache.read(LASTFM_FILENAME);
         }
-        if (limit) {
-            Selector.keepFirst(tracks, limit);
-        }
-        return tracks;
-    }
-
-    function getSpotifyRecentTrackItems() {
-        return Cache.read(SPOTIFY_FILENAME);
+        return Selector.sliceFirst(tracks, limit);
     }
 
     function updateRecentTracks() {
         if (ON_SPOTIFY_RECENT_TRACKS) {
-            updateSpotifyRecentTracks();
+            updatePlatformRecentTracks(getSpotifyRecentTrackItems(), SPOTIFY_FILENAME);
         }
         if (ON_LASTFM_RECENT_TRACKS) {
-            updateLastfmRecentTracks();
+            let recentTracks = Lastfm.getRecentTracks(LASTFM_LOGIN, LASTFM_RANGE_RECENT_TRACKS);
+            updatePlatformRecentTracks(recentTracks, LASTFM_FILENAME);
         }
         if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
             updateBothSourceRecentTracks();
         }
     }
 
-    function updateSpotifyRecentTracks() {
-        let recentItems = getSpotifyRecentTrackItemsFifty();
-        let fileItems = Cache.read(SPOTIFY_FILENAME);
-        let endIndexNewPlayed = getIndexOfNewPlayed(recentItems, fileItems);
-        let newItems = recentItems.slice(0, endIndexNewPlayed);
+    function updatePlatformRecentTracks(recentTracks, filename) {
+        let fileItems = Cache.read(filename);
+        let endIndexNewPlayed = findIndexNewPlayed(recentTracks, fileItems);
+        let newItems = recentTracks.slice(0, endIndexNewPlayed);
         if (newItems.length > 0) {
             Cache.compressTracks(newItems);
-            Cache.append(SPOTIFY_FILENAME, newItems, 'begin', TRACK_ITEMS_LIMIT);
-        }
-    }
-
-    function updateLastfmRecentTracks() {
-        let recentTracks = Lastfm.getRecentTracks(LASTFM_LOGIN, LASTFM_RANGE_RECENT_TRACKS);
-        let fileTracks = Cache.read(LASTFM_FILENAME);
-        let endIndexNewPlayed = getIndexOfNewPlayed(recentTracks, fileTracks);
-        let newTracks = recentTracks.slice(0, endIndexNewPlayed);
-        if (newTracks.length > 0) {
-            Cache.compressTracks(newTracks);
-            Cache.append(LASTFM_FILENAME, newTracks, 'begin', TRACK_ITEMS_LIMIT);
+            Cache.append(filename, newItems, 'begin', ITEMS_LIMIT);
         }
     }
 
     function updateBothSourceRecentTracks() {
-        let spotifyTracks = Source.getRecentTracks(TRACK_ITEMS_LIMIT);
+        let spotifyTracks = Source.getRecentTracks(ITEMS_LIMIT);
         let lastfmTracks = Cache.read(LASTFM_FILENAME);
         Combiner.push(spotifyTracks, lastfmTracks);
         Filter.dedupTracks(spotifyTracks);
@@ -365,7 +346,12 @@ const RecentTracks = (function () {
         Cache.write(BOTH_SOURCE_FILENAME, spotifyTracks);
     }
 
-    function getIndexOfNewPlayed(recentItems, fileItems) {
+    function getSpotifyRecentTrackItems() {
+        let url = Utilities.formatString('%s/me/player/recently-played?limit=50', API_BASE_URL);
+        return Request.get(url).items;
+    }
+
+    function findIndexNewPlayed(recentItems, fileItems) {
         if (fileItems.length == 0) {
             return recentItems.length;
         }
@@ -380,29 +366,23 @@ const RecentTracks = (function () {
     }
 
     function compress() {
-        if (ON_SPOTIFY_RECENT_TRACKS && Cache.copy(SPOTIFY_FILENAME)) {
+        if (ON_SPOTIFY_RECENT_TRACKS) {
             compressFile(SPOTIFY_FILENAME);
         }
-        if (ON_LASTFM_RECENT_TRACKS && Cache.copy(LASTFM_FILENAME)) {
+        if (ON_LASTFM_RECENT_TRACKS) {
             compressFile(LASTFM_FILENAME);
         }
-        if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS && Cache.copy(BOTH_SOURCE_FILENAME)) {
+        if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
             compressFile(BOTH_SOURCE_FILENAME);
         }
     }
 
     function compressFile(filename) {
+        Cache.copy(filename);
         let tracks = Cache.read(filename);
         Cache.compressTracks(tracks);
         Cache.write(filename, tracks);
     }
-
-    return {
-        updateRecentTracks: updateRecentTracks,
-        getRecentTrackItems: getSpotifyRecentTrackItems,
-        compress: compress,
-        get: get,
-    };
 })();
 
 const Combiner = (function () {
