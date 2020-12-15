@@ -38,90 +38,29 @@ const User = (function () {
         return KeyValue[USER_ID];
     }
 
-    function getUser(){
+    function getUser() {
         return Request.get(API_BASE_URL + '/me');
     }
 })();
 
 const Auth = (function () {
     const SCOPE = [
+        'user-library-read',
+        'user-library-modify',
+        'user-read-recently-played',
+        'user-top-read',
+        'user-follow-read',
+        'user-follow-modify',
         'playlist-read-private',
         'playlist-modify-private',
         'playlist-modify-public',
-        'user-library-read',
-        'user-top-read',
-        'user-read-recently-played',
         'ugc-image-upload',
-        'user-follow-read',
-        'user-library-modify',
-        'user-follow-modify',
     ];
-    const _service = createService();
+    const service = createService();
 
     if (VERSION != KeyValue.VERSION) {
-        setVersion();
-        sendVersion();
-    }
-
-    function createService() {
-        return OAuth2.createService('spotify')
-            .setAuthorizationBaseUrl('https://accounts.spotify.com/authorize')
-            .setTokenUrl('https://accounts.spotify.com/api/token')
-            .setClientId(CLIENT_ID)
-            .setClientSecret(CLIENT_SECRET)
-            .setCallbackFunction('displayAuthResult')
-            .setPropertyStore(UserProperties)
-            .setScope(SCOPE.join(' '))
-            .setParam('response_type', 'code')
-            .setParam('redirect_uri', getRedirectUri());
-    }
-
-    function displayAuthResult(request) {
-        let isAuthorized = _service.handleCallback(request);
-        if (isAuthorized) {
-            return HtmlService.createHtmlOutput('Успешно! Можно закрыть вкладку.');
-        } else {
-            return HtmlService.createHtmlOutput('В доступе отказано. Можно закрыть вкладку.');
-        }
-    }
-
-    function getRedirectUri() {
-        let scriptId = encodeURIComponent(ScriptApp.getScriptId());
-        let template = 'https://script.google.com/macros/d/%s/usercallback';
-        return Utilities.formatString(template, scriptId);
-    }
-
-    function displayAuthPage() {
-        let template = '<a href="%s" target="_blank">Authorize</a><p>%s</p>';
-        let html = Utilities.formatString(template, _service.getAuthorizationUrl(), getRedirectUri());
-        return HtmlService.createHtmlOutput(html);
-    }
-
-    function hasAccess() {
-        return _service.hasAccess();
-    }
-
-    function getAccessToken() {
-        return _service.getAccessToken();
-    }
-
-    function reset() {
-        _service.reset();
-    }
-
-    function setVersion() {
         UserProperties.setProperty('VERSION', VERSION);
-    }
-
-    function sendVersion() {
-        let url = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw/formResponse';
-        UrlFetchApp.fetch(url, {
-            method: 'post',
-            payload: {
-                'entry.1598003363': VERSION,
-                'entry.1594601658': ScriptApp.getScriptId(),
-            },
-        });
+        sendVersion(VERSION);
     }
 
     return {
@@ -131,6 +70,59 @@ const Auth = (function () {
         displayAuthPage: displayAuthPage,
         displayAuthResult: displayAuthResult,
     };
+
+    function createService() {
+        return OAuth2.createService('spotify')
+            .setAuthorizationBaseUrl('https://accounts.spotify.com/authorize')
+            .setTokenUrl('https://accounts.spotify.com/api/token')
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setCallbackFunction('displayAuthResult')
+            .setPropertyStore(UserProperties)
+            .setScope(SCOPE)
+            .setParam('response_type', 'code')
+            .setParam('redirect_uri', getRedirectUri());
+    }
+
+    function displayAuthResult(request) {
+        let isAuthorized = service.handleCallback(request);
+        HtmlService.createHtmlOutput(isAuthorized ? 'Успешно!' : 'Отказано в доступе');
+    }
+  
+    function displayAuthPage() {
+        let template = '<a href="%s" target="_blank">Authorize</a><p>%s</p>';
+        let html = Utilities.formatString(template, service.getAuthorizationUrl(), getRedirectUri());
+        return HtmlService.createHtmlOutput(html);
+    }
+
+    function getRedirectUri() {
+        let scriptId = encodeURIComponent(ScriptApp.getScriptId());
+        let template = 'https://script.google.com/macros/d/%s/usercallback';
+        return Utilities.formatString(template, scriptId);
+    }
+
+    function sendVersion(value) {
+        UrlFetchApp.fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw/formResponse', {
+            method: 'post',
+            muteHttpExceptions: true,
+            payload: {
+                'entry.1598003363': value,
+                'entry.1594601658': ScriptApp.getScriptId(),
+            },
+        });
+    }
+
+    function hasAccess() {
+        return service.hasAccess();
+    }
+
+    function getAccessToken() {
+        return service.getAccessToken();
+    }
+
+    function reset() {
+        service.reset();
+    }
 })();
 
 const Cache = (function () {
@@ -143,7 +135,7 @@ const Cache = (function () {
         append: append,
         clear: clear,
         copy: copy,
-        remove: remove,       
+        remove: remove,
         rename: rename,
         compressTracks: compressTracks,
         compressArtists: compressArtists,
@@ -168,7 +160,7 @@ const Cache = (function () {
         }
     }
 
-    function clear(filename){
+    function clear(filename) {
         write(filename, []);
     }
 
@@ -189,16 +181,16 @@ const Cache = (function () {
         }
     }
 
-    function remove(filename){
+    function remove(filename) {
         let file = getFile(filename);
-        if (file){
+        if (file) {
             file.setTrashed(true);
         }
     }
 
-    function rename(oldFilename, newFilename){
+    function rename(oldFilename, newFilename) {
         let file = getFile(oldFilename);
-        if (file){
+        if (file) {
             file.setName(formatExtension(newFilename));
         }
     }
@@ -299,7 +291,7 @@ const Cache = (function () {
             delete item.external_urls;
             delete item.images;
 
-            if (item.followers && item.followers.total){
+            if (item.followers && item.followers.total) {
                 item.followers = item.followers.total;
             }
         });
@@ -593,7 +585,7 @@ const Source = (function () {
         });
     }
 
-    function getFollowedItems(type = 'followed', userId = User.getId(), excludePlaylist=[]) {
+    function getFollowedItems(type = 'followed', userId = User.getId(), excludePlaylist = []) {
         let playlistArray = Playlist.getPlaylistArray(userId);
         if (type != 'all') {
             playlistArray = playlistArray.filter((playlist) => {
@@ -757,7 +749,7 @@ const Request = (function () {
 
     function get(url) {
         let response = fetch(url);
-        if (response){
+        if (response) {
             let keys = Object.keys(response);
             if (keys.length == 1 && !response.items) {
                 response = response[keys[0]];
