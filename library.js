@@ -757,9 +757,11 @@ const Request = (function () {
 
     function get(url) {
         let response = fetch(url);
-        let keys = Object.keys(response);
-        if (keys.length == 1 && !response.items) {
-            response = response[keys[0]];
+        if (response){
+            let keys = Object.keys(response);
+            if (keys.length == 1 && !response.items) {
+                response = response[keys[0]];
+            }
         }
         return response;
     }
