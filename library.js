@@ -22,430 +22,6 @@ function updateRecentTracks() {
     RecentTracks.updateRecentTracks();
 }
 
-const User = (function () {
-    const USER_ID = 'userId';
-    return {
-        getId: getId,
-    };
-
-    function getId() {
-        return KeyValue[USER_ID] ? KeyValue[USER_ID] : setId();
-    }
-
-    function setId() {
-        KeyValue[USER_ID] = getUser().id;
-        UserProperties.setProperty(USER_ID, KeyValue[USER_ID]);
-        return KeyValue[USER_ID];
-    }
-
-    function getUser() {
-        return Request.get(API_BASE_URL + '/me');
-    }
-})();
-
-const Auth = (function () {
-    const SCOPE = [
-        'user-library-read',
-        'user-library-modify',
-        'user-read-recently-played',
-        'user-top-read',
-        'user-follow-read',
-        'user-follow-modify',
-        'playlist-read-private',
-        'playlist-modify-private',
-        'playlist-modify-public',
-        'ugc-image-upload',
-    ];
-    const service = createService();
-
-    if (VERSION != KeyValue.VERSION) {
-        UserProperties.setProperty('VERSION', VERSION);
-        sendVersion(VERSION);
-    }
-
-    return {
-        reset: reset,
-        hasAccess: hasAccess,
-        getAccessToken: getAccessToken,
-        displayAuthPage: displayAuthPage,
-        displayAuthResult: displayAuthResult,
-    };
-
-    function createService() {
-        return OAuth2.createService('spotify')
-            .setAuthorizationBaseUrl('https://accounts.spotify.com/authorize')
-            .setTokenUrl('https://accounts.spotify.com/api/token')
-            .setClientId(CLIENT_ID)
-            .setClientSecret(CLIENT_SECRET)
-            .setCallbackFunction('displayAuthResult')
-            .setPropertyStore(UserProperties)
-            .setScope(SCOPE)
-            .setParam('response_type', 'code')
-            .setParam('redirect_uri', getRedirectUri());
-    }
-
-    function displayAuthResult(request) {
-        let isAuthorized = service.handleCallback(request);
-        HtmlService.createHtmlOutput(isAuthorized ? 'Успешно!' : 'Отказано в доступе');
-    }
-  
-    function displayAuthPage() {
-        let template = '<a href="%s" target="_blank">Authorize</a><p>%s</p>';
-        let html = Utilities.formatString(template, service.getAuthorizationUrl(), getRedirectUri());
-        return HtmlService.createHtmlOutput(html);
-    }
-
-    function getRedirectUri() {
-        let scriptId = encodeURIComponent(ScriptApp.getScriptId());
-        let template = 'https://script.google.com/macros/d/%s/usercallback';
-        return Utilities.formatString(template, scriptId);
-    }
-
-    function sendVersion(value) {
-        UrlFetchApp.fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw/formResponse', {
-            method: 'post',
-            muteHttpExceptions: true,
-            payload: {
-                'entry.1598003363': value,
-                'entry.1594601658': ScriptApp.getScriptId(),
-            },
-        });
-    }
-
-    function hasAccess() {
-        return service.hasAccess();
-    }
-
-    function getAccessToken() {
-        return service.getAccessToken();
-    }
-
-    function reset() {
-        service.reset();
-    }
-})();
-
-const Cache = (function () {
-    const FOLDER_NAME = 'Goofy Data';
-    const rootFolder = getRootFolder();
-
-    return {
-        read: read,
-        write: write,
-        append: append,
-        clear: clear,
-        copy: copy,
-        remove: remove,
-        rename: rename,
-        compressTracks: compressTracks,
-        compressArtists: compressArtists,
-    };
-
-    function read(filename) {
-        return getJSON(getFile(filename));
-    }
-
-    function append(filename, content, place = 'end', limit = 100000) {
-        let currentContent = read(filename);
-        if (place == 'begin') {
-            appendNewData(content, currentContent);
-        } else if (place == 'end') {
-            appendNewData(currentContent, content);
-        }
-
-        function appendNewData(xData, yData) {
-            Combiner.push(xData, yData);
-            Selector.keepFirst(xData, limit);
-            write(filename, xData);
-        }
-    }
-
-    function clear(filename) {
-        write(filename, []);
-    }
-
-    function write(filename, content) {
-        let file = getFile(filename);
-        if (!file) {
-            file = createFile(filename);
-        }
-        file.setContent(JSON.stringify(content));
-    }
-
-    function copy(filename) {
-        let file = getFile(filename);
-        if (file) {
-            filename = 'Copy' + formatExtension(filename.split('.')[0]);
-            file.makeCopy().setName(filename);
-            return filename;
-        }
-    }
-
-    function remove(filename) {
-        let file = getFile(filename);
-        if (file) {
-            file.setTrashed(true);
-        }
-    }
-
-    function rename(oldFilename, newFilename) {
-        let file = getFile(oldFilename);
-        if (file) {
-            file.setName(formatExtension(newFilename));
-        }
-    }
-
-    function getFile(filename) {
-        let files = getFileIterator(filename);
-        if (files.hasNext()) {
-            return files.next();
-        }
-    }
-
-    function createFile(filename) {
-        return rootFolder.createFile(formatExtension(filename), '');
-    }
-
-    function getFileIterator(filename) {
-        return rootFolder.getFilesByName(formatExtension(filename));
-    }
-
-    function getJSON(file) {
-        return file ? tryParseJSON(file) : [];
-    }
-
-    function tryParseJSON(file) {
-        try {
-            return JSON.parse(file.getBlob().getDataAsString());
-        } catch (e) {
-            console.error(e);
-            return [];
-        }
-    }
-
-    function getRootFolder() {
-        let folders = DriveApp.getFoldersByName(FOLDER_NAME);
-        if (folders.hasNext()) {
-            return folders.next();
-        }
-        return DriveApp.createFolder(FOLDER_NAME);
-    }
-
-    function formatExtension(filename) {
-        if (!filename.includes('.')) {
-            filename += '.json';
-        }
-        return filename;
-    }
-
-    function compressTracks(tracks) {
-        if (!(tracks && tracks.length > 0 && (tracks[0].album || tracks[0].track))) {
-            return;
-        }
-
-        tracks.forEach((item) => {
-            if (item.track) {
-                delete item.context;
-                item = item.track;
-            }
-
-            delete item.uri;
-            delete item.type;
-            delete item.track_number;
-            delete item.is_local;
-            delete item.preview_url;
-            delete item.href;
-            delete item.external_urls;
-            delete item.external_ids;
-            delete item.disc_number;
-            delete item.available_markets;
-
-            compressAlbum(item.album);
-            compressArtists(item.artists);
-        });
-    }
-
-    function compressAlbum(item) {
-        if (!item) {
-            return;
-        }
-
-        delete item.available_markets;
-        delete item.external_urls;
-        delete item.href;
-        delete item.images;
-        delete item.type;
-        delete item.uri;
-        compressArtists(item.artists);
-    }
-
-    function compressArtists(items) {
-        if (!items || items.length == 0) {
-            return;
-        }
-
-        items.forEach((item) => {
-            delete item.href;
-            delete item.type;
-            delete item.uri;
-            delete item.external_urls;
-            delete item.images;
-
-            if (item.followers && item.followers.total) {
-                item.followers = item.followers.total;
-            }
-        });
-    }
-})();
-
-const RecentTracks = (function () {
-    const SPOTIFY_FILENAME = 'SpotifyRecentTracks.json';
-    const LASTFM_FILENAME = 'LastfmRecentTracks.json';
-    const BOTH_SOURCE_FILENAME = 'BothRecentTracks.json';
-    const TRIGGER_FUCTION_NAME = 'updateRecentTracks';
-    const TRIGGER_EVERY_MINUTES = 15;
-    const TRACK_ITEMS_LIMIT = 20000;
-
-    if (!ON_SPOTIFY_RECENT_TRACKS && !ON_LASTFM_RECENT_TRACKS) {
-        deleteTrigger();
-        return;
-    }
-
-    if (!hasTrigger()) {
-        createTrigger();
-    }
-
-    function deleteTrigger() {
-        if (hasTrigger()) {
-            ScriptApp.deleteTrigger(getTrigger());
-        }
-    }
-
-    function hasTrigger() {
-        return getTrigger();
-    }
-
-    function getTrigger() {
-        let triggers = ScriptApp.getProjectTriggers();
-        for (let i = 0; i < triggers.length; i++) {
-            if (TRIGGER_FUCTION_NAME === triggers[i].getHandlerFunction()) {
-                return triggers[i];
-            }
-        }
-        return undefined;
-    }
-
-    function createTrigger() {
-        ScriptApp.newTrigger(TRIGGER_FUCTION_NAME).timeBased().everyMinutes(TRIGGER_EVERY_MINUTES).create();
-    }
-
-    function getSpotifyRecentTrackItemsFifty() {
-        let url = Utilities.formatString('%s/me/player/recently-played?limit=50', API_BASE_URL);
-        return Request.get(url).items;
-    }
-
-    function get(limit) {
-        let tracks = [];
-        if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
-            tracks = Cache.read(BOTH_SOURCE_FILENAME);
-        } else if (ON_SPOTIFY_RECENT_TRACKS) {
-            tracks = Source.getRecentTracks(TRACK_ITEMS_LIMIT);
-        } else if (ON_LASTFM_RECENT_TRACKS) {
-            tracks = Cache.read(LASTFM_FILENAME);
-        }
-        if (limit) {
-            Selector.keepFirst(tracks, limit);
-        }
-        return tracks;
-    }
-
-    function getSpotifyRecentTrackItems() {
-        return Cache.read(SPOTIFY_FILENAME);
-    }
-
-    function updateRecentTracks() {
-        if (ON_SPOTIFY_RECENT_TRACKS) {
-            updateSpotifyRecentTracks();
-        }
-        if (ON_LASTFM_RECENT_TRACKS) {
-            updateLastfmRecentTracks();
-        }
-        if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
-            updateBothSourceRecentTracks();
-        }
-    }
-
-    function updateSpotifyRecentTracks() {
-        let recentItems = getSpotifyRecentTrackItemsFifty();
-        let fileItems = Cache.read(SPOTIFY_FILENAME);
-        let endIndexNewPlayed = getIndexOfNewPlayed(recentItems, fileItems);
-        let newItems = recentItems.slice(0, endIndexNewPlayed);
-        if (newItems.length > 0) {
-            Cache.compressTracks(newItems);
-            Cache.append(SPOTIFY_FILENAME, newItems, 'begin', TRACK_ITEMS_LIMIT);
-        }
-    }
-
-    function updateLastfmRecentTracks() {
-        let recentTracks = Lastfm.getRecentTracks(LASTFM_LOGIN, LASTFM_RANGE_RECENT_TRACKS);
-        let fileTracks = Cache.read(LASTFM_FILENAME);
-        let endIndexNewPlayed = getIndexOfNewPlayed(recentTracks, fileTracks);
-        let newTracks = recentTracks.slice(0, endIndexNewPlayed);
-        if (newTracks.length > 0) {
-            Cache.compressTracks(newTracks);
-            Cache.append(LASTFM_FILENAME, newTracks, 'begin', TRACK_ITEMS_LIMIT);
-        }
-    }
-
-    function updateBothSourceRecentTracks() {
-        let spotifyTracks = Source.getRecentTracks(TRACK_ITEMS_LIMIT);
-        let lastfmTracks = Cache.read(LASTFM_FILENAME);
-        Combiner.push(spotifyTracks, lastfmTracks);
-        Filter.dedupTracks(spotifyTracks);
-        spotifyTracks.sort((x, y) => Order.compareDate(y.played_at, x.played_at));
-        Cache.write(BOTH_SOURCE_FILENAME, spotifyTracks);
-    }
-
-    function getIndexOfNewPlayed(recentItems, fileItems) {
-        if (fileItems.length == 0) {
-            return recentItems.length;
-        }
-
-        let lastPlayedTime = fileItems[0].played_at;
-        for (let i = recentItems.length - 1; i >= 0; i--) {
-            if (recentItems[i].played_at === lastPlayedTime) {
-                return i;
-            }
-        }
-        return recentItems.length;
-    }
-
-    function compress() {
-        if (ON_SPOTIFY_RECENT_TRACKS && Cache.copy(SPOTIFY_FILENAME)) {
-            compressFile(SPOTIFY_FILENAME);
-        }
-        if (ON_LASTFM_RECENT_TRACKS && Cache.copy(LASTFM_FILENAME)) {
-            compressFile(LASTFM_FILENAME);
-        }
-        if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS && Cache.copy(BOTH_SOURCE_FILENAME)) {
-            compressFile(BOTH_SOURCE_FILENAME);
-        }
-    }
-
-    function compressFile(filename) {
-        let tracks = Cache.read(filename);
-        Cache.compressTracks(tracks);
-        Cache.write(filename, tracks);
-    }
-
-    return {
-        updateRecentTracks: updateRecentTracks,
-        getRecentTrackItems: getSpotifyRecentTrackItems,
-        compress: compress,
-        get: get,
-    };
-})();
-
 const Source = (function () {
     const TOP_RANGE = ['short', 'medium', 'long'];
 
@@ -712,152 +288,220 @@ const Source = (function () {
     };
 })();
 
-const Request = (function () {
-    let countRequest = 0;
-    function getCountRequest() {
-        return countRequest;
+const RecentTracks = (function () {
+    const SPOTIFY_FILENAME = 'SpotifyRecentTracks.json';
+    const LASTFM_FILENAME = 'LastfmRecentTracks.json';
+    const BOTH_SOURCE_FILENAME = 'BothRecentTracks.json';
+    const TRIGGER_FUCTION_NAME = 'updateRecentTracks';
+    const TRIGGER_EVERY_MINUTES = 15;
+    const TRACK_ITEMS_LIMIT = 20000;
+
+    if (!ON_SPOTIFY_RECENT_TRACKS && !ON_LASTFM_RECENT_TRACKS) {
+        deleteTrigger();
+        return;
     }
 
-    function getItemsByPath(urlPath, limitRequestCount) {
-        let url = Utilities.formatString('%s/%s', API_BASE_URL, urlPath);
-        let response = get(url);
-        return getItemsByNext(response, limitRequestCount);
+    if (!hasTrigger()) {
+        createTrigger();
     }
 
-    function getItemsByNext(response, limitRequestCount = 220) {
-        let items = response.items;
-        let count = 1;
-        while (response.next != null && count != limitRequestCount) {
-            response = get(response.next);
-            Combiner.push(items, response.items);
-            count++;
+    function deleteTrigger() {
+        if (hasTrigger()) {
+            ScriptApp.deleteTrigger(getTrigger());
         }
-        return items;
     }
 
-    function getFullObjByIds(objType, ids, limit) {
-        let requestCount = Math.ceil(ids.length / limit);
-        let fullObj = [];
-        for (let i = 0; i < requestCount; i++) {
-            let strIds = ids.splice(0, limit).join(',');
-            let url = Utilities.formatString('%s/%s/?ids=%s', API_BASE_URL, objType, strIds);
-            let response = get(url);
-            Combiner.push(fullObj, response);
-        }
-        return fullObj;
+    function hasTrigger() {
+        return getTrigger();
     }
 
-    function get(url) {
-        let response = fetch(url);
-        if (response) {
-            let keys = Object.keys(response);
-            if (keys.length == 1 && !response.items) {
-                response = response[keys[0]];
+    function getTrigger() {
+        let triggers = ScriptApp.getProjectTriggers();
+        for (let i = 0; i < triggers.length; i++) {
+            if (TRIGGER_FUCTION_NAME === triggers[i].getHandlerFunction()) {
+                return triggers[i];
             }
         }
-        return response;
+        return undefined;
     }
 
-    function post(url, payload) {
-        return fetch(url, {
-            method: 'post',
-            contentType: 'application/json',
-            payload: JSON.stringify(payload),
-        });
+    function createTrigger() {
+        ScriptApp.newTrigger(TRIGGER_FUCTION_NAME).timeBased().everyMinutes(TRIGGER_EVERY_MINUTES).create();
     }
 
-    function deleteRequest(url, payload) {
-        return fetch(url, {
-            method: 'delete',
-            contentType: 'application/json',
-            payload: JSON.stringify(payload),
-        });
+    function getSpotifyRecentTrackItemsFifty() {
+        let url = Utilities.formatString('%s/me/player/recently-played?limit=50', API_BASE_URL);
+        return Request.get(url).items;
     }
 
-    function put(url, payload) {
-        return fetch(url, {
-            method: 'put',
-            contentType: 'application/json',
-            payload: JSON.stringify(payload),
-        });
+    function get(limit) {
+        let tracks = [];
+        if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
+            tracks = Cache.read(BOTH_SOURCE_FILENAME);
+        } else if (ON_SPOTIFY_RECENT_TRACKS) {
+            tracks = Source.getRecentTracks(TRACK_ITEMS_LIMIT);
+        } else if (ON_LASTFM_RECENT_TRACKS) {
+            tracks = Cache.read(LASTFM_FILENAME);
+        }
+        if (limit) {
+            Selector.keepFirst(tracks, limit);
+        }
+        return tracks;
     }
 
-    function putImage(url, imgBytes) {
-        return fetch(url, {
-            method: 'put',
-            contentType: 'image/jpeg',
-            payload: Utilities.base64Encode(imgBytes),
-        });
+    function getSpotifyRecentTrackItems() {
+        return Cache.read(SPOTIFY_FILENAME);
     }
 
-    function putIds(url, ids, limit) {
-        for (let i = 0; i < Math.ceil(ids.length / limit); i++) {
-            put(url, { ids: ids.splice(0, limit) });
+    function updateRecentTracks() {
+        if (ON_SPOTIFY_RECENT_TRACKS) {
+            updateSpotifyRecentTracks();
+        }
+        if (ON_LASTFM_RECENT_TRACKS) {
+            updateLastfmRecentTracks();
+        }
+        if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
+            updateBothSourceRecentTracks();
         }
     }
 
-    function deleteIds(url, ids, limit) {
-        for (let i = 0; i < Math.ceil(ids.length / limit); i++) {
-            deleteRequest(url, { ids: ids.splice(0, limit) });
+    function updateSpotifyRecentTracks() {
+        let recentItems = getSpotifyRecentTrackItemsFifty();
+        let fileItems = Cache.read(SPOTIFY_FILENAME);
+        let endIndexNewPlayed = getIndexOfNewPlayed(recentItems, fileItems);
+        let newItems = recentItems.slice(0, endIndexNewPlayed);
+        if (newItems.length > 0) {
+            Cache.compressTracks(newItems);
+            Cache.append(SPOTIFY_FILENAME, newItems, 'begin', TRACK_ITEMS_LIMIT);
         }
     }
 
-    function fetch(url, params = {}) {
-        countRequest++;
-        params.headers = getHeaders();
-        params.muteHttpExceptions = true;
-        let response = UrlFetchApp.fetch(url, params);
-        if (response.getResponseCode() == 429) {
-            let seconds = response.getHeaders()['Retry-After'];
-            console.error('Превышен лимит запросов. Пауза', seconds, 'секунд и повторная отправка');
-            Utilities.sleep(seconds * 1000);
-            return fetch(url, params);
-        } else if (response.getResponseCode() > 300) {
-            console.error('Ошибка при запросе', response.getResponseCode(), url, response.getContentText(), params);
-            return;
-        }
-        return parseJSON(response);
-    }
-
-    function getHeaders() {
-        return {
-            Authorization: 'Bearer ' + Auth.getAccessToken(),
-        };
-    }
-
-    function parseJSON(response) {
-        let content = response.getContentText();
-        return content.length > 0 ? tryParseJSON(content) : { msg: 'Пустое тело ответа', status: response.getResponseCode() };
-    }
-
-    function tryParseJSON(content) {
-        try {
-            return JSON.parse(content);
-        } catch (e) {
-            console.error(e);
-            return [];
+    function updateLastfmRecentTracks() {
+        let recentTracks = Lastfm.getRecentTracks(LASTFM_LOGIN, LASTFM_RANGE_RECENT_TRACKS);
+        let fileTracks = Cache.read(LASTFM_FILENAME);
+        let endIndexNewPlayed = getIndexOfNewPlayed(recentTracks, fileTracks);
+        let newTracks = recentTracks.slice(0, endIndexNewPlayed);
+        if (newTracks.length > 0) {
+            Cache.compressTracks(newTracks);
+            Cache.append(LASTFM_FILENAME, newTracks, 'begin', TRACK_ITEMS_LIMIT);
         }
     }
 
-    function parseQuery(obj) {
-        return Object.keys(obj)
-            .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`)
-            .join('&');
+    function updateBothSourceRecentTracks() {
+        let spotifyTracks = Source.getRecentTracks(TRACK_ITEMS_LIMIT);
+        let lastfmTracks = Cache.read(LASTFM_FILENAME);
+        Combiner.push(spotifyTracks, lastfmTracks);
+        Filter.dedupTracks(spotifyTracks);
+        spotifyTracks.sort((x, y) => Order.compareDate(y.played_at, x.played_at));
+        Cache.write(BOTH_SOURCE_FILENAME, spotifyTracks);
+    }
+
+    function getIndexOfNewPlayed(recentItems, fileItems) {
+        if (fileItems.length == 0) {
+            return recentItems.length;
+        }
+
+        let lastPlayedTime = fileItems[0].played_at;
+        for (let i = recentItems.length - 1; i >= 0; i--) {
+            if (recentItems[i].played_at === lastPlayedTime) {
+                return i;
+            }
+        }
+        return recentItems.length;
+    }
+
+    function compress() {
+        if (ON_SPOTIFY_RECENT_TRACKS && Cache.copy(SPOTIFY_FILENAME)) {
+            compressFile(SPOTIFY_FILENAME);
+        }
+        if (ON_LASTFM_RECENT_TRACKS && Cache.copy(LASTFM_FILENAME)) {
+            compressFile(LASTFM_FILENAME);
+        }
+        if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS && Cache.copy(BOTH_SOURCE_FILENAME)) {
+            compressFile(BOTH_SOURCE_FILENAME);
+        }
+    }
+
+    function compressFile(filename) {
+        let tracks = Cache.read(filename);
+        Cache.compressTracks(tracks);
+        Cache.write(filename, tracks);
     }
 
     return {
+        updateRecentTracks: updateRecentTracks,
+        getRecentTrackItems: getSpotifyRecentTrackItems,
+        compress: compress,
         get: get,
-        getItemsByPath: getItemsByPath,
-        getItemsByNext: getItemsByNext,
-        getFullObjByIds: getFullObjByIds,
-        getCountRequest: getCountRequest,
-        post: post,
-        put: put,
-        putImage: putImage,
-        putIds: putIds,
-        deleteIds: deleteIds,
-        parseQuery: parseQuery,
-        parseJSON: parseJSON,
+    };
+})();
+
+const Combiner = (function () {
+    function replace(oldArray, newArray) {
+        oldArray.length = 0;
+        push(oldArray, newArray);
+    }
+
+    function push(sourceArray, ...additionalArray) {
+        additionalArray.forEach((array) => {
+            if (array.length < 1000) {
+                sourceArray.push.apply(sourceArray, array);
+            } else {
+                array.forEach((item) => sourceArray.push(item));
+            }
+        });
+        return sourceArray;
+    }
+
+    const Alternation = (function () {
+        function alternate(bound, ...arrays) {
+            let limitLength = getLimitLength(bound, arrays);
+            const resultArray = [];
+            for (let i = 0; i < limitLength; i++) {
+                const index = i;
+                arrays.forEach((item) => {
+                    if (item[index]) resultArray.push(item[index]);
+                });
+            }
+            return resultArray;
+        }
+
+        function getLimitLength(type, arrays) {
+            let lengthArray = arrays.map((item) => item.length);
+            let mathMethod = type == 'min' ? Math.min : Math.max;
+            return mathMethod(...lengthArray);
+        }
+
+        function mixin(xArray, yArray, xRow, yRow, toLimitOn) {
+            let resultArray = [];
+            let limitLength = getLimitLength('max', [xArray, yArray]);
+            for (let i = 0; i < limitLength; i++) {
+                let xStartIndex = i * xRow;
+                let xEndIndex = xStartIndex + xRow;
+                push(resultArray, xArray.slice(xStartIndex, xEndIndex));
+
+                let yStartIndex = i * yRow;
+                let yEndIndex = yStartIndex + yRow;
+                push(resultArray, yArray.slice(yStartIndex, yEndIndex));
+
+                if (toLimitOn && !(xArray[(i + 1) * xRow] && yArray[(i + 1) * yRow])) {
+                    break;
+                }
+            }
+            return resultArray;
+        }
+
+        return {
+            alternate: alternate,
+            mixin: mixin,
+        };
+    })();
+
+    return {
+        alternate: Alternation.alternate,
+        mixin: Alternation.mixin,
+        replace: replace,
+        push: push,
     };
 })();
 
@@ -1270,279 +914,6 @@ const Filter = (function () {
     };
 })();
 
-const Combiner = (function () {
-    function replace(oldArray, newArray) {
-        oldArray.length = 0;
-        push(oldArray, newArray);
-    }
-
-    function push(sourceArray, ...additionalArray) {
-        additionalArray.forEach((array) => {
-            if (array.length < 1000) {
-                sourceArray.push.apply(sourceArray, array);
-            } else {
-                array.forEach((item) => sourceArray.push(item));
-            }
-        });
-        return sourceArray;
-    }
-
-    const Alternation = (function () {
-        function alternate(bound, ...arrays) {
-            let limitLength = getLimitLength(bound, arrays);
-            const resultArray = [];
-            for (let i = 0; i < limitLength; i++) {
-                const index = i;
-                arrays.forEach((item) => {
-                    if (item[index]) resultArray.push(item[index]);
-                });
-            }
-            return resultArray;
-        }
-
-        function getLimitLength(type, arrays) {
-            let lengthArray = arrays.map((item) => item.length);
-            let mathMethod = type == 'min' ? Math.min : Math.max;
-            return mathMethod(...lengthArray);
-        }
-
-        function mixin(xArray, yArray, xRow, yRow, toLimitOn) {
-            let resultArray = [];
-            let limitLength = getLimitLength('max', [xArray, yArray]);
-            for (let i = 0; i < limitLength; i++) {
-                let xStartIndex = i * xRow;
-                let xEndIndex = xStartIndex + xRow;
-                push(resultArray, xArray.slice(xStartIndex, xEndIndex));
-
-                let yStartIndex = i * yRow;
-                let yEndIndex = yStartIndex + yRow;
-                push(resultArray, yArray.slice(yStartIndex, yEndIndex));
-
-                if (toLimitOn && !(xArray[(i + 1) * xRow] && yArray[(i + 1) * yRow])) {
-                    break;
-                }
-            }
-            return resultArray;
-        }
-
-        return {
-            alternate: alternate,
-            mixin: mixin,
-        };
-    })();
-
-    return {
-        alternate: Alternation.alternate,
-        mixin: Alternation.mixin,
-        replace: replace,
-        push: push,
-    };
-})();
-
-const Playlist = (function () {
-    const LIMIT_TRACKS = 11000;
-    const LIMIT_DESCRIPTION = 300;
-    const SIZE = ['500', '600', '700', '800', '900', '1000'];
-
-    function getById(playlistId) {
-        let url = Utilities.formatString('%s/playlists/%s', API_BASE_URL, playlistId);
-        return Request.get(url);
-    }
-
-    function getByName(playlistName, userId) {
-        let path = userId == null ? 'me/playlists?limit=50' : Utilities.formatString('users/%s/playlists?limit=50', userId);
-        let url = Utilities.formatString('%s/%s', API_BASE_URL, path);
-        let response = Request.get(url);
-        while (true) {
-            const name = playlistName;
-            let foundItem = response.items.find((item) => {
-                return item.name == name;
-            });
-            if (!foundItem && response.next) {
-                response = Request.get(response.next);
-            } else {
-                return foundItem;
-            }
-        }
-    }
-
-    function getDescription(tracks, limit = 5) {
-        let copyTracks = Selector.sliceCopy(tracks);
-        Filter.dedupArtists(copyTracks);
-        let artists = Selector.sliceRandom(copyTracks, limit);
-        let strArtists = artists.map((track) => track.artists[0].name).join(', ');
-        return Utilities.formatString('%s и не только', strArtists);
-    }
-
-    const getPlaylistArray = (function () {
-        let playlistsOfUsers = {};
-        return get;
-
-        function get(userId) {
-            let key = userId == null ? 'me' : userId;
-            if (playlistsOfUsers[key] == null) {
-                let path = userId == null ? 'me/playlists?limit=50' : Utilities.formatString('users/%s/playlists?limit=50', userId);
-                playlistsOfUsers[key] = Request.getItemsByPath(path);
-            }
-            return playlistsOfUsers[key];
-        }
-    })();
-
-    function create(payload) {
-        let url = Utilities.formatString('%s/users/%s/playlists', API_BASE_URL, User.getId());
-        return Request.post(url, payload);
-    }
-
-    function saveAsNew(data) {
-        let payload = createPayload(data);
-        let createdPlaylist = create(payload);
-
-        addTracks({
-            id: createdPlaylist.id,
-            tracks: data.tracks,
-        });
-
-        if (data.hasOwnProperty('randomCover')) {
-            setRandomCover(createdPlaylist.id);
-        }
-    }
-
-    function saveWithReplace(data) {
-        saveWithModify(replaceTracks, data);
-    }
-
-    function saveWithAppend(data) {
-        saveWithModify(addTracks, data);
-    }
-
-    function saveWithModify(modifyMethod, data) {
-        if (data.id) {
-            modifyMethod(data);
-            changeDetails(data);
-            changeCover(data);
-            return;
-        }
-
-        let response = getByName(data.name);
-        if (response == null) {
-            saveAsNew(data);
-        } else {
-            data.id = response.id;
-            saveWithModify(modifyMethod, data);
-        }
-    }
-
-    function addTracks(data) {
-        modifyTracks('post', data);
-    }
-
-    function replaceTracks(data) {
-        modifyTracks('put', data);
-    }
-
-    function modifyTracks(requestType, data) {
-        if (data.tracks.length > LIMIT_TRACKS) {
-            Selector.keepFirst(data.tracks, LIMIT_TRACKS);
-        }
-        let size = 100;
-        let uris = getTrackUris(data.tracks);
-        let count = Math.ceil(uris.length / size);
-        let url = Utilities.formatString('%s/playlists/%s/tracks', API_BASE_URL, data.id);
-        if (count == 0 && requestType == 'put') {
-            // Удалить треки в плейлисте
-            Request.put(url, { uris: [] });
-            return;
-        }
-
-        for (let i = 0; i < count; i++) {
-            let begin = i * size;
-            let end = begin + size;
-            let payload = { uris: uris.slice(begin, end) };
-            if (!data.toEnd && requestType === 'post') {
-                // добавлять треки вначало плейлиста со смещением begin, чтобы сохранить оригинальную сортировку
-                payload.position = begin;
-            }
-
-            if (requestType === 'post') {
-                // post-запрос добавляет треки в плейлист
-                Request.post(url, payload);
-            } else if (requestType === 'put') {
-                // put-запрос заменяет все треки плейлиста
-                Request.put(url, payload);
-                // сменить тип запроса, чтобы добавлять остальные треки
-                requestType = 'post';
-            }
-        }
-    }
-
-    function getTrackUris(tracks) {
-        return tracks.reduce((uris, track) => {
-            let uri = track.uri;
-            if (!uri) {
-                uri = Utilities.formatString('spotify:track:%s', track.id);
-            }
-            uris.push(uri);
-            return uris;
-        }, []);
-    }
-
-    function changeDetails(data) {
-        let url = Utilities.formatString('%s/playlists/%s', API_BASE_URL, data.id);
-        let payload = createPayload(data);
-        Request.put(url, payload);
-    }
-
-    function changeCover(data) {
-        if (data.randomCover == 'update' || (data.randomCover == 'once' && hasMosaicCover(data.id))) {
-            setRandomCover(data.id);
-        }
-    }
-
-    function hasMosaicCover(playlistId) {
-        let playlist = getById(playlistId);
-        return playlist.images.length > 0 && playlist.images[0].url.includes('mosaic');
-    }
-
-    function getRandomSize() {
-        let index = Math.floor(Math.random() * SIZE.length);
-        return SIZE[index];
-    }
-
-    function getRandomCover() {
-        let img = UrlFetchApp.fetch('https://picsum.photos/' + getRandomSize());
-        if (img.getAllHeaders()['content-length'] > 250000) {
-            return getRandomCover();
-        }
-        return img.getContent();
-    }
-
-    function setRandomCover(playlistId) {
-        let url = Utilities.formatString('%s/playlists/%s/images', API_BASE_URL, playlistId);
-        Request.putImage(url, getRandomCover());
-    }
-
-    function createPayload(data) {
-        let payload = {
-            name: data.name,
-            public: data.hasOwnProperty('public') ? data.public : true,
-        };
-        if (data.description) {
-            payload.description = Selector.sliceFirst(data.description, LIMIT_DESCRIPTION);
-        }
-        return payload;
-    }
-
-    return {
-        getById: getById,
-        getByName: getByName,
-        getDescription: getDescription,
-        getPlaylistArray: getPlaylistArray,
-        saveAsNew: saveAsNew,
-        saveWithReplace: saveWithReplace,
-        saveWithAppend: saveWithAppend,
-    };
-})();
-
 const Selector = (function () {
     function keepFirst(array, count) {
         Combiner.replace(array, sliceFirst(array, count));
@@ -1780,78 +1151,245 @@ const Order = (function () {
     };
 })();
 
-const getCachedTracks = (function () {
-    let cachedTracks = { meta: [], artists: {}, albums: {}, features: {} };
-    let uncachedTracks;
-    let _tracks, _args;
+const Playlist = (function () {
+    const LIMIT_TRACKS = 11000;
+    const LIMIT_DESCRIPTION = 300;
+    const SIZE = ['500', '600', '700', '800', '900', '1000'];
 
-    return function getCache(tracks, args) {
-        cache(tracks, args);
-        return cachedTracks;
-    };
-
-    function cache(tracks, args) {
-        _tracks = tracks;
-        _args = args;
-        uncachedTracks = { meta: [], artists: [], albums: [], features: [] };
-        findIdsOfUncachedObj();
-        cacheToFullObj();
+    function getById(playlistId) {
+        let url = Utilities.formatString('%s/playlists/%s', API_BASE_URL, playlistId);
+        return Request.get(url);
     }
 
-    function findIdsOfUncachedObj() {
-        _tracks.forEach((track) => {
-            if (_args.meta && !cachedTracks.meta[track.id] && isTrackSimplified(track)) {
-                uncachedTracks.meta.push(track.id);
-            }
-            if (_args.artist && !cachedTracks.artists[track.artists[0].id] && isArtistSimplified(track)) {
-                uncachedTracks.artists.push(track.artists[0].id);
-            }
-            if (_args.album && !cachedTracks.albums[track.album.id] && isAlbumSimplified(track)) {
-                uncachedTracks.albums.push(track.album.id);
-            }
-            if (_args.features && !cachedTracks.features[track.id]) {
-                uncachedTracks.features.push(track.id);
-            }
-        });
-    }
-
-    function cacheToFullObj() {
-        if (uncachedTracks.meta.length > 0) {
-            let fullTracks = Request.getFullObjByIds('tracks', uncachedTracks.meta, 50);
-            fullTracks.forEach((track) => (cachedTracks.meta[track.id] = track));
-        }
-        if (uncachedTracks.artists.length > 0) {
-            let fullArtists = Request.getFullObjByIds('artists', uncachedTracks.artists, 50);
-            fullArtists.forEach((artist) => (cachedTracks.artists[artist.id] = artist));
-        }
-        if (uncachedTracks.albums.length > 0) {
-            let fullAlbums = Request.getFullObjByIds('albums', uncachedTracks.albums, 20);
-            fullAlbums.forEach((album) => (cachedTracks.albums[album.id] = album));
-        }
-        if (uncachedTracks.features.length > 0) {
-            // limit = 100, но UrlFetchApp.fetch выдает ошибку о превышении длины URL
-            // При limit 85, длина URL для этого запроса 2001 символ
-            let features = Request.getFullObjByIds('audio-features', uncachedTracks.features, 85);
-            features.forEach((item) => {
-                if (item != null) {
-                    cachedTracks.features[item.id] = item;
-                }
+    function getByName(playlistName, userId) {
+        let path = userId == null ? 'me/playlists?limit=50' : Utilities.formatString('users/%s/playlists?limit=50', userId);
+        let url = Utilities.formatString('%s/%s', API_BASE_URL, path);
+        let response = Request.get(url);
+        while (true) {
+            const name = playlistName;
+            let foundItem = response.items.find((item) => {
+                return item.name == name;
             });
+            if (!foundItem && response.next) {
+                response = Request.get(response.next);
+            } else {
+                return foundItem;
+            }
         }
     }
 
-    // В объектах Track, Album, Artist Simplified нет ключа popularity
-    function isTrackSimplified(track) {
-        return !track.popularity;
+    function getDescription(tracks, limit = 5) {
+        let copyTracks = Selector.sliceCopy(tracks);
+        Filter.dedupArtists(copyTracks);
+        let artists = Selector.sliceRandom(copyTracks, limit);
+        let strArtists = artists.map((track) => track.artists[0].name).join(', ');
+        return Utilities.formatString('%s и не только', strArtists);
     }
 
-    function isArtistSimplified(track) {
-        return !track.artists[0].popularity;
+    const getPlaylistArray = (function () {
+        let playlistsOfUsers = {};
+        return get;
+
+        function get(userId) {
+            let key = userId == null ? 'me' : userId;
+            if (playlistsOfUsers[key] == null) {
+                let path = userId == null ? 'me/playlists?limit=50' : Utilities.formatString('users/%s/playlists?limit=50', userId);
+                playlistsOfUsers[key] = Request.getItemsByPath(path);
+            }
+            return playlistsOfUsers[key];
+        }
+    })();
+
+    function create(payload) {
+        let url = Utilities.formatString('%s/users/%s/playlists', API_BASE_URL, User.getId());
+        return Request.post(url, payload);
     }
 
-    function isAlbumSimplified(track) {
-        return !track.album.popularity;
+    function saveAsNew(data) {
+        let payload = createPayload(data);
+        let createdPlaylist = create(payload);
+
+        addTracks({
+            id: createdPlaylist.id,
+            tracks: data.tracks,
+        });
+
+        if (data.hasOwnProperty('randomCover')) {
+            setRandomCover(createdPlaylist.id);
+        }
     }
+
+    function saveWithReplace(data) {
+        saveWithModify(replaceTracks, data);
+    }
+
+    function saveWithAppend(data) {
+        saveWithModify(addTracks, data);
+    }
+
+    function saveWithModify(modifyMethod, data) {
+        if (data.id) {
+            modifyMethod(data);
+            changeDetails(data);
+            changeCover(data);
+            return;
+        }
+
+        let response = getByName(data.name);
+        if (response == null) {
+            saveAsNew(data);
+        } else {
+            data.id = response.id;
+            saveWithModify(modifyMethod, data);
+        }
+    }
+
+    function addTracks(data) {
+        modifyTracks('post', data);
+    }
+
+    function replaceTracks(data) {
+        modifyTracks('put', data);
+    }
+
+    function modifyTracks(requestType, data) {
+        if (data.tracks.length > LIMIT_TRACKS) {
+            Selector.keepFirst(data.tracks, LIMIT_TRACKS);
+        }
+        let size = 100;
+        let uris = getTrackUris(data.tracks);
+        let count = Math.ceil(uris.length / size);
+        let url = Utilities.formatString('%s/playlists/%s/tracks', API_BASE_URL, data.id);
+        if (count == 0 && requestType == 'put') {
+            // Удалить треки в плейлисте
+            Request.put(url, { uris: [] });
+            return;
+        }
+
+        for (let i = 0; i < count; i++) {
+            let begin = i * size;
+            let end = begin + size;
+            let payload = { uris: uris.slice(begin, end) };
+            if (!data.toEnd && requestType === 'post') {
+                // добавлять треки вначало плейлиста со смещением begin, чтобы сохранить оригинальную сортировку
+                payload.position = begin;
+            }
+
+            if (requestType === 'post') {
+                // post-запрос добавляет треки в плейлист
+                Request.post(url, payload);
+            } else if (requestType === 'put') {
+                // put-запрос заменяет все треки плейлиста
+                Request.put(url, payload);
+                // сменить тип запроса, чтобы добавлять остальные треки
+                requestType = 'post';
+            }
+        }
+    }
+
+    function getTrackUris(tracks) {
+        return tracks.reduce((uris, track) => {
+            let uri = track.uri;
+            if (!uri) {
+                uri = Utilities.formatString('spotify:track:%s', track.id);
+            }
+            uris.push(uri);
+            return uris;
+        }, []);
+    }
+
+    function changeDetails(data) {
+        let url = Utilities.formatString('%s/playlists/%s', API_BASE_URL, data.id);
+        let payload = createPayload(data);
+        Request.put(url, payload);
+    }
+
+    function changeCover(data) {
+        if (data.randomCover == 'update' || (data.randomCover == 'once' && hasMosaicCover(data.id))) {
+            setRandomCover(data.id);
+        }
+    }
+
+    function hasMosaicCover(playlistId) {
+        let playlist = getById(playlistId);
+        return playlist.images.length > 0 && playlist.images[0].url.includes('mosaic');
+    }
+
+    function getRandomSize() {
+        let index = Math.floor(Math.random() * SIZE.length);
+        return SIZE[index];
+    }
+
+    function getRandomCover() {
+        let img = UrlFetchApp.fetch('https://picsum.photos/' + getRandomSize());
+        if (img.getAllHeaders()['content-length'] > 250000) {
+            return getRandomCover();
+        }
+        return img.getContent();
+    }
+
+    function setRandomCover(playlistId) {
+        let url = Utilities.formatString('%s/playlists/%s/images', API_BASE_URL, playlistId);
+        Request.putImage(url, getRandomCover());
+    }
+
+    function createPayload(data) {
+        let payload = {
+            name: data.name,
+            public: data.hasOwnProperty('public') ? data.public : true,
+        };
+        if (data.description) {
+            payload.description = Selector.sliceFirst(data.description, LIMIT_DESCRIPTION);
+        }
+        return payload;
+    }
+
+    return {
+        getById: getById,
+        getByName: getByName,
+        getDescription: getDescription,
+        getPlaylistArray: getPlaylistArray,
+        saveAsNew: saveAsNew,
+        saveWithReplace: saveWithReplace,
+        saveWithAppend: saveWithAppend,
+    };
+})();
+
+const Library = (function () {
+    function followArtists(artists) {
+        modifyFollowArtists(Request.putIds, artists);
+    }
+
+    function unfollowArtists(artists) {
+        modifyFollowArtists(Request.deleteIds, artists);
+    }
+
+    function modifyFollowArtists(method, artists) {
+        let url = Utilities.formatString('%s/%s', API_BASE_URL, 'me/following?type=artist');
+        let ids = artists.map((artist) => artist.id);
+        method(url, ids, 50);
+    }
+
+    function saveFavoriteTracks(tracks) {
+        modifyFavoriteTracks(Request.putIds, tracks);
+    }
+
+    function deleteFavoriteTracks(tracks) {
+        modifyFavoriteTracks(Request.deleteIds, tracks);
+    }
+
+    function modifyFavoriteTracks(method, tracks) {
+        let url = Utilities.formatString('%s/%s', API_BASE_URL, 'me/tracks');
+        let ids = tracks.map((track) => track.id);
+        method(url, ids, 50);
+    }
+
+    return {
+        followArtists: followArtists,
+        unfollowArtists: unfollowArtists,
+        saveFavoriteTracks: saveFavoriteTracks,
+        deleteFavoriteTracks: deleteFavoriteTracks,
+    };
 })();
 
 const Lastfm = (function () {
@@ -2115,39 +1653,501 @@ const Yandex = (function () {
     };
 })();
 
-const Library = (function () {
-    function followArtists(artists) {
-        modifyFollowArtists(Request.putIds, artists);
+const Cache = (function () {
+    const FOLDER_NAME = 'Goofy Data';
+    const rootFolder = getRootFolder();
+
+    return {
+        read: read,
+        write: write,
+        append: append,
+        clear: clear,
+        copy: copy,
+        remove: remove,
+        rename: rename,
+        compressTracks: compressTracks,
+        compressArtists: compressArtists,
+    };
+
+    function read(filename) {
+        return getJSON(getFile(filename));
     }
 
-    function unfollowArtists(artists) {
-        modifyFollowArtists(Request.deleteIds, artists);
+    function append(filename, content, place = 'end', limit = 100000) {
+        let currentContent = read(filename);
+        if (place == 'begin') {
+            appendNewData(content, currentContent);
+        } else if (place == 'end') {
+            appendNewData(currentContent, content);
+        }
+
+        function appendNewData(xData, yData) {
+            Combiner.push(xData, yData);
+            Selector.keepFirst(xData, limit);
+            write(filename, xData);
+        }
     }
 
-    function modifyFollowArtists(method, artists) {
-        let url = Utilities.formatString('%s/%s', API_BASE_URL, 'me/following?type=artist');
-        let ids = artists.map((artist) => artist.id);
-        method(url, ids, 50);
+    function clear(filename) {
+        write(filename, []);
     }
 
-    function saveFavoriteTracks(tracks) {
-        modifyFavoriteTracks(Request.putIds, tracks);
+    function write(filename, content) {
+        let file = getFile(filename);
+        if (!file) {
+            file = createFile(filename);
+        }
+        file.setContent(JSON.stringify(content));
     }
 
-    function deleteFavoriteTracks(tracks) {
-        modifyFavoriteTracks(Request.deleteIds, tracks);
+    function copy(filename) {
+        let file = getFile(filename);
+        if (file) {
+            filename = 'Copy' + formatExtension(filename.split('.')[0]);
+            file.makeCopy().setName(filename);
+            return filename;
+        }
     }
 
-    function modifyFavoriteTracks(method, tracks) {
-        let url = Utilities.formatString('%s/%s', API_BASE_URL, 'me/tracks');
-        let ids = tracks.map((track) => track.id);
-        method(url, ids, 50);
+    function remove(filename) {
+        let file = getFile(filename);
+        if (file) {
+            file.setTrashed(true);
+        }
+    }
+
+    function rename(oldFilename, newFilename) {
+        let file = getFile(oldFilename);
+        if (file) {
+            file.setName(formatExtension(newFilename));
+        }
+    }
+
+    function getFile(filename) {
+        let files = getFileIterator(filename);
+        if (files.hasNext()) {
+            return files.next();
+        }
+    }
+
+    function createFile(filename) {
+        return rootFolder.createFile(formatExtension(filename), '');
+    }
+
+    function getFileIterator(filename) {
+        return rootFolder.getFilesByName(formatExtension(filename));
+    }
+
+    function getJSON(file) {
+        return file ? tryParseJSON(file) : [];
+    }
+
+    function tryParseJSON(file) {
+        try {
+            return JSON.parse(file.getBlob().getDataAsString());
+        } catch (e) {
+            console.error(e);
+            return [];
+        }
+    }
+
+    function getRootFolder() {
+        let folders = DriveApp.getFoldersByName(FOLDER_NAME);
+        if (folders.hasNext()) {
+            return folders.next();
+        }
+        return DriveApp.createFolder(FOLDER_NAME);
+    }
+
+    function formatExtension(filename) {
+        if (!filename.includes('.')) {
+            filename += '.json';
+        }
+        return filename;
+    }
+
+    function compressTracks(tracks) {
+        if (!(tracks && tracks.length > 0 && (tracks[0].album || tracks[0].track))) {
+            return;
+        }
+
+        tracks.forEach((item) => {
+            if (item.track) {
+                delete item.context;
+                item = item.track;
+            }
+
+            delete item.uri;
+            delete item.type;
+            delete item.track_number;
+            delete item.is_local;
+            delete item.preview_url;
+            delete item.href;
+            delete item.external_urls;
+            delete item.external_ids;
+            delete item.disc_number;
+            delete item.available_markets;
+
+            compressAlbum(item.album);
+            compressArtists(item.artists);
+        });
+    }
+
+    function compressAlbum(item) {
+        if (!item) {
+            return;
+        }
+
+        delete item.available_markets;
+        delete item.external_urls;
+        delete item.href;
+        delete item.images;
+        delete item.type;
+        delete item.uri;
+        compressArtists(item.artists);
+    }
+
+    function compressArtists(items) {
+        if (!items || items.length == 0) {
+            return;
+        }
+
+        items.forEach((item) => {
+            delete item.href;
+            delete item.type;
+            delete item.uri;
+            delete item.external_urls;
+            delete item.images;
+
+            if (item.followers && item.followers.total) {
+                item.followers = item.followers.total;
+            }
+        });
+    }
+})();
+
+const getCachedTracks = (function () {
+    let cachedTracks = { meta: [], artists: {}, albums: {}, features: {} };
+    let uncachedTracks;
+    let _tracks, _args;
+
+    return function getCache(tracks, args) {
+        cache(tracks, args);
+        return cachedTracks;
+    };
+
+    function cache(tracks, args) {
+        _tracks = tracks;
+        _args = args;
+        uncachedTracks = { meta: [], artists: [], albums: [], features: [] };
+        findIdsOfUncachedObj();
+        cacheToFullObj();
+    }
+
+    function findIdsOfUncachedObj() {
+        _tracks.forEach((track) => {
+            if (_args.meta && !cachedTracks.meta[track.id] && isTrackSimplified(track)) {
+                uncachedTracks.meta.push(track.id);
+            }
+            if (_args.artist && !cachedTracks.artists[track.artists[0].id] && isArtistSimplified(track)) {
+                uncachedTracks.artists.push(track.artists[0].id);
+            }
+            if (_args.album && !cachedTracks.albums[track.album.id] && isAlbumSimplified(track)) {
+                uncachedTracks.albums.push(track.album.id);
+            }
+            if (_args.features && !cachedTracks.features[track.id]) {
+                uncachedTracks.features.push(track.id);
+            }
+        });
+    }
+
+    function cacheToFullObj() {
+        if (uncachedTracks.meta.length > 0) {
+            let fullTracks = Request.getFullObjByIds('tracks', uncachedTracks.meta, 50);
+            fullTracks.forEach((track) => (cachedTracks.meta[track.id] = track));
+        }
+        if (uncachedTracks.artists.length > 0) {
+            let fullArtists = Request.getFullObjByIds('artists', uncachedTracks.artists, 50);
+            fullArtists.forEach((artist) => (cachedTracks.artists[artist.id] = artist));
+        }
+        if (uncachedTracks.albums.length > 0) {
+            let fullAlbums = Request.getFullObjByIds('albums', uncachedTracks.albums, 20);
+            fullAlbums.forEach((album) => (cachedTracks.albums[album.id] = album));
+        }
+        if (uncachedTracks.features.length > 0) {
+            // limit = 100, но UrlFetchApp.fetch выдает ошибку о превышении длины URL
+            // При limit 85, длина URL для этого запроса 2001 символ
+            let features = Request.getFullObjByIds('audio-features', uncachedTracks.features, 85);
+            features.forEach((item) => {
+                if (item != null) {
+                    cachedTracks.features[item.id] = item;
+                }
+            });
+        }
+    }
+
+    // В объектах Track, Album, Artist Simplified нет ключа popularity
+    function isTrackSimplified(track) {
+        return !track.popularity;
+    }
+
+    function isArtistSimplified(track) {
+        return !track.artists[0].popularity;
+    }
+
+    function isAlbumSimplified(track) {
+        return !track.album.popularity;
+    }
+})();
+
+const Auth = (function () {
+    const SCOPE = [
+        'user-library-read',
+        'user-library-modify',
+        'user-read-recently-played',
+        'user-top-read',
+        'user-follow-read',
+        'user-follow-modify',
+        'playlist-read-private',
+        'playlist-modify-private',
+        'playlist-modify-public',
+        'ugc-image-upload',
+    ];
+    const service = createService();
+
+    if (VERSION != KeyValue.VERSION) {
+        UserProperties.setProperty('VERSION', VERSION);
+        sendVersion(VERSION);
     }
 
     return {
-        followArtists: followArtists,
-        unfollowArtists: unfollowArtists,
-        saveFavoriteTracks: saveFavoriteTracks,
-        deleteFavoriteTracks: deleteFavoriteTracks,
+        reset: reset,
+        hasAccess: hasAccess,
+        getAccessToken: getAccessToken,
+        displayAuthPage: displayAuthPage,
+        displayAuthResult: displayAuthResult,
+    };
+
+    function createService() {
+        return OAuth2.createService('spotify')
+            .setAuthorizationBaseUrl('https://accounts.spotify.com/authorize')
+            .setTokenUrl('https://accounts.spotify.com/api/token')
+            .setClientId(CLIENT_ID)
+            .setClientSecret(CLIENT_SECRET)
+            .setCallbackFunction('displayAuthResult')
+            .setPropertyStore(UserProperties)
+            .setScope(SCOPE)
+            .setParam('response_type', 'code')
+            .setParam('redirect_uri', getRedirectUri());
+    }
+
+    function displayAuthResult(request) {
+        let isAuthorized = service.handleCallback(request);
+        HtmlService.createHtmlOutput(isAuthorized ? 'Успешно!' : 'Отказано в доступе');
+    }
+
+    function displayAuthPage() {
+        let template = '<a href="%s" target="_blank">Authorize</a><p>%s</p>';
+        let html = Utilities.formatString(template, service.getAuthorizationUrl(), getRedirectUri());
+        return HtmlService.createHtmlOutput(html);
+    }
+
+    function getRedirectUri() {
+        let scriptId = encodeURIComponent(ScriptApp.getScriptId());
+        let template = 'https://script.google.com/macros/d/%s/usercallback';
+        return Utilities.formatString(template, scriptId);
+    }
+
+    function sendVersion(value) {
+        UrlFetchApp.fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw/formResponse', {
+            method: 'post',
+            muteHttpExceptions: true,
+            payload: {
+                'entry.1598003363': value,
+                'entry.1594601658': ScriptApp.getScriptId(),
+            },
+        });
+    }
+
+    function hasAccess() {
+        return service.hasAccess();
+    }
+
+    function getAccessToken() {
+        return service.getAccessToken();
+    }
+
+    function reset() {
+        service.reset();
+    }
+})();
+
+const User = (function () {
+    const USER_ID = 'userId';
+    return {
+        getId: getId,
+    };
+
+    function getId() {
+        return KeyValue[USER_ID] ? KeyValue[USER_ID] : setId();
+    }
+
+    function setId() {
+        KeyValue[USER_ID] = getUser().id;
+        UserProperties.setProperty(USER_ID, KeyValue[USER_ID]);
+        return KeyValue[USER_ID];
+    }
+
+    function getUser() {
+        return Request.get(API_BASE_URL + '/me');
+    }
+})();
+
+const Request = (function () {
+    let countRequest = 0;
+    function getCountRequest() {
+        return countRequest;
+    }
+
+    function getItemsByPath(urlPath, limitRequestCount) {
+        let url = Utilities.formatString('%s/%s', API_BASE_URL, urlPath);
+        let response = get(url);
+        return getItemsByNext(response, limitRequestCount);
+    }
+
+    function getItemsByNext(response, limitRequestCount = 220) {
+        let items = response.items;
+        let count = 1;
+        while (response.next != null && count != limitRequestCount) {
+            response = get(response.next);
+            Combiner.push(items, response.items);
+            count++;
+        }
+        return items;
+    }
+
+    function getFullObjByIds(objType, ids, limit) {
+        let requestCount = Math.ceil(ids.length / limit);
+        let fullObj = [];
+        for (let i = 0; i < requestCount; i++) {
+            let strIds = ids.splice(0, limit).join(',');
+            let url = Utilities.formatString('%s/%s/?ids=%s', API_BASE_URL, objType, strIds);
+            let response = get(url);
+            Combiner.push(fullObj, response);
+        }
+        return fullObj;
+    }
+
+    function get(url) {
+        let response = fetch(url);
+        if (response) {
+            let keys = Object.keys(response);
+            if (keys.length == 1 && !response.items) {
+                response = response[keys[0]];
+            }
+        }
+        return response;
+    }
+
+    function post(url, payload) {
+        return fetch(url, {
+            method: 'post',
+            contentType: 'application/json',
+            payload: JSON.stringify(payload),
+        });
+    }
+
+    function deleteRequest(url, payload) {
+        return fetch(url, {
+            method: 'delete',
+            contentType: 'application/json',
+            payload: JSON.stringify(payload),
+        });
+    }
+
+    function put(url, payload) {
+        return fetch(url, {
+            method: 'put',
+            contentType: 'application/json',
+            payload: JSON.stringify(payload),
+        });
+    }
+
+    function putImage(url, imgBytes) {
+        return fetch(url, {
+            method: 'put',
+            contentType: 'image/jpeg',
+            payload: Utilities.base64Encode(imgBytes),
+        });
+    }
+
+    function putIds(url, ids, limit) {
+        for (let i = 0; i < Math.ceil(ids.length / limit); i++) {
+            put(url, { ids: ids.splice(0, limit) });
+        }
+    }
+
+    function deleteIds(url, ids, limit) {
+        for (let i = 0; i < Math.ceil(ids.length / limit); i++) {
+            deleteRequest(url, { ids: ids.splice(0, limit) });
+        }
+    }
+
+    function fetch(url, params = {}) {
+        countRequest++;
+        params.headers = getHeaders();
+        params.muteHttpExceptions = true;
+        let response = UrlFetchApp.fetch(url, params);
+        if (response.getResponseCode() == 429) {
+            let seconds = response.getHeaders()['Retry-After'];
+            console.error('Превышен лимит запросов. Пауза', seconds, 'секунд и повторная отправка');
+            Utilities.sleep(seconds * 1000);
+            return fetch(url, params);
+        } else if (response.getResponseCode() > 300) {
+            console.error('Ошибка при запросе', response.getResponseCode(), url, response.getContentText(), params);
+            return;
+        }
+        return parseJSON(response);
+    }
+
+    function getHeaders() {
+        return {
+            Authorization: 'Bearer ' + Auth.getAccessToken(),
+        };
+    }
+
+    function parseJSON(response) {
+        let content = response.getContentText();
+        return content.length > 0 ? tryParseJSON(content) : { msg: 'Пустое тело ответа', status: response.getResponseCode() };
+    }
+
+    function tryParseJSON(content) {
+        try {
+            return JSON.parse(content);
+        } catch (e) {
+            console.error(e);
+            return [];
+        }
+    }
+
+    function parseQuery(obj) {
+        return Object.keys(obj)
+            .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`)
+            .join('&');
+    }
+
+    return {
+        get: get,
+        getItemsByPath: getItemsByPath,
+        getItemsByNext: getItemsByNext,
+        getFullObjByIds: getFullObjByIds,
+        getCountRequest: getCountRequest,
+        post: post,
+        put: put,
+        putImage: putImage,
+        putIds: putIds,
+        deleteIds: deleteIds,
+        parseQuery: parseQuery,
+        parseJSON: parseJSON,
     };
 })();
