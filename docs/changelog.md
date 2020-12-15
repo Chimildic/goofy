@@ -5,8 +5,10 @@
 Подробности о работе функций смотреть в [справочнике](/func)
 
 ## Версия 1.3.1
-- Новые функции для модуля Cache: [rename](/func?id=rename), [remove](/func?id=remove), [clear](/func?id=clear), [compressArtists](/func?id=compressArtists)
-- Багфикс: get с 404 прерывал скрипт
+- Новые функции для модуля Cache: [rename](/func?id=rename), [remove](/func?id=remove), [clear](/func?id=clear), [compressArtists](/func?id=compressArtists).
+- Стали публичными функции: [getArtists](/func?id=getartists), [getArtistsAlbums](/func?id=getartistsalbums), [getAlbumTracks](/func?id=getalbumtracks).
+- Функция getTracksArtists **переименована** в getArtistsTracks.
+- Багфикс: get с 404 прерывал скрипт.
 
 ## Версия 1.3.0
 - Обновлены: инструкция и видео по установке.

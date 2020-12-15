@@ -270,7 +270,67 @@ let tracks = Source.getRecomTracks({
 });
 ```
 
-## getTracksArtists
+## getArtists
+
+Возвращает массив исполнителей согласно заданным `paramsArtist`.
+
+Аргументы
+- (объект) `paramsArtist` - перечень критериев отбора исполнителей. Объект соответствует описанию из [getArtistsTracks](/func?id=getartiststracks) в части испонителя.
+
+Пример 1 - Получить массив отслеживаемых исполнителей
+```js
+let artists = Source.getArtists({
+    followed_include: true,
+});
+```
+
+## getArtistsAlbums
+
+Возвращает массив со всеми альбомами указанных исполнителей.
+
+Аргументы
+- (массив) `artists` - массив исполнителей
+- (объект) `paramsAlbum` - перечень критериев отбора альбомов. Объект соответствует описанию из [getArtistsTracks](/func?id=getartiststracks) в части альбома.
+
+Пример 1 - Получить массив синглов одного исполнителя
+```js
+let artist = Source.getArtists({
+    followed_include: false,
+    include: [ 
+        { id: 'abc', name: 'Avril' }, 
+    ],
+});
+let albums = Source.getArtistsAlbums(artist, {
+    groups: 'single',
+});
+```
+
+## getAlbumTracks
+
+Возвращает массив треков указанного альбома.
+
+Аргументы
+- (объект) `album` - объект одного альбома
+- (число) `limit` - если указано, выбирает треки случайно до указанного количества.
+
+Пример 1 - Получить треки первого альбома массива
+```js
+let albums = Source.getArtistsAlbums(artists, {
+    groups: 'album',
+});
+let albumTracks = Source.getAlbumTracks(albums[0]);
+```
+
+Пример 2 - Получить треки из всех альбомов
+```js
+let albums = Source.getArtistsAlbums(artists, {
+    groups: 'album',
+});
+let tracks = [];
+albums.forEach((album) => Combiner.push(tracks, Source.getAlbumTracks(album)));
+```
+
+## getArtistsTracks
 
 Возвращает массив треков исполнителей согласно заданным `params`.
 
@@ -323,7 +383,7 @@ let tracks = Source.getRecomTracks({
 
 Пример 1 - Получить треки из синглов отслеживаемых исполнителей, вышедших за последнюю неделю включая сегодня. Исключить несколько исполнителей.
 ```js
-let tracks = Source.getTracksArtists({
+let tracks = Source.getArtistsTracks({
     artist: {
         followed_include: true,
         exclude:  [
@@ -340,7 +400,7 @@ let tracks = Source.getTracksArtists({
 
 Пример 2 - Получить треки из альбомов и синглов за неделю десяти отслеживаемых исполнителей, выбранных случайным образом. Исполнители с не более чем 10 тысячами подписчиков. Только один трек из альбома.
 ```js
-let tracks = Source.getTracksArtists({
+let tracks = Source.getArtistsTracks({
     artist: {
         followed_include: true,
         artist_limit: 10,
@@ -356,7 +416,7 @@ let tracks = Source.getTracksArtists({
 
 Пример 3 - Получить треки из альбомов и синглов указанных исполнителей
 ```js
-let tracks = Source.getTracksArtists({
+let tracks = Source.getArtistsTracks({
     artist: {
         followed_include: false,
         include:  [

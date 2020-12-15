@@ -30,12 +30,15 @@ const Source = (function () {
         getTopTracks: getTopTracks,
         getRecentTracks: getRecentTracks,
         getFollowedTracks: getFollowedTracks,
-        getTracksArtists: getTracksArtists,
         getSavedTracks: getSavedTracks,
         getSavedAlbumTracks: getSavedAlbumTracks,
         getRecomTracks: getRecomTracks,
         searchTrack: searchTrack,
         searchArtist: searchArtist,
+        getArtists: getArtists,
+        getArtistsAlbums: getArtistsAlbums,
+        getArtistsTracks: getArtistsTracks,
+        getAlbumTracks: getAlbumTracks,
     };
 
     function getTopTracks(timeRange) {
@@ -68,7 +71,7 @@ const Source = (function () {
         return getTracks(Selector.sliceRandom(items, params.limit));
     }
 
-    function getTracksArtists(params) {
+    function getArtistsTracks(params) {
         let artists = getArtists(params.artist);
         params.album = params.album || {};
         let albums = getArtistsAlbums(artists, params.album);
