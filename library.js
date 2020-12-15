@@ -1641,10 +1641,11 @@ const Cache = (function () {
     };
 
     function read(filename) {
-        return getJSON(getFile(filename));
+        return tryParseJSON(getFile(filename));
     }
 
     function append(filename, content, place = 'end', limit = 100000) {
+        if (!content || content.length == 0) return;
         let currentContent = read(filename);
         if (place == 'begin') {
             appendNewData(content, currentContent);
@@ -1709,15 +1710,12 @@ const Cache = (function () {
         return rootFolder.getFilesByName(formatExtension(filename));
     }
 
-    function getJSON(file) {
-        return file ? tryParseJSON(file) : [];
-    }
-
     function tryParseJSON(file) {
+        if (!file) return [];
         try {
             return JSON.parse(file.getBlob().getDataAsString());
         } catch (e) {
-            console.error(e);
+            console.error(e, e.stack, file.getBlob().getDataAsString());
             return [];
         }
     }
@@ -2096,7 +2094,7 @@ const Request = (function () {
         try {
             return JSON.parse(content);
         } catch (e) {
-            console.error(e);
+            console.error(e, e.stack, content);
             return [];
         }
     }
