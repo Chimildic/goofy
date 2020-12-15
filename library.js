@@ -1,12 +1,13 @@
 const VERSION = '1.3.1';
-const keyValue = PropertiesService.getUserProperties().getProperties();
-const CLIENT_ID = keyValue.CLIENT_ID;
-const CLIENT_SECRET = keyValue.CLIENT_SECRET;
-const LASTFM_API_KEY = keyValue.LASTFM_API_KEY;
-const ON_SPOTIFY_RECENT_TRACKS = 'true' === keyValue.ON_SPOTIFY_RECENT_TRACKS;
-const ON_LASTFM_RECENT_TRACKS = 'true' === keyValue.ON_LASTFM_RECENT_TRACKS;
-const LASTFM_RANGE_RECENT_TRACKS = parseInt(keyValue.LASTFM_RANGE_RECENT_TRACKS);
-const LASTFM_LOGIN = keyValue.LASTFM_LOGIN;
+const UserProperties = PropertiesService.getUserProperties();
+const KeyValue = UserProperties.getProperties();
+const CLIENT_ID = KeyValue.CLIENT_ID;
+const CLIENT_SECRET = KeyValue.CLIENT_SECRET;
+const LASTFM_API_KEY = KeyValue.LASTFM_API_KEY;
+const ON_SPOTIFY_RECENT_TRACKS = 'true' === KeyValue.ON_SPOTIFY_RECENT_TRACKS;
+const ON_LASTFM_RECENT_TRACKS = 'true' === KeyValue.ON_LASTFM_RECENT_TRACKS;
+const LASTFM_RANGE_RECENT_TRACKS = parseInt(KeyValue.LASTFM_RANGE_RECENT_TRACKS);
+const LASTFM_LOGIN = KeyValue.LASTFM_LOGIN;
 const API_BASE_URL = 'https://api.spotify.com/v1';
 
 function doGet() {
@@ -28,13 +29,13 @@ const User = (function () {
     };
 
     function getId() {
-        return keyValue[USER_ID] ? keyValue[USER_ID] : setId();
+        return KeyValue[USER_ID] ? KeyValue[USER_ID] : setId();
     }
 
     function setId() {
-        keyValue[USER_ID] = getUser().id;
-        PropertiesService.getUserProperties().setProperty(USER_ID, keyValue[USER_ID]);
-        return keyValue[USER_ID];
+        KeyValue[USER_ID] = getUser().id;
+        UserProperties.setProperty(USER_ID, KeyValue[USER_ID]);
+        return KeyValue[USER_ID];
     }
 
     function getUser(){
@@ -57,13 +58,9 @@ const Auth = (function () {
     ];
     const _service = createService();
 
-    if (VERSION != keyValue.VERSION) {
+    if (VERSION != KeyValue.VERSION) {
         setVersion();
         sendVersion();
-    }
-
-    function reset() {
-        _service.reset();
     }
 
     function createService() {
@@ -73,7 +70,7 @@ const Auth = (function () {
             .setClientId(CLIENT_ID)
             .setClientSecret(CLIENT_SECRET)
             .setCallbackFunction('displayAuthResult')
-            .setPropertyStore(PropertiesService.getUserProperties())
+            .setPropertyStore(UserProperties)
             .setScope(SCOPE.join(' '))
             .setParam('response_type', 'code')
             .setParam('redirect_uri', getRedirectUri());
@@ -108,8 +105,12 @@ const Auth = (function () {
         return _service.getAccessToken();
     }
 
+    function reset() {
+        _service.reset();
+    }
+
     function setVersion() {
-        PropertiesService.getUserProperties().setProperty('VERSION', VERSION);
+        UserProperties.setProperty('VERSION', VERSION);
     }
 
     function sendVersion() {
