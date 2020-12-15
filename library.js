@@ -1515,7 +1515,7 @@ const Lastfm = (function () {
         let params = { method: 'get', muteHttpExceptions: true };
         let response = UrlFetchApp.fetch(url, params);
         if (response.getResponseCode() >= 300) {
-            console.error('Ошибка', response.getResponseCode(), response);
+            console.error('Ошибка', response.getResponseCode(), Request.parseJSON(response));
             Utilities.sleep(2000);
             console.info('Попытка повторной отправки');
             return UrlFetchApp.fetch(url, params);
