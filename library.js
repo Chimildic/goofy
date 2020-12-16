@@ -1492,13 +1492,13 @@ const Lastfm = (function () {
     }
 
     function requestGet(url) {
-        let params = { method: 'get', muteHttpExceptions: true };
-        let response = CustomUrlFetchApp.fetch(url, params);
+        let response = CustomUrlFetchApp.fetch(url);
         if (response.getResponseCode() >= 300) {
-            console.error('Ошибка', response.getResponseCode(), Request.parseJSON(response));
+            console.error(response.getResponseCode(), Request.parseJSON(response));
             Utilities.sleep(2000);
-            console.info('Попытка повторной отправки');
-            return CustomUrlFetchApp.fetch(url, params);
+            response = CustomUrlFetchApp.fetch(url);
+            console.info('Повторная отправка дала результат:', response.getContentText());
+            return response;
         }
         return response;
     }
@@ -1910,7 +1910,6 @@ const Auth = (function () {
     function sendVersion(value) {
         CustomUrlFetchApp.fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw/formResponse', {
             method: 'post',
-            muteHttpExceptions: true,
             payload: {
                 'entry.1598003363': value,
                 'entry.1594601658': ScriptApp.getScriptId(),
@@ -1956,16 +1955,14 @@ const CustomUrlFetchApp = (function () {
     let countRequest = 0;
     return {
         fetch: fetch,
-        getCountRequest: getCountRequest,
+        getCountRequest: () => countRequest,
     };
 
     function fetch(url, params) {
         countRequest++;
+        params = params || {};
+        params.muteHttpExceptions = true;
         return UrlFetchApp.fetch(url, params);
-    }
-
-    function getCountRequest() {
-        return countRequest;
     }
 })();
 
@@ -2056,15 +2053,14 @@ const Request = (function () {
 
     function fetch(url, params = {}) {
         params.headers = getHeaders();
-        params.muteHttpExceptions = true;
         let response = CustomUrlFetchApp.fetch(url, params);
         if (response.getResponseCode() == 429) {
             let seconds = response.getHeaders()['Retry-After'];
-            console.error('Превышен лимит запросов. Пауза', seconds, 'секунд и повторная отправка');
+            console.error('Ошибка 429. Пауза', seconds, 'секунд');
             Utilities.sleep(seconds * 1000);
             return fetch(url, params);
         } else if (response.getResponseCode() > 300) {
-            console.error('Ошибка при запросе', response.getResponseCode(), url, response.getContentText(), params);
+            console.error(url, response.getResponseCode(), response.getContentText(), params);
             return;
         }
         return parseJSON(response);
