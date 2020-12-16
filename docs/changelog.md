@@ -8,6 +8,7 @@
 - Новые функции для модуля Cache: [rename](/func?id=rename), [remove](/func?id=remove), [clear](/func?id=clear), [compressArtists](/func?id=compressArtists).
 - Стали публичными функции: [getArtists](/func?id=getartists), [getArtistsAlbums](/func?id=getartistsalbums), [getAlbumTracks](/func?id=getalbumtracks).
 - Функция getTracksArtists **переименована** в getArtistsTracks.
+- Повторный вызов getSavedTracks в том же скрипте отправляет новые запросы к Spotify, вместо возврата ранее полученного. Используйте [sliceCopy](/func?id=slicecopy) для создания копии.
 - Багфикс: spotify get с 404 прерывал скрипт; lastfm с ошибками 500+ прерывал скрипт.
 
 ## Версия 1.3.0
