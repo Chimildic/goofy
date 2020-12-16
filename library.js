@@ -1272,7 +1272,7 @@ const Playlist = (function () {
     }
 
     function getRandomCover() {
-        let img = UrlFetchApp.fetch('https://picsum.photos/' + getRandomSize());
+        let img = CustomUrlFetchApp.fetch('https://picsum.photos/' + getRandomSize());
         if (img.getAllHeaders()['content-length'] > 250000) {
             return getRandomCover();
         }
@@ -1493,12 +1493,12 @@ const Lastfm = (function () {
 
     function requestGet(url) {
         let params = { method: 'get', muteHttpExceptions: true };
-        let response = UrlFetchApp.fetch(url, params);
+        let response = CustomUrlFetchApp.fetch(url, params);
         if (response.getResponseCode() >= 300) {
             console.error('Ошибка', response.getResponseCode(), Request.parseJSON(response));
             Utilities.sleep(2000);
             console.info('Попытка повторной отправки');
-            return UrlFetchApp.fetch(url, params);
+            return CustomUrlFetchApp.fetch(url, params);
         }
         return response;
     }
@@ -1531,7 +1531,7 @@ const Yandex = (function () {
 
     function getLibrary(queryObj) {
         let url = YANDEX_LIBRARY + Request.parseQuery(queryObj);
-        return Request.parseJSON(UrlFetchApp.fetch(url));
+        return Request.parseJSON(CustomUrlFetchApp.fetch(url));
     }
 
     function multisearchArtists(items) {
@@ -1558,7 +1558,7 @@ const Yandex = (function () {
 
     function getPlaylist(queryObj) {
         let url = YANDEX_PLAYLIST + Request.parseQuery(queryObj);
-        return Request.parseJSON(UrlFetchApp.fetch(url));
+        return Request.parseJSON(CustomUrlFetchApp.fetch(url));
     }
 
     function multisearchTracks(items) {
@@ -1908,7 +1908,7 @@ const Auth = (function () {
     }
 
     function sendVersion(value) {
-        UrlFetchApp.fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw/formResponse', {
+        CustomUrlFetchApp.fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw/formResponse', {
             method: 'post',
             muteHttpExceptions: true,
             payload: {
@@ -1952,12 +1952,24 @@ const User = (function () {
     }
 })();
 
-const Request = (function () {
+const CustomUrlFetchApp = (function () {
     let countRequest = 0;
+    return {
+        fetch: fetch,
+        getCountRequest: getCountRequest,
+    };
+
+    function fetch(url, params) {
+        countRequest++;
+        return UrlFetchApp.fetch(url, params);
+    }
+
     function getCountRequest() {
         return countRequest;
     }
+})();
 
+const Request = (function () {
     function getItemsByPath(urlPath, limitRequestCount) {
         let url = Utilities.formatString('%s/%s', API_BASE_URL, urlPath);
         let response = get(url);
@@ -2043,10 +2055,9 @@ const Request = (function () {
     }
 
     function fetch(url, params = {}) {
-        countRequest++;
         params.headers = getHeaders();
         params.muteHttpExceptions = true;
-        let response = UrlFetchApp.fetch(url, params);
+        let response = CustomUrlFetchApp.fetch(url, params);
         if (response.getResponseCode() == 429) {
             let seconds = response.getHeaders()['Retry-After'];
             console.error('Превышен лимит запросов. Пауза', seconds, 'секунд и повторная отправка');
@@ -2090,7 +2101,7 @@ const Request = (function () {
         getItemsByPath: getItemsByPath,
         getItemsByNext: getItemsByNext,
         getFullObjByIds: getFullObjByIds,
-        getCountRequest: getCountRequest,
+        getCountRequest: CustomUrlFetchApp.getCountRequest,
         post: post,
         put: put,
         putImage: putImage,
