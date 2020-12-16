@@ -1085,7 +1085,7 @@ const Order = (function () {
 
         function isCorrectRow(item, startIndex, endIndex) {
             for (let i = startIndex; i <= endIndex; i++) {
-                if (original[i] && original[i].id === item.id) {
+                if (original[i] && original[i].artists[0].id === item.artists[0].id) {
                     return false;
                 }
             }
