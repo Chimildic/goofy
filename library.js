@@ -648,7 +648,7 @@ const Filter = (function () {
     }
 
     function matchExceptRu(tracks) {
-        matchExcept(tracks, '^[а-яА-Я0-9]+');
+        matchExcept(tracks, '^[а-яА-Я]+');
     }
 
     function matchLatinOnly(tracks) {
@@ -687,7 +687,7 @@ const Filter = (function () {
 
     function extractTracksAbs(items, startDate, endDate) {
         if (!items) {
-            console.error('items is null', items);
+            console.error('Filter.extractTracksAbs: items is null');
             return;
         }
 

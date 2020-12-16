@@ -847,7 +847,7 @@ Filter.match(tracks, 'cover|live', true);
 Аргументы
 - (массив) `tracks` - массив треков.
 
-Аналогично [matchExcept](/func?id=matchexcept) с аргументом `strRegex = '^[а-яА-Я0-9]+'`
+Аналогично [matchExcept](/func?id=matchexcept) с аргументом `strRegex = '^[а-яА-Я]+'`
 
 ## matchLatinOnly
 
