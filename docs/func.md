@@ -1,10 +1,10 @@
 # Список функций
 
-# **Source**
+## Source
 
 Источник получения треков Spotify
 
-## getTracks
+### getTracks
 
 Возвращает массив треков из одного и более плейлистов
 
@@ -51,7 +51,7 @@ let tracks = Source.getTracks([
 ]);
 ```
 
-## getTracksRandom
+### getTracksRandom
 
 Возвращает массив треков из одного и более плейлистов. Плейлисты выбираются случайным образом. 
 
@@ -78,7 +78,7 @@ let playlistArray = [
 let tracks = Source.getTracksRandom(playlistArray, 2);
 ```
 
-## getPlaylistTracks
+### getPlaylistTracks
 
 Возвращает массив треков из одного плейлиста. Аналогично [getTracks](/func?id=gettracks) с одним плейлистом.
 
@@ -92,7 +92,7 @@ let tracks = Source.getTracksRandom(playlistArray, 2);
 let tracks = Source.getPlaylistTracks('Заблокированный треки', 'abcdef');
 ```
 
-## getTopTracks
+### getTopTracks
 
 Возвращает массив треков топа прослушиваний за выбранный период. До 90 треков.
 
@@ -117,7 +117,7 @@ let tracks = Source.getTopTracks('short');
 let tracks = Source.getTopTracks('long');
 ```
 
-## getRecentTracks
+### getRecentTracks
 
 Возвращает массив треков недавней истории прослушивай. Источник только Spotify. Сортировка от свежих к более старым. Подробнее [здесь](/desc?id=История-прослушиваний).
 
@@ -134,7 +134,7 @@ let tracks = Source.getRecentTracks();
 let tracks = Source.getRecentTracks(1000);
 ```
 
-## getFollowedTracks
+### getFollowedTracks
 
 Возвращает массив треков отслеживаемых плейлистов и/или личных плейлистов указанного пользователя.
 
@@ -194,7 +194,7 @@ let tracks = Source.getFollowedTracks({
 
 > ❗️ Следует избегать пользователей со слишком большим количеством плейлистов. Например, `glennpmcdonald` почти с 5 тысячами плейлистов. Ограничение связано с квотой на выполнение в Apps Script. За отведенное время неудастся получить такой объем треков. Подробнее в [описании ограничений](/desc?id=Ограничения).
 
-## getSavedTracks
+### getSavedTracks
 
 Возвращает массив любимых треков (лайков).
 
@@ -207,7 +207,7 @@ let tracks = Source.getFollowedTracks({
 let tracks = Source.getSavedTracks();
 ```
 
-## getSavedAlbumTracks
+### getSavedAlbumTracks
 
 Возвращает массив треков со всех сохранненых альбомов. Можно задать выбор альбомов случайным образом.
 
@@ -224,7 +224,7 @@ let tracks = Source.getSavedAlbumTracks(3);
 let tracks = Source.getSavedAlbumTracks();
 ```
 
-## getRecomTracks
+### getRecomTracks
 
 Возвращает массив рекомендованных треков по заданным параметрам. До 100 треков.
 
@@ -274,7 +274,7 @@ let tracks = Source.getRecomTracks({
 });
 ```
 
-## getArtists
+### getArtists
 
 Возвращает массив исполнителей согласно заданным `paramsArtist`.
 
@@ -288,7 +288,7 @@ let artists = Source.getArtists({
 });
 ```
 
-## getArtistsAlbums
+### getArtistsAlbums
 
 Возвращает массив со всеми альбомами указанных исполнителей.
 
@@ -309,7 +309,7 @@ let albums = Source.getArtistsAlbums(artist, {
 });
 ```
 
-## getAlbumTracks
+### getAlbumTracks
 
 Возвращает массив треков указанного альбома.
 
@@ -334,7 +334,7 @@ let tracks = [];
 albums.forEach((album) => Combiner.push(tracks, Source.getAlbumTracks(album)));
 ```
 
-## getArtistsTracks
+### getArtistsTracks
 
 Возвращает массив треков исполнителей согласно заданным `params`.
 
@@ -434,11 +434,11 @@ let tracks = Source.getArtistsTracks({
 });
 ```
 
-# **RecentTracks**
+## RecentTracks
 
 Источник истории прослушиваний 
 
-## get
+### get
 
 Возвращает массив треков истории прослушиваний в зависимости от [параметров](/guide?id=Параметры)
 
@@ -451,7 +451,7 @@ let tracks = Source.getArtistsTracks({
 | `ON_LASTFM_RECENT_TRACKS` | История прослушиваний только Lastfm.   |
 | `ON_SPOTIFY_RECENT_TRACKS` и `ON_LASTFM_RECENT_TRACKS` | Объединение обоих источников с удалением дубликатов треков. |
 
-## compress
+### compress
 
 Сжимает треки в существующих накопительных файлах истории прослушиваний в зависимости от [параметров](/guide?id=Параметры). Предварительно создает копию файла.
 
@@ -459,11 +459,11 @@ let tracks = Source.getArtistsTracks({
 
 > Используется для совместимости с прошлыми версиями библиотеки. Достаточно одного выполнения, чтобы сжать файлы истории прослушиваний. Новые треки историии сжимаются автоматически.
 
-# **Combiner**
+## Combiner
 
 Объединение треков разных источников 
 
-## push
+### push
 
 Добавить в конец первого массива все элементы второго массива и так далее.
 
@@ -488,7 +488,7 @@ Combiner.push(firstArray, secondeArray, thirdArray);
 // теперь в firstArray 145 треков
 ```
 
-## mixin
+### mixin
 
 Возвращает новый массив, в котором чередуются элементы двух массивов в заданной пропорции.
 
@@ -523,7 +523,7 @@ let savedTracks = Source.getSavedTracks();
 let resultArray = Combiner.mixin(tracks, savedTracks, 5, 1, true);
 ```
 
-## alternate
+### alternate
 
 Возвращает новый массив, в котором чередуются элементы массивов источников.
 
@@ -550,11 +550,11 @@ let resultArray = Combiner.alternate('min', topTracks, savedTracks);
 // результат содержит 40 треков
 ```
 
-# **Filter**
+## Filter
 
 Отсеивание треков по разным признакам
 
-## removeTracks
+### removeTracks
 
 Удаляет из `sourceArray` треки, которые есть в `removedArray`. Совпадение определяется по `id` трека или по названию трека вместе с исполнителем.
 
@@ -570,7 +570,7 @@ let removedArray = Source.getSavedTracks();
 Filter.removeTracks(sourceArray, removedArray);
 ```
 
-## removeArtists
+### removeArtists
 
 Удаляет из `sourceArray` треки исполнителей, которые есть в `removedArray`. Совпадение определяется по `id` основого исполнителя трека.
 
@@ -586,7 +586,7 @@ let removedArray = Source.getSavedTracks();
 Filter.removeArtists(sourceArray, removedArray);
 ```
 
-## dedupTracks
+### dedupTracks
 
 Удаляет дубликаты треков по `id` и `name`.
 
@@ -599,7 +599,7 @@ let tracks = Source.getTracks(playlistArray);
 Filter.dedupTracks(tracks);
 ```
 
-## dedupArtists
+### dedupArtists
 
 Удаляет дубликаты основных исполнителей по `id`. То есть если у трека несколько исполнителей, выбирается первый в списке. Обычно он главный. В результате, массив содержит по одному треку каждого исполнителя.
 
@@ -612,7 +612,7 @@ let tracks = Source.getTracks(playlistArray);
 Filter.dedupArtists(tracks);
 ```
 
-## getDateRel
+### getDateRel
 
 Возвращает дату со смещением в днях относительно сегодня.
 
@@ -622,7 +622,7 @@ Filter.dedupArtists(tracks);
 
 Пример в шаблоне [любимо и забыто](/template?id=Любимо-и-забыто).
 
-## rangeDateRel
+### rangeDateRel
 
 Оставить только треки, добавленные за указанный период относительно сегодня.
 
@@ -663,7 +663,7 @@ Filter.rangeDateRel(tracks);
 // аналогично Filter.rangeDateRel(tracks, 0, 0);
 ```
 
-## rangeDateAbs
+### rangeDateAbs
 
 Оставить только треки, добавленные за указанный абсолютный период.
 
@@ -703,7 +703,7 @@ let endDate = new Date();
 Filter.rangeDateAbs(tracks, startDate, endDate);
 ```
 
-## rangeTracks
+### rangeTracks
 
 Оставляет только треки, кототорые удовлетворяют условиям `args`. Треки непрошедшие проверку удаляются из оригинального массива `tracks`. 
 
@@ -793,7 +793,7 @@ Filter.rangeTracks(tracks, {
 });
 ```
 
-## getLastOutRange
+### getLastOutRange
 
 Получить новый массив с треками, которые не прошли последнюю проверку функции [rangeTracks](/func?id=rangetracks).
 
@@ -806,7 +806,7 @@ Filter.rangeTracks(tracks, args);
 let outRangeTracks = Filter.getLastOutRange();
 ```
 
-## match
+### match
 
 Оставляет только треки, которые удовлетворяют условию `strRegex` по названию трека и альбома.
 
@@ -821,7 +821,7 @@ let tracks = Source.getTracks(playlistArray);
 Filter.match(tracks, 'cover|live', true);
 ```
 
-## matchExcept
+### matchExcept
 
 Оставляет только треки, которые **не** удовлетворяют условию `strRegex` по названию трека и альбома.
 
@@ -831,7 +831,7 @@ Filter.match(tracks, 'cover|live', true);
 
 Аналогично [match](/func?id=match) с аргументом `invert = true`
 
-## matchExceptMix
+### matchExceptMix
 
 Удаляет треки, содержащие `mix` и `club`.
 
@@ -840,7 +840,7 @@ Filter.match(tracks, 'cover|live', true);
 
 Аналогично [matchExcept](/func?id=matchexcept) с аргументом `strRegex = 'mix|club'`
 
-## matchExceptRu
+### matchExceptRu
 
 Удаляет треки, содержащие кириллицу.
 
@@ -849,7 +849,7 @@ Filter.match(tracks, 'cover|live', true);
 
 Аналогично [matchExcept](/func?id=matchexcept) с аргументом `strRegex = '^[а-яА-Я]+'`
 
-## matchLatinOnly
+### matchLatinOnly
 
 Оставляет треки, которые содержат названия только на латинице. То есть удаляет иероглифы, кириллицу и прочее. 
 
@@ -858,7 +858,7 @@ Filter.match(tracks, 'cover|live', true);
 
 Аналогично [match](/func?id=match) с аргументом `strRegex = '^[a-zA-Z0-9]+'`
 
-## matchOriginalOnly
+### matchOriginalOnly
 
 Удаляет неоригинальные версии треков.
 
@@ -867,11 +867,11 @@ Filter.match(tracks, 'cover|live', true);
 
 Аналогично [matchExcept](/func?id=matchexcept) с аргументом `strRegex = 'mix|club|radio|piano|acoustic|edit|live|version|cover'`
 
-# **Selector**
+## Selector
 
 Отбор количества треков по позиции
 
-## keepFirst / sliceFirst
+### keepFirst / sliceFirst
 
 Изменяет / возвращает массив, состоящий из первых `count` элементов массива `array`.
 
@@ -890,7 +890,7 @@ let tracks = Source.getTracks(playlistArray);
 tracks = Selector.sliceFirst(tracks, 100);
 ```
 
-## keepLast / sliceLast
+### keepLast / sliceLast
 
 Изменяет / возвращает массив, состоящий из последних `count` элементов массива `array`.
 
@@ -904,7 +904,7 @@ let tracks = Source.getTracks(playlistArray);
 tracks = Selector.sliceLast(tracks, 100);
 ```
 
-## keepAllExceptFirst / sliceAllExceptFirst
+### keepAllExceptFirst / sliceAllExceptFirst
 
 Изменяет / возвращает массив, состоящий из всех элементов массива `array` кроме `skipCount` первых.
 
@@ -918,7 +918,7 @@ let tracks = Source.getTracks(playlistArray);
 tracks = Selector.sliceAllExceptFirst(tracks, 10);
 ```
 
-## keepAllExceptLast / sliceAllExceptLast
+### keepAllExceptLast / sliceAllExceptLast
 
 Изменяет / возвращает массив, состоящий из всех элементов массива `array` кроме `skipCount` последних.
 
@@ -932,7 +932,7 @@ let tracks = Source.getTracks(playlistArray);
 tracks = Selector.sliceAllExceptLast(tracks, 10);
 ```
 
-## keepRandom / sliceRandom
+### keepRandom / sliceRandom
 
 Изменяет / возвращает массив, состоящий из случайно отобранных элементов исходного массива.
 
@@ -946,7 +946,7 @@ let tracks = Source.getTracks(playlistArray);
 tracks = Selector.sliceRandom(tracks, 20);
 ```
 
-## keepNoLongerThan / sliceNoLongerThan
+### keepNoLongerThan / sliceNoLongerThan
 
 Изменяет / возвращает массив треков с общей длительностью не более, чем `minutes` минут.
 
@@ -960,7 +960,7 @@ let tracks = Source.getTracks(playlistArray);
 tracks = Selector.sliceNoLongerThan(tracks, 60);
 ```
 
-## sliceCopy
+### sliceCopy
 
 Возвращает новый массив, который является копией исходного массива.
 
@@ -975,7 +975,7 @@ let tracks = Source.getTracks(playlistArray);
 let tracksCopy = Selector.sliceCopy(tracks);
 ```
 
-## isWeekend
+### isWeekend
 
 Возвращает булево значение: `true` если сегодня суббота или пятница и `false` если нет.
 
@@ -990,7 +990,7 @@ if (Selector.isWeekend()){
 }
 ```
 
-## isDayOfWeekRu
+### isDayOfWeekRu
 
 Возвращает булево значение: `true` если сегодня день недели `strDay` и `false` если нет. Значение дня недели кириллицей.
 
@@ -1008,7 +1008,7 @@ if (Selector.isDayOfWeekRu('понедельник')){
 }
 ```
 
-## isDayOfWeek
+### isDayOfWeek
 
 Возвращает булево значение: `true` если сегодня день недели `strDay` и `false` если нет.
 
@@ -1025,11 +1025,11 @@ if (Selector.isDayOfWeek('friday')){
 }
 ```
 
-# **Order**
+## Order
 
 Cортировка треков
 
-## sort
+### sort
 
 Сортирует оригинальный массив по заданному ключу.
 
@@ -1059,7 +1059,7 @@ Order.sort(tracks, 'artist.popularity', 'desc');
 Order.sort(tracks, 'features.energy', 'asc');
 ```
 
-## shuffle
+### shuffle
 
 Перемешивает элементы массива случайным образом.
 
@@ -1086,7 +1086,7 @@ let tracks = Source.getTracks(playlistArray);
 Order.shuffle(tracks);
 ```
 
-## reverse
+### reverse
 
 Обратная сортировка. Первый элемент станет последним и наоборот.
 
@@ -1110,7 +1110,7 @@ let tracks = Source.getTracks(playlistArray);
 Order.reverse(tracks);
 ```
 
-## separateArtists
+### separateArtists
 
 Сортировка, при которой соблюдается минимальный отступ между одним и тем же исполнителем. Треки, которые неудалось разместить будут исключены.
 
@@ -1140,11 +1140,11 @@ let tracks = Source.getTracks(playlistArray);
 Order.separateArtists(tracks, 2);
 ```
 
-# **Playlist**
+## Playlist
 
 Cоздание или обновление плейлиста
 
-## saveAsNew
+### saveAsNew
 
 Создает плейлист. Каждый раз новый.
 
@@ -1179,7 +1179,7 @@ Playlist.saveAsNew({
 });
 ```
 
-## saveWithReplace
+### saveWithReplace
 
 Заменяет треки плейлиста. Обновляет остальные данные (название, описание). Если плейлиста еще нет, создает новый.
 
@@ -1219,7 +1219,7 @@ Playlist.saveWithReplace({
 });
 ```
 
-## saveWithAppend
+### saveWithAppend
 
 Добавляет треки к уже имеющимся в плейлисте. Обновляет остальные данные (название, описание). Если плейлиста еще нет, создает новый.
 
@@ -1251,7 +1251,7 @@ Playlist.saveWithAppend({
 
 > ❗️ Если обновить название плейлиста без указания `id` будет создан новый плейлист. Потому что поиск не найден плейлист с новым названием.
 
-## getDescription
+### getDescription
 
 Возвращает строку вида: `Исполнитель 1, Исполнитель 2... и не только`.
 
@@ -1270,11 +1270,11 @@ Playlist.saveWithReplace({
 });
 ```
 
-# **Library**
+## Library
 
 Действия над любимыми треками и подписками на исполнителей
 
-## followArtists
+### followArtists
 
 Подписаться на исполнителей
 
@@ -1283,7 +1283,7 @@ Playlist.saveWithReplace({
 
 Пример в [Yandex.getArtists](/func?id=getartists)
 
-## unfollowArtists
+### unfollowArtists
 
 Отписаться от исполнителей
 
@@ -1292,7 +1292,7 @@ Playlist.saveWithReplace({
 
 Пример аналогичен [Yandex.getArtists](/func?id=getartists). Только использовать `unfollowArtists`.
 
-## saveFavoriteTracks
+### saveFavoriteTracks
 
 Добавить треки в любимые (поставить лайк)
 
@@ -1307,7 +1307,7 @@ Filter.removeTracks(yandexTracks, savedTracks);
 Library.saveFavoriteTracks(yandexTracks);
 ```
 
-## deleteFavoriteTracks
+### deleteFavoriteTracks
 
 Удалить треки из любимых (снять лайки)
 
@@ -1320,11 +1320,11 @@ let savedTracks = Source.getSavedTracks();
 Library.deleteFavoriteTracks(savedTracks);
 ```
 
-# **Lastfm**
+## Lastfm
 
 Модуль по работе с сервисом Last fm
 
-## getRecentTracks
+### getRecentTracks
 
 Возвращает массив недавно прослушанных треков пользователя `user`, ограниченного количеством `limit`. 
 
@@ -1341,7 +1341,7 @@ Library.deleteFavoriteTracks(savedTracks);
 let tracks = Lastfm.getRecentTracks('login', 200);
 ```
 
-## getLovedTracks
+### getLovedTracks
 
 Возвращает массив любимых треков пользователя `user`, ограниченного количеством `limit`. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1).
 
@@ -1354,7 +1354,7 @@ let tracks = Lastfm.getRecentTracks('login', 200);
 let tracks = Lastfm.getLovedTracks('login', 200);
 ```
 
-## getTopTracks
+### getTopTracks
 
 Возвращает массив с топом треков по заданному периоду. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1).
 
@@ -1379,7 +1379,7 @@ let tracks = Lastfm.getTopTracks({
 });
 ```
 
-## getMixStation
+### getMixStation
 
 Возвращает массив треков из радио last fm `Микс`. Содержит ранее заскробленные треки и рекомендации last fm. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1).
 
@@ -1392,7 +1392,7 @@ let tracks = Lastfm.getTopTracks({
 let tracks = Lastfm.getMixStation('login', 2);
 ```
 
-## getLibraryStation
+### getLibraryStation
 
 Возвращает массив треков из радио last fm `Библиотека`. Содержит только заскробленные ранее треки. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1).
 
@@ -1405,7 +1405,7 @@ let tracks = Lastfm.getMixStation('login', 2);
 let tracks = Lastfm.getLibraryStation('login', 2);
 ```
 
-## getRecomStation
+### getRecomStation
 
 Возвращает массив треков из радио last fm `Рекомендации`. Содержит только рекомендации last fm. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1).
 
@@ -1419,7 +1419,7 @@ let tracks = Lastfm.getRecomStation('login', 2);
 ```
 
 
-## getNeighboursStation
+### getNeighboursStation
 
 Возвращает массив треков из радио last fm `Соседи`. Содержит треки, которые слушают пользователи last fm со схожими вам музыкальными вкусами. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1).
 
@@ -1432,7 +1432,7 @@ let tracks = Lastfm.getRecomStation('login', 2);
 let tracks = Lastfm.getNeighboursStation('login', 2);
 ```
 
-## removeRecentTracks
+### removeRecentTracks
 
 Удаляет из массива треков `sourceArray` историю недавно прослушанных `limit` треков пользователя `lastfmUser`. Совпадение определяется по названию трека и исполнителя. Требуется [дополнительная настройка](/install?id=Настройка-lastfm).
 
@@ -1451,7 +1451,7 @@ Playlist.saveAsNew({
 });
 ```
 
-## removeRecentArtists
+### removeRecentArtists
 Удаляет из массива треков `sourceArray` историю недавно прослушанных `limit` треков пользователя `lastfmUser`. Совпадение определяется только по имени исполнителя. Требуется [дополнительная настройка](/install?id=Настройка-lastfm).
 
 Аргументы
@@ -1461,11 +1461,11 @@ Playlist.saveAsNew({
 
 Пример как у [removeRecentTracks](/func?id=removerecenttracks)
 
-# **Yandex**
+## Yandex
 
 Модуль по работе с Яндекс.Музыкой
 
-## getTracks
+### getTracks
 
 Возвращает массив треков плейлиста Яндекс.Музыки. Поиск аналога в базе Spotify по имени исполнителя и названию трека. Внимание на [ограничения](/desc?id=Ограничения). Один трек = один запрос поиска. Указанный пользователь должен иметь публично доступную библиотеку. Настройка находится [здесь](https://music.yandex.ru/settings/other). Кроме того, сам плейлист должен быть публичным (у них есть локальная приватность).
 
@@ -1489,7 +1489,7 @@ Playlist.saveAsNew({
  });
 ```
 
-## getArtists
+### getArtists
 
 Возвращает массив исполнителей из подписок Яндекс.Музыки указанного пользователя. Поиск аналога в базе Spotify по имени исполнителя. Внимание на [ограничения](/desc?id=Ограничения). Один исполнитель = один запрос поиска. Указанный пользователь должен иметь публично доступную библиотеку. Настройка находится [здесь](https://music.yandex.ru/settings/other).
 
@@ -1506,13 +1506,13 @@ let artists = Yandex.getArtists('owner', 50);
 Library.followArtists(artists);
 ```
 
-# **Cache**
+## Cache
 
 Модуль для сохранения массивов на Google Диск
 
 > В случае отсутствия требуемой функциональности, можете реализовать свои функции через [DriveApp](https://developers.google.com/apps-script/reference/drive).
 
-## read
+### read
 
 Возвращает массив из файла. 
 
@@ -1528,7 +1528,7 @@ Playlist.saveAsNew({
 });
 ```
 
-## write
+### write
 
 Записывает данные в файл. Если файла не существует, создает его. Если файл есть, перезаписывает содержимое.
 
@@ -1542,7 +1542,7 @@ let tracks = Sourct.getSavedTracks();
 Cache.write('liked.json', tracks);
 ```
 
-## append
+### append
 
 Записывает данные в файл, добавляя новые данные. Если файла не существует, создает его. 
 
@@ -1564,7 +1564,7 @@ let tracks = Source.getPlaylistTracks('playlist name', 'id');
 Cache.append('myfile.json', tracks);
 ```
 
-## clear
+### clear
 
 Перезаписывает содержимое файла пустым массивом.
 
@@ -1576,7 +1576,7 @@ Cache.append('myfile.json', tracks);
 Cache.clear('filename.json');
 ```
 
-## copy
+### copy
 
 Создает копию файла. Возвращает имя созданной копии.
 
@@ -1590,7 +1590,7 @@ filename = Cache.copy(filename);
 let tracks = Cache.read(filename);
 ```
 
-## remove
+### remove
 
 Переносит файл в корзину. По правилам Google Диска, объекты в корзине удаляются через 30 дней.
 
@@ -1602,7 +1602,7 @@ let tracks = Cache.read(filename);
 Cache.remove('filename.json');
 ```
 
-## rename
+### rename
 
 Переименовывает файл.
 
@@ -1617,7 +1617,7 @@ Cache.remove('filename.json');
 Cache.rename('filename.json', 'newname.json');
 ```
 
-## compressTracks
+### compressTracks
 
 Удаляет излишние данные о треках. Позволяет существенно сократить объем файла.
 
@@ -1631,7 +1631,7 @@ Cache.compressTracks(tracks);
 Cache.write('myfile.json', tracks);
 ```
 
-## compressArtists
+### compressArtists
 
 Удаляет излишние данные о исполнителе.
 
