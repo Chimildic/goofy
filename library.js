@@ -516,7 +516,7 @@ const Combiner = (function () {
                 let yEndIndex = yStartIndex + yRow;
                 push(resultArray, yArray.slice(yStartIndex, yEndIndex));
 
-                if (toLimitOn && !(xArray[(i + 1) * xRow] && yArray[(i + 1) * yRow])) {
+                if (toLimitOn && !(xArray[xEndIndex + xRow - 1] && yArray[yEndIndex + yRow - 1])) {
                     break;
                 }
             }
