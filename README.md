@@ -12,8 +12,6 @@
 
 ## Помощь
 
-Если вы нашли баг или столкнулись с ошибкой, [создайте новый запрос](https://github.com/Chimildic/goofy/issues).
-
-Если вам нужна помощь с составлением алгоритма, напишите на [форум 4PDA](https://4pda.ru/forum/index.php?showtopic=715234&st=11840).
+Для помощи с алгоритмом или ошибкой, создайте новую тему [здесь](https://github.com/Chimildic/goofy/discussions).
 
 [☕ Поддержать проект](https://yoomoney.ru/to/410014208620686)
