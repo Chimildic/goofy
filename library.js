@@ -203,7 +203,7 @@ const Source = (function () {
             Combiner.push(albums, SpotifyRequest.getItemsByPath(path));
         });
         albums = albums.filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, paramsAlbum.release_date));
-        return Selector.keepRandom(albums, paramsAlbum.album_limit);
+        return Selector.sliceRandom(albums, paramsAlbum.album_limit);
     }
 
     function getAlbumTracks(album, limit) {
