@@ -469,6 +469,13 @@ const RecentTracks = (function () {
 })();
 
 const Combiner = (function () {
+    return {
+        alternate: alternate,
+        mixin: mixin,
+        replace: replace,
+        push: push,
+    };
+
     function replace(oldArray, newArray) {
         oldArray.length = 0;
         push(oldArray, newArray);
@@ -485,56 +492,44 @@ const Combiner = (function () {
         return sourceArray;
     }
 
-    const Alternation = (function () {
-        function alternate(bound, ...arrays) {
-            let limitLength = getLimitLength(bound, arrays);
-            const resultArray = [];
-            for (let i = 0; i < limitLength; i++) {
-                const index = i;
-                arrays.forEach((item) => {
-                    if (item[index]) resultArray.push(item[index]);
-                });
+    function alternate(bound, ...arrays) {
+        let limitLength = getLimitLength(bound, arrays);
+        const resultArray = [];
+        for (let i = 0; i < limitLength; i++) {
+            const index = i;
+            arrays.forEach((item) => {
+                if (item[index]) resultArray.push(item[index]);
+            });
+        }
+        return resultArray;
+    }
+
+    function mixin(xArray, yArray, xRow, yRow, toLimitOn) {
+        let resultArray = [];
+        let limitLength = getLimitLength('max', [xArray, yArray]);
+        for (let i = 0; i < limitLength; i++) {
+            let xNextEndIndex = pushPack(xArray, i, xRow);
+            let yNextEndIndex = pushPack(yArray, i, yRow);
+            let hasNextPack = xArray[xNextEndIndex] && yArray[yNextEndIndex];
+            if (toLimitOn && !hasNextPack) {
+                break;
             }
-            return resultArray;
         }
+        return resultArray;
 
-        function getLimitLength(type, arrays) {
-            let lengthArray = arrays.map((item) => item.length);
-            let mathMethod = type == 'min' ? Math.min : Math.max;
-            return mathMethod(...lengthArray);
+        function pushPack(array, step, inRow){
+            let startIndex = step * inRow;
+            let endIndex = startIndex + inRow;
+            push(resultArray, array.slice(startIndex, endIndex));
+            return endIndex + inRow - 1;
         }
+    }
 
-        function mixin(xArray, yArray, xRow, yRow, toLimitOn) {
-            let resultArray = [];
-            let limitLength = getLimitLength('max', [xArray, yArray]);
-            for (let i = 0; i < limitLength; i++) {
-                let xStartIndex = i * xRow;
-                let xEndIndex = xStartIndex + xRow;
-                push(resultArray, xArray.slice(xStartIndex, xEndIndex));
-
-                let yStartIndex = i * yRow;
-                let yEndIndex = yStartIndex + yRow;
-                push(resultArray, yArray.slice(yStartIndex, yEndIndex));
-
-                if (toLimitOn && !(xArray[xEndIndex + xRow - 1] && yArray[yEndIndex + yRow - 1])) {
-                    break;
-                }
-            }
-            return resultArray;
-        }
-
-        return {
-            alternate: alternate,
-            mixin: mixin,
-        };
-    })();
-
-    return {
-        alternate: Alternation.alternate,
-        mixin: Alternation.mixin,
-        replace: replace,
-        push: push,
-    };
+    function getLimitLength(type, arrays) {
+        let lengthArray = arrays.map((item) => item.length);
+        let mathMethod = type == 'min' ? Math.min : Math.max;
+        return mathMethod(...lengthArray);
+    }
 })();
 
 const RangeTracks = (function () {
