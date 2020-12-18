@@ -45,7 +45,7 @@ const Source = (function () {
         timeRange = isValidTimeRange(timeRange) ? timeRange : 'medium';
         // Баг Spotify: https://community.spotify.com/t5/Spotify-for-Developers/Bug-with-offset-for-method-quot-Get-User-s-Top-Artists-and/td-p/5032362
         let path = Utilities.formatString('me/top/tracks?limit=%s&time_range=%s_term', 45, timeRange);
-        return Request.getItemsByPath(path, 2);
+        return SpotifyRequest.getItemsByPath(path, 2);
     }
 
     function isValidTimeRange(timeRange) {
@@ -55,9 +55,9 @@ const Source = (function () {
     function getRecomTracks(queryObj) {
         queryObj.limit = queryObj.limit > 100 ? 100 : queryObj.limit || 100;
         queryObj.market = queryObj.market || 'from_token';
-        let query = Request.parseQuery(queryObj);
+        let query = CustomUrlFetchApp.parseQuery(queryObj);
         let url = Utilities.formatString('%s/recommendations?%s', API_BASE_URL, query);
-        return Request.get(url).tracks;
+        return SpotifyRequest.get(url).tracks;
     }
 
     function getRecentTracks(limit = 200) {
@@ -105,11 +105,11 @@ const Source = (function () {
 
     function getArtistsById(artistsArray) {
         let ids = artistsArray.map((item) => item.id);
-        return Request.getFullObjByIds('artists', ids, 50);
+        return SpotifyRequest.getFullObjByIds('artists', ids, 50);
     }
 
     function getFollowedArtists() {
-        return Request.getItemsByPath('me/following?type=artist&limit=50');
+        return SpotifyRequest.getItemsByPath('me/following?type=artist&limit=50');
     }
 
     function getArtistsAlbums(artists, paramsAlbum) {
@@ -117,7 +117,7 @@ const Source = (function () {
         let groups = paramsAlbum.groups || 'album,single';
         artists.forEach((artist) => {
             let path = Utilities.formatString('artists/%s/albums?country=from_token&include_groups=%s&limit=50', artist.id, groups);
-            Combiner.push(albums, Request.getItemsByPath(path));
+            Combiner.push(albums, SpotifyRequest.getItemsByPath(path));
         });
         albums = albums.filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, paramsAlbum.release_date));
         return Selector.keepRandom(albums, paramsAlbum.album_limit);
@@ -125,7 +125,7 @@ const Source = (function () {
 
     function getAlbumTracks(album, limit) {
         let path = Utilities.formatString('albums/%s/tracks', album.id);
-        let items = Request.getItemsByPath(path);
+        let items = SpotifyRequest.getItemsByPath(path);
         Selector.keepRandom(items, limit);
         items.forEach((item) => (item.album = album));
         return items;
@@ -144,7 +144,7 @@ const Source = (function () {
     }
 
     function getSavedAlbumItems() {
-        let albumItems = Request.getItemsByPath('me/albums?limit=50', 400);
+        let albumItems = SpotifyRequest.getItemsByPath('me/albums?limit=50', 400);
         return albumItems.map((item) => {
             let album = item.album;
             album.added_at = item.added_at;
@@ -208,13 +208,13 @@ const Source = (function () {
         if (!obj || !obj.tracks || !obj.tracks.items) {
             return [];
         } else if (obj.tracks.total > 100) {
-            return Request.getItemsByNext(obj.tracks);
+            return SpotifyRequest.getItemsByNext(obj.tracks);
         }
         return obj.tracks.items;
     }
 
     function getSavedTracks() {
-        let items = Request.getItemsByPath('me/tracks?limit=50', 400);
+        let items = SpotifyRequest.getItemsByPath('me/tracks?limit=50', 400);
         return extractTracks(items);
     }
 
@@ -246,13 +246,13 @@ const Source = (function () {
         let url = Utilities.formatString(
             '%s/search/?%s',
             API_BASE_URL,
-            Request.parseQuery({
+            CustomUrlFetchApp.parseQuery({
                 q: text,
                 type: type,
                 limit: '1',
             })
         );
-        let items = Request.get(url).items;
+        let items = SpotifyRequest.get(url).items;
         return items[0] ? items[0] : {};
     }
 })();
@@ -348,7 +348,7 @@ const RecentTracks = (function () {
 
     function getSpotifyRecentTrackItems() {
         let url = Utilities.formatString('%s/me/player/recently-played?limit=50', API_BASE_URL);
-        return Request.get(url).items;
+        return SpotifyRequest.get(url).items;
     }
 
     function findIndexNewPlayed(recentItems, fileItems) {
@@ -1109,20 +1109,20 @@ const Playlist = (function () {
 
     function getById(playlistId) {
         let url = Utilities.formatString('%s/playlists/%s', API_BASE_URL, playlistId);
-        return Request.get(url);
+        return SpotifyRequest.get(url);
     }
 
     function getByName(playlistName, userId) {
         let path = userId == null ? 'me/playlists?limit=50' : Utilities.formatString('users/%s/playlists?limit=50', userId);
         let url = Utilities.formatString('%s/%s', API_BASE_URL, path);
-        let response = Request.get(url);
+        let response = SpotifyRequest.get(url);
         while (true) {
             const name = playlistName;
             let foundItem = response.items.find((item) => {
                 return item.name == name;
             });
             if (!foundItem && response.next) {
-                response = Request.get(response.next);
+                response = SpotifyRequest.get(response.next);
             } else {
                 return foundItem;
             }
@@ -1145,7 +1145,7 @@ const Playlist = (function () {
             let key = userId == null ? 'me' : userId;
             if (playlistsOfUsers[key] == null) {
                 let path = userId == null ? 'me/playlists?limit=50' : Utilities.formatString('users/%s/playlists?limit=50', userId);
-                playlistsOfUsers[key] = Request.getItemsByPath(path);
+                playlistsOfUsers[key] = SpotifyRequest.getItemsByPath(path);
             }
             return playlistsOfUsers[key];
         }
@@ -1153,7 +1153,7 @@ const Playlist = (function () {
 
     function create(payload) {
         let url = Utilities.formatString('%s/users/%s/playlists', API_BASE_URL, User.getId());
-        return Request.post(url, payload);
+        return SpotifyRequest.post(url, payload);
     }
 
     function saveAsNew(data) {
@@ -1213,7 +1213,7 @@ const Playlist = (function () {
         let url = Utilities.formatString('%s/playlists/%s/tracks', API_BASE_URL, data.id);
         if (count == 0 && requestType == 'put') {
             // Удалить треки в плейлисте
-            Request.put(url, { uris: [] });
+            SpotifyRequest.put(url, { uris: [] });
             return;
         }
 
@@ -1228,10 +1228,10 @@ const Playlist = (function () {
 
             if (requestType === 'post') {
                 // post-запрос добавляет треки в плейлист
-                Request.post(url, payload);
+                SpotifyRequest.post(url, payload);
             } else if (requestType === 'put') {
                 // put-запрос заменяет все треки плейлиста
-                Request.put(url, payload);
+                SpotifyRequest.put(url, payload);
                 // сменить тип запроса, чтобы добавлять остальные треки
                 requestType = 'post';
             }
@@ -1252,7 +1252,7 @@ const Playlist = (function () {
     function changeDetails(data) {
         let url = Utilities.formatString('%s/playlists/%s', API_BASE_URL, data.id);
         let payload = createPayload(data);
-        Request.put(url, payload);
+        SpotifyRequest.put(url, payload);
     }
 
     function changeCover(data) {
@@ -1281,7 +1281,7 @@ const Playlist = (function () {
 
     function setRandomCover(playlistId) {
         let url = Utilities.formatString('%s/playlists/%s/images', API_BASE_URL, playlistId);
-        Request.putImage(url, getRandomCover());
+        SpotifyRequest.putImage(url, getRandomCover());
     }
 
     function createPayload(data) {
@@ -1308,11 +1308,11 @@ const Playlist = (function () {
 
 const Library = (function () {
     function followArtists(artists) {
-        modifyFollowArtists(Request.putIds, artists);
+        modifyFollowArtists(SpotifyRequest.putIds, artists);
     }
 
     function unfollowArtists(artists) {
-        modifyFollowArtists(Request.deleteIds, artists);
+        modifyFollowArtists(SpotifyRequest.deleteIds, artists);
     }
 
     function modifyFollowArtists(method, artists) {
@@ -1322,11 +1322,11 @@ const Library = (function () {
     }
 
     function saveFavoriteTracks(tracks) {
-        modifyFavoriteTracks(Request.putIds, tracks);
+        modifyFavoriteTracks(SpotifyRequest.putIds, tracks);
     }
 
     function deleteFavoriteTracks(tracks) {
-        modifyFavoriteTracks(Request.deleteIds, tracks);
+        modifyFavoriteTracks(SpotifyRequest.deleteIds, tracks);
     }
 
     function modifyFavoriteTracks(method, tracks) {
@@ -1443,7 +1443,7 @@ const Lastfm = (function () {
         let url = Utilities.formatString('%s/%s/%s', LASTFM_STATION, user, type);
         let stationTracks = [];
         for (let i = 0; i < countRequest; i++) {
-            let response = Request.parseJSON(requestGet(url));
+            let response = CustomUrlFetchApp.fetch(url);
             if (response.playlist) {
                 Combiner.push(stationTracks, response.playlist);
             }
@@ -1468,8 +1468,8 @@ const Lastfm = (function () {
     function getPageTracks(queryObj) {
         queryObj.api_key = LASTFM_API_KEY;
         queryObj.format = 'json';
-        let url = LASTFM_API_BASE_URL + Request.parseQuery(queryObj);
-        return Request.parseJSON(requestGet(url));
+        let url = LASTFM_API_BASE_URL + CustomUrlFetchApp.parseQuery(queryObj);
+        return CustomUrlFetchApp.fetch(url);
     }
 
     function multisearchTracks(items) {
@@ -1489,18 +1489,6 @@ const Lastfm = (function () {
 
     function isNowPlayling(track) {
         return track['@attr'] && track['@attr'].nowplaying === 'true';
-    }
-
-    function requestGet(url) {
-        let response = CustomUrlFetchApp.fetch(url);
-        if (response.getResponseCode() >= 300) {
-            console.error(response.getResponseCode(), Request.parseJSON(response));
-            Utilities.sleep(2000);
-            response = CustomUrlFetchApp.fetch(url);
-            console.info('Повторная отправка дала результат:', response.getContentText());
-            return response;
-        }
-        return response;
     }
 
     return {
@@ -1530,8 +1518,8 @@ const Yandex = (function () {
     }
 
     function getLibrary(queryObj) {
-        let url = YANDEX_LIBRARY + Request.parseQuery(queryObj);
-        return Request.parseJSON(CustomUrlFetchApp.fetch(url));
+        let url = YANDEX_LIBRARY + CustomUrlFetchApp.parseQuery(queryObj);
+        return CustomUrlFetchApp.fetch(url);
     }
 
     function multisearchArtists(items) {
@@ -1557,8 +1545,8 @@ const Yandex = (function () {
     }
 
     function getPlaylist(queryObj) {
-        let url = YANDEX_PLAYLIST + Request.parseQuery(queryObj);
-        return Request.parseJSON(CustomUrlFetchApp.fetch(url));
+        let url = YANDEX_PLAYLIST + CustomUrlFetchApp.parseQuery(queryObj);
+        return CustomUrlFetchApp.fetch(url);
     }
 
     function multisearchTracks(items) {
@@ -1812,21 +1800,21 @@ const getCachedTracks = (function () {
 
     function cacheToFullObj() {
         if (uncachedTracks.meta.length > 0) {
-            let fullTracks = Request.getFullObjByIds('tracks', uncachedTracks.meta, 50);
+            let fullTracks = SpotifyRequest.getFullObjByIds('tracks', uncachedTracks.meta, 50);
             fullTracks.forEach((track) => (cachedTracks.meta[track.id] = track));
         }
         if (uncachedTracks.artists.length > 0) {
-            let fullArtists = Request.getFullObjByIds('artists', uncachedTracks.artists, 50);
+            let fullArtists = SpotifyRequest.getFullObjByIds('artists', uncachedTracks.artists, 50);
             fullArtists.forEach((artist) => (cachedTracks.artists[artist.id] = artist));
         }
         if (uncachedTracks.albums.length > 0) {
-            let fullAlbums = Request.getFullObjByIds('albums', uncachedTracks.albums, 20);
+            let fullAlbums = SpotifyRequest.getFullObjByIds('albums', uncachedTracks.albums, 20);
             fullAlbums.forEach((album) => (cachedTracks.albums[album.id] = album));
         }
         if (uncachedTracks.features.length > 0) {
             // limit = 100, но UrlFetchApp.fetch выдает ошибку о превышении длины URL
             // При limit 85, длина URL для этого запроса 2001 символ
-            let features = Request.getFullObjByIds('audio-features', uncachedTracks.features, 85);
+            let features = SpotifyRequest.getFullObjByIds('audio-features', uncachedTracks.features, 85);
             features.forEach((item) => {
                 if (item != null) {
                     cachedTracks.features[item.id] = item;
@@ -1908,13 +1896,16 @@ const Auth = (function () {
     }
 
     function sendVersion(value) {
-        CustomUrlFetchApp.fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw/formResponse', {
-            method: 'post',
-            payload: {
-                'entry.1598003363': value,
-                'entry.1594601658': ScriptApp.getScriptId(),
-            },
-        });
+        CustomUrlFetchApp.fetch(
+            'https://docs.google.com/forms/u/0/d/e/1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw/formResponse',
+            {
+                method: 'post',
+                payload: {
+                    'entry.1598003363': value,
+                    'entry.1594601658': ScriptApp.getScriptId(),
+                },
+            }
+        );
     }
 
     function hasAccess() {
@@ -1947,7 +1938,7 @@ const User = (function () {
     }
 
     function getUser() {
-        return Request.get(API_BASE_URL + '/me');
+        return SpotifyRequest.get(API_BASE_URL + '/me');
     }
 })();
 
@@ -1955,6 +1946,7 @@ const CustomUrlFetchApp = (function () {
     let countRequest = 0;
     return {
         fetch: fetch,
+        parseQuery: parseQuery,
         getCountRequest: () => countRequest,
     };
 
@@ -1962,11 +1954,91 @@ const CustomUrlFetchApp = (function () {
         countRequest++;
         params = params || {};
         params.muteHttpExceptions = true;
-        return UrlFetchApp.fetch(url, params);
+        let response = UrlFetchApp.fetch(url, params);
+        let responseCode = response.getResponseCode();
+        let headers = response.getHeaders();
+        if (isSuccess(responseCode)) {
+            return onSuccess();
+        }
+        return onError();
+
+        function onSuccess(){
+            let type = headers['Content-Type'] || '';
+            if (type.includes('json')){
+                return parseJSON(response);
+            }
+            return response;
+        }
+
+        function onError(){
+            writeErrorLog();
+            if (responseCode == 429) {
+                return onRetryAfter();
+            } else if (responseCode >= 500) {
+                return tryFetchOnce();
+            }
+        }
+
+        function onRetryAfter() {
+            let value = headers['Retry-After'] || 2;
+            console.error('Ошибка 429. Пауза', value);
+            Utilities.sleep(value > 60 ? value : value * 1000);
+            return fetch(url, params);
+        }
+
+        function tryFetchOnce() {
+            Utilities.sleep(3000);
+            countRequest++;
+            let response = UrlFetchApp.fetch(url, params);
+            if (isSuccess(response.getResponseCode())) {
+                return parseJSON(response);
+            }
+        }
+
+        function isSuccess(code) {
+            return code >= 200 && code < 300;
+        }
+
+        function writeErrorLog() {
+            console.error('URL:', url, '\nCode:', responseCode, '\nParams:', params, '\nContent:', response.getContentText());
+        }
+    }
+
+    function parseJSON(response) {
+        let content = response.getContentText();
+        return content.length > 0 ? tryParseJSON(content) : { msg: 'Пустое тело ответа', status: response.getResponseCode() };
+    }
+
+    function tryParseJSON(content) {
+        try {
+            return JSON.parse(content);
+        } catch (e) {
+            console.error(e, e.stack, content);
+            return [];
+        }
+    }
+
+    function parseQuery(obj) {
+        return Object.keys(obj)
+            .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`)
+            .join('&');
     }
 })();
 
-const Request = (function () {
+const SpotifyRequest = (function () {
+    return {
+        get: get,
+        getItemsByPath: getItemsByPath,
+        getItemsByNext: getItemsByNext,
+        getFullObjByIds: getFullObjByIds,
+        post: post,
+        put: put,
+        putImage: putImage,
+        putIds: putIds,
+        deleteIds: deleteIds,
+        deleteRequest: deleteRequest,
+    };
+
     function getItemsByPath(urlPath, limitRequestCount) {
         let url = Utilities.formatString('%s/%s', API_BASE_URL, urlPath);
         let response = get(url);
@@ -2053,17 +2125,7 @@ const Request = (function () {
 
     function fetch(url, params = {}) {
         params.headers = getHeaders();
-        let response = CustomUrlFetchApp.fetch(url, params);
-        if (response.getResponseCode() == 429) {
-            let seconds = response.getHeaders()['Retry-After'];
-            console.error('Ошибка 429. Пауза', seconds, 'секунд');
-            Utilities.sleep(seconds * 1000);
-            return fetch(url, params);
-        } else if (response.getResponseCode() > 300) {
-            console.error(url, response.getResponseCode(), response.getContentText(), params);
-            return;
-        }
-        return parseJSON(response);
+        return CustomUrlFetchApp.fetch(url, params);
     }
 
     function getHeaders() {
@@ -2071,39 +2133,4 @@ const Request = (function () {
             Authorization: 'Bearer ' + Auth.getAccessToken(),
         };
     }
-
-    function parseJSON(response) {
-        let content = response.getContentText();
-        return content.length > 0 ? tryParseJSON(content) : { msg: 'Пустое тело ответа', status: response.getResponseCode() };
-    }
-
-    function tryParseJSON(content) {
-        try {
-            return JSON.parse(content);
-        } catch (e) {
-            console.error(e, e.stack, content);
-            return [];
-        }
-    }
-
-    function parseQuery(obj) {
-        return Object.keys(obj)
-            .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`)
-            .join('&');
-    }
-
-    return {
-        get: get,
-        getItemsByPath: getItemsByPath,
-        getItemsByNext: getItemsByNext,
-        getFullObjByIds: getFullObjByIds,
-        getCountRequest: CustomUrlFetchApp.getCountRequest,
-        post: post,
-        put: put,
-        putImage: putImage,
-        putIds: putIds,
-        deleteIds: deleteIds,
-        parseQuery: parseQuery,
-        parseJSON: parseJSON,
-    };
 })();

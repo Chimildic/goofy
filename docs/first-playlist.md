@@ -81,7 +81,7 @@ tracks.forEach(track => console.log(track.name));
 
 Чтобы узнать сколько запросов потребовалось на выполнение, добавьте в конец функции следующую строку. Подробнее о запросах в [описании ограничений](/desc?id=Ограничения).
 ```
-console.log('Число запросов', Request.getCountRequest());
+console.log('Число запросов', CustomUrlFetchApp.getCountRequest());
 ```
 
 ## Экспресс-курс

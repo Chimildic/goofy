@@ -229,7 +229,7 @@ function templateRandarGenre(){
         randomCover: 'update',
     });
    
-    console.log('Число запросов', Request.getCountRequest());
+    console.log('Число запросов', CustomUrlFetchApp.getCountRequest());
 
     // Вспомогательная функция
     function cleanTracks(tracksArray){
