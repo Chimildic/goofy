@@ -22,6 +22,89 @@ function updateRecentTracks() {
     RecentTracks.updateRecentTracks();
 }
 
+const CustomUrlFetchApp = (function () {
+    let countRequest = 0;
+    return {
+        fetch: fetch,
+        parseQuery: parseQuery,
+        getCountRequest: () => countRequest,
+    };
+
+    function fetch(url, params) {
+        countRequest++;
+        params = params || {};
+        params.muteHttpExceptions = true;
+        let response = UrlFetchApp.fetch(url, params);
+        let responseCode = response.getResponseCode();
+        let headers = response.getHeaders();
+        if (isSuccess(responseCode)) {
+            return onSuccess();
+        }
+        return onError();
+
+        function onSuccess(){
+            let type = headers['Content-Type'] || '';
+            if (type.includes('json')){
+                return parseJSON(response);
+            }
+            return response;
+        }
+
+        function onError(){
+            writeErrorLog();
+            if (responseCode == 429) {
+                return onRetryAfter();
+            } else if (responseCode >= 500) {
+                return tryFetchOnce();
+            }
+        }
+
+        function onRetryAfter() {
+            let value = headers['Retry-After'] || 2;
+            console.error('Ошибка 429. Пауза', value);
+            Utilities.sleep(value > 60 ? value : value * 1000);
+            return fetch(url, params);
+        }
+
+        function tryFetchOnce() {
+            Utilities.sleep(3000);
+            countRequest++;
+            let response = UrlFetchApp.fetch(url, params);
+            if (isSuccess(response.getResponseCode())) {
+                return parseJSON(response);
+            }
+        }
+
+        function isSuccess(code) {
+            return code >= 200 && code < 300;
+        }
+
+        function writeErrorLog() {
+            console.error('URL:', url, '\nCode:', responseCode, '\nParams:', params, '\nContent:', response.getContentText());
+        }
+    }
+
+    function parseJSON(response) {
+        let content = response.getContentText();
+        return content.length > 0 ? tryParseJSON(content) : { msg: 'Пустое тело ответа', status: response.getResponseCode() };
+    }
+
+    function tryParseJSON(content) {
+        try {
+            return JSON.parse(content);
+        } catch (e) {
+            console.error(e, e.stack, content);
+            return [];
+        }
+    }
+
+    function parseQuery(obj) {
+        return Object.keys(obj)
+            .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`)
+            .join('&');
+    }
+})();
+
 const Source = (function () {
     return {
         getTracks: getTracks,
@@ -1939,89 +2022,6 @@ const User = (function () {
 
     function getUser() {
         return SpotifyRequest.get(API_BASE_URL + '/me');
-    }
-})();
-
-const CustomUrlFetchApp = (function () {
-    let countRequest = 0;
-    return {
-        fetch: fetch,
-        parseQuery: parseQuery,
-        getCountRequest: () => countRequest,
-    };
-
-    function fetch(url, params) {
-        countRequest++;
-        params = params || {};
-        params.muteHttpExceptions = true;
-        let response = UrlFetchApp.fetch(url, params);
-        let responseCode = response.getResponseCode();
-        let headers = response.getHeaders();
-        if (isSuccess(responseCode)) {
-            return onSuccess();
-        }
-        return onError();
-
-        function onSuccess(){
-            let type = headers['Content-Type'] || '';
-            if (type.includes('json')){
-                return parseJSON(response);
-            }
-            return response;
-        }
-
-        function onError(){
-            writeErrorLog();
-            if (responseCode == 429) {
-                return onRetryAfter();
-            } else if (responseCode >= 500) {
-                return tryFetchOnce();
-            }
-        }
-
-        function onRetryAfter() {
-            let value = headers['Retry-After'] || 2;
-            console.error('Ошибка 429. Пауза', value);
-            Utilities.sleep(value > 60 ? value : value * 1000);
-            return fetch(url, params);
-        }
-
-        function tryFetchOnce() {
-            Utilities.sleep(3000);
-            countRequest++;
-            let response = UrlFetchApp.fetch(url, params);
-            if (isSuccess(response.getResponseCode())) {
-                return parseJSON(response);
-            }
-        }
-
-        function isSuccess(code) {
-            return code >= 200 && code < 300;
-        }
-
-        function writeErrorLog() {
-            console.error('URL:', url, '\nCode:', responseCode, '\nParams:', params, '\nContent:', response.getContentText());
-        }
-    }
-
-    function parseJSON(response) {
-        let content = response.getContentText();
-        return content.length > 0 ? tryParseJSON(content) : { msg: 'Пустое тело ответа', status: response.getResponseCode() };
-    }
-
-    function tryParseJSON(content) {
-        try {
-            return JSON.parse(content);
-        } catch (e) {
-            console.error(e, e.stack, content);
-            return [];
-        }
-    }
-
-    function parseQuery(obj) {
-        return Object.keys(obj)
-            .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`)
-            .join('&');
     }
 })();
 
