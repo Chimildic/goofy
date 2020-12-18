@@ -54,6 +54,34 @@
                         hook.afterEach(function (html) {
                             return html + footer;
                         });
+
+                        hook.ready(function () {
+                            // true = show debug log
+                            let dd = false;
+                            let TARGET_QUERY = 'id';
+                            let SCROLL_DELAY = 2000; // in milisecond
+                            let location = window.location;
+
+                            dd && console.log('custom scroll plugin called!');
+                            let currentUrlWithoutHash = new URL(
+                                location.origin + location.pathname + location.search + location.hash.substring(1)
+                            );
+                            let urlQueryParam = currentUrlWithoutHash.searchParams;
+                            let isUrlHasIdQuery = urlQueryParam.has(TARGET_QUERY);
+                            if (isUrlHasIdQuery) {
+                                dd && console.log('url has id, will scroll to element');
+                                let urlId = urlQueryParam.get(TARGET_QUERY);
+                                // run delayed, to make sure everything loaded
+                                setTimeout(function () {
+                                    dd && console.log('will scroll now!');
+                                    try {
+                                        document.querySelector('#' + urlId).scrollIntoView();
+                                    } catch (e) {
+                                        dd && console.log('custom scroll failed', e);
+                                    }
+                                }, SCROLL_DELAY);
+                            }
+                        });
                     },
                 ],
             };
@@ -65,5 +93,6 @@
         <script src="//unpkg.com/docsify-copy-code"></script>
         <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
         <script src="./script/docsify-sidebar-collapse.js"></script>
+        <script src="./script/docsify-fix-pageload-scroll.js"></script>
     </body>
 </html>
