@@ -42,6 +42,23 @@ const CustomUrlFetchApp = (function () {
         }
         return onError();
 
+        function onRetryAfter() {
+            let value = headers['Retry-After'] || 2;
+            console.error('Ошибка 429. Пауза', value);
+            Utilities.sleep(value > 60 ? value : value * 1000);
+            return fetch(url, params);
+        }
+
+        function tryFetchOnce() {
+            Utilities.sleep(3000);
+            countRequest++;
+            response = UrlFetchApp.fetch(url, params);
+            if (isSuccess(response.getResponseCode())) {
+                return onSuccess();
+            }
+            writeErrorLog();
+        }
+
         function onSuccess(){
             let type = headers['Content-Type'] || '';
             if (type.includes('json')){
@@ -56,22 +73,6 @@ const CustomUrlFetchApp = (function () {
                 return onRetryAfter();
             } else if (responseCode >= 500) {
                 return tryFetchOnce();
-            }
-        }
-
-        function onRetryAfter() {
-            let value = headers['Retry-After'] || 2;
-            console.error('Ошибка 429. Пауза', value);
-            Utilities.sleep(value > 60 ? value : value * 1000);
-            return fetch(url, params);
-        }
-
-        function tryFetchOnce() {
-            Utilities.sleep(3000);
-            countRequest++;
-            let response = UrlFetchApp.fetch(url, params);
-            if (isSuccess(response.getResponseCode())) {
-                return parseJSON(response);
             }
         }
 
@@ -1522,7 +1523,7 @@ const Lastfm = (function () {
         let stationTracks = [];
         for (let i = 0; i < countRequest; i++) {
             let response = CustomUrlFetchApp.fetch(url);
-            if (response.playlist) {
+            if (typeof response === 'object' && response.playlist) {
                 Combiner.push(stationTracks, response.playlist);
             }
         }
@@ -1547,7 +1548,7 @@ const Lastfm = (function () {
         queryObj.api_key = LASTFM_API_KEY;
         queryObj.format = 'json';
         let url = LASTFM_API_BASE_URL + CustomUrlFetchApp.parseQuery(queryObj);
-        return CustomUrlFetchApp.fetch(url);
+        return CustomUrlFetchApp.fetch(url) || [];
     }
 
     function multisearchTracks(items) {
@@ -1597,7 +1598,7 @@ const Yandex = (function () {
 
     function getLibrary(queryObj) {
         let url = YANDEX_LIBRARY + CustomUrlFetchApp.parseQuery(queryObj);
-        return CustomUrlFetchApp.fetch(url);
+        return CustomUrlFetchApp.fetch(url) || {};
     }
 
     function multisearchArtists(items) {
@@ -1618,17 +1619,21 @@ const Yandex = (function () {
             kinds: kinds,
             light: false,
         });
+        if (!(typeof responsePlaylist === 'object' && responsePlaylist.playlist)){
+            return [];
+        }
         let trackItems = slice(responsePlaylist.playlist.tracks, limit, offset);
         return multisearchTracks(trackItems);
     }
 
     function getPlaylist(queryObj) {
         let url = YANDEX_PLAYLIST + CustomUrlFetchApp.parseQuery(queryObj);
-        return CustomUrlFetchApp.fetch(url);
+        return CustomUrlFetchApp.fetch(url) || {};
     }
 
     function multisearchTracks(items) {
         let tracks = [];
+        if (!items) return tracks;
         for (let i = 0; i < items.length; i++) {
             let trackname = getYandexTrackname(items[i]);
             let track = Source.searchTrack(trackname);
@@ -1657,7 +1662,7 @@ const Yandex = (function () {
     }
 
     function slice(array, limit, offset) {
-        if (limit) {
+        if (array && limit) {
             offset = offset ? offset : 0;
             return array.slice(offset, offset + limit);
         }
