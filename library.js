@@ -1791,7 +1791,7 @@ const Cache = (function () {
         }
 
         tracks.forEach((item) => {
-            if (item.track) {
+            if (typeof item.track === 'object') {
                 delete item.context;
                 item = item.track;
             }
@@ -1806,6 +1806,7 @@ const Cache = (function () {
             delete item.external_ids;
             delete item.disc_number;
             delete item.available_markets;
+            delete item.track;
 
             compressAlbum(item.album);
             compressArtists(item.artists);
