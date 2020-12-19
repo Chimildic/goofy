@@ -35,15 +35,13 @@ const CustomUrlFetchApp = (function () {
         params = params || {};
         params.muteHttpExceptions = true;
         let response = UrlFetchApp.fetch(url, params);
-        let responseCode = response.getResponseCode();
-        let headers = response.getHeaders();
-        if (isSuccess(responseCode)) {
+        if (isSuccess(response.getResponseCode())) {
             return onSuccess();
         }
         return onError();
 
         function onRetryAfter() {
-            let value = headers['Retry-After'] || 2;
+            let value = response.getHeaders()['Retry-After'] || 2;
             console.error('Ошибка 429. Пауза', value);
             Utilities.sleep(value > 60 ? value : value * 1000);
             return fetch(url, params);
@@ -60,7 +58,7 @@ const CustomUrlFetchApp = (function () {
         }
 
         function onSuccess(){
-            let type = headers['Content-Type'] || '';
+            let type = response.getHeaders()['Content-Type'] || '';
             if (type.includes('json')){
                 return parseJSON(response);
             }
@@ -69,6 +67,7 @@ const CustomUrlFetchApp = (function () {
 
         function onError(){
             writeErrorLog();
+            let responseCode = response.getResponseCode();
             if (responseCode == 429) {
                 return onRetryAfter();
             } else if (responseCode >= 500) {
@@ -81,7 +80,7 @@ const CustomUrlFetchApp = (function () {
         }
 
         function writeErrorLog() {
-            console.error('URL:', url, '\nCode:', responseCode, '\nParams:', params, '\nContent:', response.getContentText());
+            console.error('URL:', url, '\nCode:', response.getResponseCode(), '\nParams:', params, '\nContent:', response.getContentText());
         }
     }
 
