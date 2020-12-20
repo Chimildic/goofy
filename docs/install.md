@@ -6,7 +6,7 @@
 
 Выполняется один раз. [Видео инструкция](https://drive.google.com/file/d/13I_E9g5x_Gb-G-KANmzUxLgDv-bPkQsu/view).
 
-1. Перейдите в [Spotify Dashboard](https://developer.spotify.com/dashboard/). Нажмите `Log in` и авторизируйтесь в Spotify. Примите условия использования.
+1. Перейдите в [Spotify Dashboard](https://developer.spotify.com/dashboard/). Нажмите `Log in` и авторизуйтесь в Spotify. Примите условия использования.
 
    ![Условия использования](/img/install-step-dashboard-term.png)
 
