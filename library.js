@@ -57,15 +57,15 @@ const CustomUrlFetchApp = (function () {
             writeErrorLog();
         }
 
-        function onSuccess(){
+        function onSuccess() {
             let type = response.getHeaders()['Content-Type'] || '';
-            if (type.includes('json')){
+            if (type.includes('json')) {
                 return parseJSON(response);
             }
             return response;
         }
 
-        function onError(){
+        function onError() {
             writeErrorLog();
             let responseCode = response.getResponseCode();
             if (responseCode == 429) {
@@ -195,7 +195,7 @@ const Source = (function () {
         return SpotifyRequest.getItemsByPath('me/following?type=artist&limit=50');
     }
 
-    function getArtistsAlbums(artists, paramsAlbum) {
+    function getArtistsAlbums(artists, paramsAlbum = {}) {
         let albums = [];
         let groups = paramsAlbum.groups || 'album,single';
         artists.forEach((artist) => {
@@ -517,7 +517,7 @@ const Combiner = (function () {
         }
         return resultArray;
 
-        function pushPack(array, step, inRow){
+        function pushPack(array, step, inRow) {
             let startIndex = step * inRow;
             let endIndex = startIndex + inRow;
             push(resultArray, array.slice(startIndex, endIndex));
@@ -1618,7 +1618,7 @@ const Yandex = (function () {
             kinds: kinds,
             light: false,
         });
-        if (!(typeof responsePlaylist === 'object' && responsePlaylist.playlist)){
+        if (!(typeof responsePlaylist === 'object' && responsePlaylist.playlist)) {
             return [];
         }
         let trackItems = slice(responsePlaylist.playlist.tracks, limit, offset);
