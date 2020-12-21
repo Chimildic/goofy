@@ -2097,7 +2097,22 @@ const SpotifyRequest = (function () {
     function getItemsByPath(urlPath, limitRequestCount) {
         let url = Utilities.formatString('%s/%s', API_BASE_URL, urlPath);
         let response = get(url);
-        return getItemsByNext(response, limitRequestCount);
+        if (response.items.length < response.total){
+            let method = response.cursors ? getItemsByCursor: getItemsByNext;
+            return method(response, limitRequestCount);
+        }
+        return response.items;
+    }
+    
+    function getItemsByCursor(response, limitRequestCount = 220){
+        let items = response.items;
+        let count = 1;
+        while (response.next != null && count != limitRequestCount) {
+            response = get(response.next);
+            Combiner.push(items, response.items);
+            count++;
+        }
+        return items;
     }
 
     function getItemsByNext(response, limitRequestCount = 220) {
@@ -2109,6 +2124,8 @@ const SpotifyRequest = (function () {
         let href = response.href.split('?');
         let baseurl = href[0];
         let query = urlStringToObj(href[1]);
+        query.limit = query.limit || 50;
+        query.offset = query.offset || 0;
         
         let urls = [];
         for (let i = 1; i < count; i++) {
@@ -2117,10 +2134,10 @@ const SpotifyRequest = (function () {
         }
         
         let items = response.items;
-        getAll(urls).forEach((response) => { 
-            if (response && response.items){
-                response = extractContent(response);
-                Combiner.push(items, response.items);
+        getAll(urls).forEach((responseItem) => { 
+            responseItem = extractContent(responseItem);
+            if (responseItem && responseItem.items){
+                Combiner.push(items, responseItem.items);
             }
         });
         return items;
@@ -2147,7 +2164,7 @@ const SpotifyRequest = (function () {
         let fullObj = [];
         getAll(urls).forEach((response) => {
             if (response){
-                Combiner.push(fullObj, extractContent(response));
+                Combiner.push(fullObj, response);
             }
         });
         return fullObj;
