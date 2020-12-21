@@ -1610,7 +1610,7 @@ const Lastfm = (function () {
                 }
                 tracks.push(track);
             } else {
-                console.error('track', track, 'search result', searchResult[i]);
+                console.error('track', track, 'search result', searchResult[i], 'original', items[0]);
             }
         }
         return tracks;
@@ -1691,7 +1691,7 @@ const Yandex = (function () {
             if (track && track.id) {
                 tracks.push(track);
             } else {
-                console.error('track', track, 'search result', searchResult[i]);
+                console.error('track', track, 'search result', searchResult[i], 'original', items[0]);
             }
         }
         return tracks;
