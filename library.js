@@ -1963,7 +1963,7 @@ const Auth = (function () {
 
     function displayAuthResult(request) {
         let isAuthorized = service.handleCallback(request);
-        HtmlService.createHtmlOutput(isAuthorized ? 'Успешно!' : 'Отказано в доступе');
+        return HtmlService.createHtmlOutput(isAuthorized ? 'Успешно!' : 'Отказано в доступе');
     }
 
     function displayAuthPage() {
