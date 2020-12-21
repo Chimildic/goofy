@@ -1,4 +1,4 @@
-const VERSION = '1.3.1';
+const VERSION = '1.3.2 beta';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const CLIENT_ID = KeyValue.CLIENT_ID;
@@ -26,15 +26,60 @@ const CustomUrlFetchApp = (function () {
     let countRequest = 0;
     return {
         fetch: fetch,
+        fetchAll: fetchAll,
         parseQuery: parseQuery,
         getCountRequest: () => countRequest,
     };
 
-    function fetch(url, params) {
+    function fetch(url, params = {}) {
         countRequest++;
-        params = params || {};
         params.muteHttpExceptions = true;
         let response = UrlFetchApp.fetch(url, params);
+        return readResponse(response, url, params);
+    }
+
+    function fetchAll(requests) {
+        countRequest += requests.length;
+        requests.forEach((request) => (request.muteHttpExceptions = true));
+        let responseArray = [];
+        let limit = 40;
+        let count = Math.ceil(requests.length / limit);
+        for (let i = 0; i < count; i++) {
+            let requestPack = requests.splice(0, limit);
+            let responseRaw = sendPack(requestPack);
+            let responses = responseRaw.map((response, index) => {
+                return readResponse(response, requestPack[index].url, {
+                    headers: requestPack[index].headers,
+                    payload: requestPack[index].payload,
+                    muteHttpExceptions: requestPack[index].muteHttpExceptions,
+                });
+            });
+            Combiner.push(responseArray, responses);
+        }
+        return responseArray;
+
+        function sendPack(requests) {
+            let raw = UrlFetchApp.fetchAll(requests);
+            let result = [];
+            let failed = [];
+            let seconds = 0;
+            raw.forEach((response, index) => {
+                if (response.getResponseCode() == 429) {
+                    seconds = response.getHeaders()['Retry-After'] || 2;
+                    failed.push(requests[index]);
+                } else {
+                    result.push(response);
+                }
+            });
+            if (seconds > 0) {
+                Utilities.sleep(seconds * 1000);
+                Combiner.push(result, sendPack(failed));
+            }
+            return result;
+        }
+    }
+
+    function readResponse(response, url, params = {}) {
         if (isSuccess(response.getResponseCode())) {
             return onSuccess();
         }
@@ -116,8 +161,8 @@ const Source = (function () {
         getSavedTracks: getSavedTracks,
         getSavedAlbumTracks: getSavedAlbumTracks,
         getRecomTracks: getRecomTracks,
-        searchTrack: searchTrack,
-        searchArtist: searchArtist,
+        multisearchTracks: multisearchTracks,
+        multisearchArtists: multisearchArtists,
         getArtists: getArtists,
         getArtistsAlbums: getArtistsAlbums,
         getArtistsTracks: getArtistsTracks,
@@ -317,26 +362,28 @@ const Source = (function () {
         }, []);
     }
 
-    function searchTrack(trackname) {
-        return searchBestMatch(trackname, 'track');
+    function multisearchTracks(textArray) {
+        return multiBestSearch(textArray, 'track');
     }
 
-    function searchArtist(artistname) {
-        return searchBestMatch(artistname, 'artist');
+    function multisearchArtists(textArray) {
+        return multiBestSearch(textArray, 'artist');
     }
 
-    function searchBestMatch(text, type) {
-        let url = Utilities.formatString(
-            '%s/search/?%s',
-            API_BASE_URL,
-            CustomUrlFetchApp.parseQuery({
-                q: text,
-                type: type,
-                limit: '1',
-            })
-        );
-        let items = SpotifyRequest.get(url).items;
-        return items[0] ? items[0] : {};
+    function multiBestSearch(textArray, type) {
+        return SpotifyRequest.getAll(
+            textArray.map((text) =>
+                Utilities.formatString(
+                    '%s/search/?%s',
+                    API_BASE_URL,
+                    CustomUrlFetchApp.parseQuery({
+                        q: text,
+                        type: type,
+                        limit: '1',
+                    })
+                )
+            )
+        ).map((response) => (response && response.items ? response.items[0] : {}));
     }
 })();
 
@@ -1552,14 +1599,18 @@ const Lastfm = (function () {
 
     function multisearchTracks(items) {
         let tracks = [];
-        for (let i = 0; i < items.length; i++) {
-            let trackname = getLastfmTrackname(items[i]);
-            let track = Source.searchTrack(trackname);
-            if (track.id) {
+        if (!items) return tracks;
+        let textArray = items.map((item) => getLastfmTrackname(item));
+        let searchResult = Source.multisearchTracks(textArray);
+        for (let i = 0; i < searchResult.length; i++) {
+            let track = searchResult[i];
+            if (track && track.id) {
                 if (items[i].date) {
                     track.played_at = items[i].date['#text'];
                 }
                 tracks.push(track);
+            } else {
+                console.error('track', track, 'search result', searchResult[i]);
             }
         }
         return tracks;
@@ -1633,11 +1684,14 @@ const Yandex = (function () {
     function multisearchTracks(items) {
         let tracks = [];
         if (!items) return tracks;
-        for (let i = 0; i < items.length; i++) {
-            let trackname = getYandexTrackname(items[i]);
-            let track = Source.searchTrack(trackname);
-            if (track.id) {
+        let textArray = items.map((item) => getYandexTrackname(item));
+        let searchResult = Source.multisearchTracks(textArray);
+        for (let i = 0; i < searchResult.length; i++) {
+            let track = searchResult[i];
+            if (track && track.id) {
                 tracks.push(track);
+            } else {
+                console.error('track', track, 'search result', searchResult[i]);
             }
         }
         return tracks;
@@ -2028,6 +2082,7 @@ const User = (function () {
 const SpotifyRequest = (function () {
     return {
         get: get,
+        getAll: getAll,
         getItemsByPath: getItemsByPath,
         getItemsByNext: getItemsByNext,
         getFullObjByIds: getFullObjByIds,
@@ -2046,35 +2101,79 @@ const SpotifyRequest = (function () {
     }
 
     function getItemsByNext(response, limitRequestCount = 220) {
-        let items = response.items;
-        let count = 1;
-        while (response.next != null && count != limitRequestCount) {
-            response = get(response.next);
-            Combiner.push(items, response.items);
-            count++;
+        let count = Math.ceil(response.total / response.limit);
+        if (count > limitRequestCount){
+            count = limitRequestCount;
         }
+
+        let href = response.href.split('?');
+        let baseurl = href[0];
+        let query = urlStringToObj(href[1]);
+        
+        let urls = [];
+        for (let i = 1; i < count; i++) {
+            query.offset = parseInt(query.offset) + parseInt(query.limit);
+            urls.push(Utilities.formatString('%s?%s', baseurl, CustomUrlFetchApp.parseQuery(query)));
+        }
+        
+        let items = response.items;
+        getAll(urls).forEach((response) => { 
+            if (response && response.items){
+                response = extractContent(response);
+                Combiner.push(items, response.items);
+            }
+        });
         return items;
+    }
+
+    function urlStringToObj(str) {
+        try {
+            str = '{"' + decodeURI(str).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}';
+            return JSON.parse(str);
+        } catch (e) {
+            console.error('urlStringToObj', e, str);
+            return {};
+        }
     }
 
     function getFullObjByIds(objType, ids, limit) {
         let requestCount = Math.ceil(ids.length / limit);
-        let fullObj = [];
+        let urls = [];
         for (let i = 0; i < requestCount; i++) {
             let strIds = ids.splice(0, limit).join(',');
-            let url = Utilities.formatString('%s/%s/?ids=%s', API_BASE_URL, objType, strIds);
-            let response = get(url);
-            Combiner.push(fullObj, response);
+            urls.push(Utilities.formatString('%s/%s/?ids=%s', API_BASE_URL, objType, strIds));
         }
+
+        let fullObj = [];
+        getAll(urls).forEach((response) => {
+            if (response){
+                Combiner.push(fullObj, extractContent(response));
+            }
+        });
         return fullObj;
     }
 
     function get(url) {
-        let response = fetch(url);
-        if (response) {
-            let keys = Object.keys(response);
-            if (keys.length == 1 && !response.items) {
-                response = response[keys[0]];
-            }
+        return extractContent(fetch(url));
+    }
+
+    function getAll(urls) {
+        let requests = [];
+        urls.forEach((url) =>
+            requests.push({
+                url: url,
+                headers: getHeaders(),
+                method: 'get',
+            })
+        );
+        return CustomUrlFetchApp.fetchAll(requests).map((response) => extractContent(response));
+    }
+
+    function extractContent(response) {
+        if (!response) return;
+        let keys = Object.keys(response);
+        if (keys.length == 1 && !response.items) {
+            response = response[keys[0]];
         }
         return response;
     }
