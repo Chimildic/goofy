@@ -167,6 +167,7 @@ const Source = (function () {
         getArtistsAlbums: getArtistsAlbums,
         getArtistsTracks: getArtistsTracks,
         getAlbumTracks: getAlbumTracks,
+        getArtistsTopTracks: getArtistsTopTracks,
     };
 
     function getTopTracks(timeRange) {
@@ -178,6 +179,16 @@ const Source = (function () {
 
     function isValidTimeRange(timeRange) {
         return ['short', 'medium', 'long'].includes(timeRange);
+    }
+
+    function getArtistsTopTracks(artists, isSplit=false){
+        let urls = [];
+        artists.forEach(artist => urls.push(Utilities.formatString('%s/artists/%s/top-tracks?country=from_token', API_BASE_URL, artist.id)));
+        let responses = SpotifyRequest.getAll(urls);
+        if (isSplit){
+            return responses;
+        }
+        return responses.reduce((tracks, response) => Combiner.push(tracks, response));
     }
 
     function getRecomTracks(queryObj) {
