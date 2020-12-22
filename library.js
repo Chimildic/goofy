@@ -156,6 +156,7 @@ const Source = (function () {
         getTracksRandom: getTracksRandom,
         getPlaylistTracks: getPlaylistTracks,
         getTopTracks: getTopTracks,
+        getTopArtists: getTopArtists,
         getRecentTracks: getRecentTracks,
         getFollowedTracks: getFollowedTracks,
         getSavedTracks: getSavedTracks,
@@ -170,10 +171,18 @@ const Source = (function () {
         getArtistsTopTracks: getArtistsTopTracks,
     };
 
-    function getTopTracks(timeRange) {
+    function getTopTracks(timeRange){
+        return getTop(timeRange, 'tracks');
+    }
+
+    function getTopArtists(timeRange){
+        return getTop(timeRange, 'artists');
+    }
+
+    function getTop(timeRange, type) {
         timeRange = isValidTimeRange(timeRange) ? timeRange : 'medium';
         // Баг Spotify: https://community.spotify.com/t5/Spotify-for-Developers/Bug-with-offset-for-method-quot-Get-User-s-Top-Artists-and/td-p/5032362
-        let path = Utilities.formatString('me/top/tracks?limit=%s&time_range=%s_term', 45, timeRange);
+        let path = Utilities.formatString('me/top/%s?limit=%s&time_range=%s_term', type, 45, timeRange);
         return SpotifyRequest.getItemsByPath(path, 2);
     }
 

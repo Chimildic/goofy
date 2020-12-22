@@ -94,7 +94,7 @@ let tracks = Source.getPlaylistTracks('Заблокированный треки
 
 ### getTopTracks
 
-Возвращает массив треков топа прослушиваний за выбранный период. До 90 треков.
+Возвращает массив треков с топом прослушиваний за выбранный период. До 90 треков.
 
 Аргументы
 - (строка) `timeRange` - период. По умолчанию `medium`.
@@ -115,6 +115,20 @@ let tracks = Source.getTopTracks('short');
 Пример 2 - Получить топ за несколько лет.
 ```js
 let tracks = Source.getTopTracks('long');
+```
+
+### getTopArtists
+
+Возвращает топ исполнителей за выбранный период. До 90 исполнителей. 
+
+Аргументы
+- (строка) `timeRange` - период. По умолчанию `medium`. Возможные значения приведены в [getTopTracks](/func?id=gettoptracks).
+
+Пример 1 - Получить топ треков от топ 10 исполнителей
+```
+let artists = Source.getTopArtists('long');
+Selector.keepFirst(artists, 10);
+let tracks = Source.getArtistsTopTracks(artists);
 ```
 
 ### getRecentTracks
