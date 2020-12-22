@@ -4,6 +4,10 @@
 
 Подробности о работе функций смотреть в [справочнике](/func)
 
+## Версия 1.3.2
+- Обновлен механизм отправки запросов. Многие функции стали отрабатывать быстрее за счет асинхронной отправки сразу N-количества запросов.
+- Новые функции: [getTopArtits](/func?id=gettopartists), [getArtistsTopTracks](/func?id=getartiststoptracks).
+
 ## Версия 1.3.1
 - Новые функции для модуля Cache: [rename](/func?id=rename), [remove](/func?id=remove), [clear](/func?id=clear), [compressArtists](/func?id=compressArtists).
 - Стали публичными функции: [getArtists](/func?id=getartists), [getArtistsAlbums](/func?id=getartistsalbums), [getAlbumTracks](/func?id=getalbumtracks).
