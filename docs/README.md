@@ -11,6 +11,7 @@
 - Рекомендации Last.fm любого пользователя
 - Перенос треков с Яндекс.Музыки в Spotify, в том числе любимых (лайков)
 
+Подробное описание
 - [Отличия от Smarter Playlists](https://chimildic.github.io/goofy/#/desc?id=Отличия-от-smarter-playlists)
 - [Преимущества](https://chimildic.github.io/goofy/#/desc?id=Преимущества-goofy)
 - [Ограничения](https://chimildic.github.io/goofy/#/desc?id=Ограничения)
