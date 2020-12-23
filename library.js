@@ -558,12 +558,17 @@ const Combiner = (function () {
         let limitLength = getLimitLength(bound, arrays);
         const resultArray = [];
         for (let i = 0; i < limitLength; i++) {
-            const index = i;
-            arrays.forEach((item) => {
-                if (item[index]) resultArray.push(item[index]);
-            });
+            pushPack(i);
         }
         return resultArray;
+
+        function pushPack(index){
+            arrays.forEach((array) => {
+                if (array.length > index){
+                    resultArray.push(array[index]);
+                }
+            });
+        }
     }
 
     function mixin(xArray, yArray, xRow, yRow, toLimitOn) {
