@@ -533,6 +533,7 @@ const RecentTracks = (function () {
 const Combiner = (function () {
     return {
         alternate: alternate,
+        mixinMulti: mixinMulti,
         mixin: mixin,
         replace: replace,
         push: push,
@@ -562,9 +563,9 @@ const Combiner = (function () {
         }
         return resultArray;
 
-        function pushPack(index){
+        function pushPack(index) {
             arrays.forEach((array) => {
-                if (array.length > index){
+                if (array.length > index) {
                     resultArray.push(array[index]);
                 }
             });
@@ -572,23 +573,51 @@ const Combiner = (function () {
     }
 
     function mixin(xArray, yArray, xRow, yRow, toLimitOn) {
+        return mixinMulti({
+            toLimitOn: toLimitOn || false,
+            source: [xArray, yArray],
+            inRow: [xRow, yRow],
+        });
+    }
+
+    function mixinMulti(params) {
         let resultArray = [];
-        let limitLength = getLimitLength('max', [xArray, yArray]);
+        if (params.source.length != params.inRow.length || (params.toLimitOn && !isEnoughItems())) {
+            return resultArray;
+        }
+        let limitLength = getLimitLength('max', params.source);
         for (let i = 0; i < limitLength; i++) {
-            let xNextEndIndex = pushPack(xArray, i, xRow);
-            let yNextEndIndex = pushPack(yArray, i, yRow);
-            let hasNextPack = xArray[xNextEndIndex] && yArray[yNextEndIndex];
-            if (toLimitOn && !hasNextPack) {
+            let hasNextFullPack = pushAllPack(i);
+            if (params.toLimitOn && !hasNextFullPack) {
                 break;
             }
         }
         return resultArray;
 
+        function pushAllPack(step) {
+            let hasNextFullPack = true;
+            params.source.forEach((array, rowIndex) => {
+                let hasNextPack = pushPack(array, step, params.inRow[rowIndex]);
+                hasNextFullPack = hasNextFullPack && hasNextPack;
+            });
+            return hasNextFullPack;
+        }
+
         function pushPack(array, step, inRow) {
             let startIndex = step * inRow;
             let endIndex = startIndex + inRow;
             push(resultArray, array.slice(startIndex, endIndex));
-            return endIndex + inRow - 1;
+            let nextEndIndex = endIndex + inRow - 1;
+            return array[nextEndIndex] != undefined;
+        }
+
+        function isEnoughItems() {
+            for (let i = 0; i < params.source.length; i++) {
+                if (params.source[i].length < params.inRow[i]) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 
