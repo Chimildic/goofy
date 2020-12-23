@@ -171,28 +171,36 @@ const Source = (function () {
         getArtistsTopTracks: getArtistsTopTracks,
     };
 
-    function getTopTracks(timeRange){
+    function getTopTracks(timeRange) {
         return getTop(timeRange, 'tracks');
     }
 
-    function getTopArtists(timeRange){
+    function getTopArtists(timeRange) {
         return getTop(timeRange, 'artists');
     }
 
     function getTop(timeRange, type) {
         timeRange = isValidTimeRange(timeRange) ? timeRange : 'medium';
         // Баг Spotify: https://community.spotify.com/t5/Spotify-for-Developers/Bug-with-offset-for-method-quot-Get-User-s-Top-Artists-and/td-p/5032362
-        let path = Utilities.formatString('me/top/%s?limit=%s&time_range=%s_term', type, 45, timeRange);
-        return SpotifyRequest.getItemsByPath(path, 2);
+        let template = API_BASE_URL + '/me/top/%s?offset=%s&limit=%s&&time_range=%s_term';
+        return SpotifyRequest.getAll([
+            Utilities.formatString(template, type, 0, 49, timeRange),
+            Utilities.formatString(template, type, 49, 49, timeRange),
+        ]).reduce((items, response) => {
+            return Combiner.push(items, response.items);
+        }, []);
     }
 
     function isValidTimeRange(timeRange) {
         return ['short', 'medium', 'long'].includes(timeRange);
     }
 
-    function getArtistsTopTracks(artists, isFlat=true){
-        let urls = [];
-        artists.forEach(artist => urls.push(Utilities.formatString('%s/artists/%s/top-tracks?country=from_token', API_BASE_URL, artist.id)));
+    function getArtistsTopTracks(artists, isFlat = true) {
+        let template = API_BASE_URL + '/artists/%s/top-tracks?country=from_token';
+        let urls = artists.reduce((urls, artist) => {
+            urls.push(Utilities.formatString(template, artist.id));
+            return urls;
+        }, []);
         let responses = SpotifyRequest.getAll(urls);
         return isFlat ? responses.flat(1) : responses;
     }
@@ -210,8 +218,7 @@ const Source = (function () {
         return Selector.sliceFirst(tracks, limit);
     }
 
-    function getFollowedTracks(params) {
-        params = params || {};
+    function getFollowedTracks(params = {}) {
         let items = getFollowedItems(params.type, params.userId, params.exclude);
         return getTracks(Selector.sliceRandom(items, params.limit));
     }
@@ -219,10 +226,9 @@ const Source = (function () {
     function getArtistsTracks(params) {
         let artists = getArtists(params.artist);
         params.album = params.album || {};
-        let albums = getArtistsAlbums(artists, params.album);
-        let tracks = [];
-        albums.forEach((album) => Combiner.push(tracks, getAlbumTracks(album, params.album.track_limit)));
-        return tracks;
+        return getArtistsAlbums(artists, params.album).reduce((tracks, album) => {
+            return Combiner.push(tracks, getAlbumTracks(album, params.album.track_limit));
+        }, []);
     }
 
     function getArtists(paramsArtist) {
@@ -258,13 +264,14 @@ const Source = (function () {
     }
 
     function getArtistsAlbums(artists, paramsAlbum = {}) {
-        let albums = [];
         let groups = paramsAlbum.groups || 'album,single';
-        artists.forEach((artist) => {
-            let path = Utilities.formatString('artists/%s/albums?country=from_token&include_groups=%s&limit=50', artist.id, groups);
-            Combiner.push(albums, SpotifyRequest.getItemsByPath(path));
-        });
-        albums = albums.filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, paramsAlbum.release_date));
+        let template = 'artists/%s/albums?country=from_token&include_groups=%s&limit=50';
+        let albums = artists
+            .reduce((albums, artist) => {
+                let path = Utilities.formatString(template, artist.id, groups);
+                return Combiner.push(albums, SpotifyRequest.getItemsByPath(path));
+            }, [])
+            .filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, paramsAlbum.release_date));
         return Selector.sliceRandom(albums, paramsAlbum.album_limit);
     }
 
@@ -272,8 +279,7 @@ const Source = (function () {
         let path = Utilities.formatString('albums/%s/tracks', album.id);
         let items = SpotifyRequest.getItemsByPath(path);
         Selector.keepRandom(items, limit);
-        items.forEach((item) => (item.album = album));
-        return items;
+        return items.map((item) => (item.album = album));
     }
 
     function getSavedAlbumTracks(limit) {
@@ -283,14 +289,11 @@ const Source = (function () {
     }
 
     function extractAlbumTracks(albums) {
-        let tracks = [];
-        albums.forEach((album) => Combiner.push(tracks, album.tracks.items));
-        return tracks;
+        return albums.reduce((tracks, album) => Combiner.push(tracks, album.tracks.items), []);
     }
 
     function getSavedAlbumItems() {
-        let albumItems = SpotifyRequest.getItemsByPath('me/albums?limit=50', 400);
-        return albumItems.map((item) => {
+        return SpotifyRequest.getItemsByPath('me/albums?limit=50', 400).map((item) => {
             let album = item.album;
             album.added_at = item.added_at;
             return album;
@@ -388,19 +391,14 @@ const Source = (function () {
     }
 
     function multiBestSearch(textArray, type) {
-        return SpotifyRequest.getAll(
-            textArray.map((text) =>
-                Utilities.formatString(
-                    '%s/search/?%s',
-                    API_BASE_URL,
-                    CustomUrlFetchApp.parseQuery({
-                        q: text,
-                        type: type,
-                        limit: '1',
-                    })
-                )
-            )
-        ).map((response) => (response && response.items ? response.items[0] : {}));
+        let template = API_BASE_URL + '/search/?%s';
+        let urls = textArray.map((text) => {
+            let queryObj = { q: text, type: type, limit: '1' };
+            return Utilities.formatString(template, CustomUrlFetchApp.parseQuery(queryObj));
+        });
+        return SpotifyRequest.getAll(urls).map((response) => {
+            return response && response.items ? response.items[0] : {};
+        });
     }
 })();
 
@@ -2114,14 +2112,14 @@ const SpotifyRequest = (function () {
     function getItemsByPath(urlPath, limitRequestCount) {
         let url = Utilities.formatString('%s/%s', API_BASE_URL, urlPath);
         let response = get(url);
-        if (response.items.length < response.total){
-            let method = response.cursors ? getItemsByCursor: getItemsByNext;
+        if (response.items.length < response.total) {
+            let method = response.cursors ? getItemsByCursor : getItemsByNext;
             return method(response, limitRequestCount);
         }
         return response.items;
     }
-    
-    function getItemsByCursor(response, limitRequestCount = 220){
+
+    function getItemsByCursor(response, limitRequestCount = 220) {
         let items = response.items;
         let count = 1;
         while (response.next != null && count != limitRequestCount) {
@@ -2134,7 +2132,7 @@ const SpotifyRequest = (function () {
 
     function getItemsByNext(response, limitRequestCount = 220) {
         let count = Math.ceil(response.total / response.limit);
-        if (count > limitRequestCount){
+        if (count > limitRequestCount) {
             count = limitRequestCount;
         }
 
@@ -2143,17 +2141,17 @@ const SpotifyRequest = (function () {
         let query = urlStringToObj(href[1]);
         query.limit = query.limit || 50;
         query.offset = query.offset || 0;
-        
+
         let urls = [];
         for (let i = 1; i < count; i++) {
             query.offset = parseInt(query.offset) + parseInt(query.limit);
             urls.push(Utilities.formatString('%s?%s', baseurl, CustomUrlFetchApp.parseQuery(query)));
         }
-        
+
         let items = response.items;
-        getAll(urls).forEach((responseItem) => { 
+        getAll(urls).forEach((responseItem) => {
             responseItem = extractContent(responseItem);
-            if (responseItem && responseItem.items){
+            if (responseItem && responseItem.items) {
                 Combiner.push(items, responseItem.items);
             }
         });
@@ -2180,7 +2178,7 @@ const SpotifyRequest = (function () {
 
         let fullObj = [];
         getAll(urls).forEach((response) => {
-            if (response){
+            if (response) {
                 Combiner.push(fullObj, response);
             }
         });
