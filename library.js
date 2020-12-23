@@ -190,14 +190,11 @@ const Source = (function () {
         return ['short', 'medium', 'long'].includes(timeRange);
     }
 
-    function getArtistsTopTracks(artists, isSplit=false){
+    function getArtistsTopTracks(artists, isFlat=true){
         let urls = [];
         artists.forEach(artist => urls.push(Utilities.formatString('%s/artists/%s/top-tracks?country=from_token', API_BASE_URL, artist.id)));
         let responses = SpotifyRequest.getAll(urls);
-        if (isSplit){
-            return responses;
-        }
-        return responses.reduce((tracks, response) => Combiner.push(tracks, response));
+        return isFlat ? responses.flat(1) : responses;
     }
 
     function getRecomTracks(queryObj) {

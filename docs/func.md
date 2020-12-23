@@ -454,18 +454,18 @@ let tracks = Source.getArtistsTracks({
 
 Аргументы
 - (массив) `artists` - массив исполнителей. Значимо только `id`.
-- (бул) `isSplit` - если `true` результат содержит треки в отдельном массиве для каждого исполнителя. Если `false` все треки в одном массиве. По умолчанию `false`.
+- (бул) `isFlat` - если `false` результат содержит треки в отдельном массиве для каждого исполнителя. Если `true` все треки в одном массиве. По умолчанию `true`.
 
-Пример 1 - `isSplit = false`
+Пример 1 - `isFlat = true`
 ```
 let tracks = Source.getArtistsTopTracks(artists);
 tracks[0]; // первый трек первого исполнителя
 tracks[10]; // первый трек второго исполнителя, если у первого 10 треков
 ```
 
-Пример 2 - `isSplit = true`
+Пример 2 - `isFlat = false`
 ```
-let tracks = Source.getArtistsTopTracks(artists, true);
+let tracks = Source.getArtistsTopTracks(artists, false);
 tracks[0][0]; // первый трек первого исполнителя
 tracks[1][0]; // первый трек второго исполнителя
 ```
