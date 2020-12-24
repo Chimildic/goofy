@@ -1,4 +1,4 @@
-const VERSION = '1.3.1';
+const VERSION = '1.3.2';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const CLIENT_ID = KeyValue.CLIENT_ID;
@@ -26,29 +26,74 @@ const CustomUrlFetchApp = (function () {
     let countRequest = 0;
     return {
         fetch: fetch,
+        fetchAll: fetchAll,
         parseQuery: parseQuery,
         getCountRequest: () => countRequest,
     };
 
-    function fetch(url, params) {
+    function fetch(url, params = {}) {
         countRequest++;
-        params = params || {};
         params.muteHttpExceptions = true;
         let response = UrlFetchApp.fetch(url, params);
+        return readResponse(response, url, params);
+    }
+
+    function fetchAll(requests) {
+        countRequest += requests.length;
+        requests.forEach((request) => (request.muteHttpExceptions = true));
+        let responseArray = [];
+        let limit = 40;
+        let count = Math.ceil(requests.length / limit);
+        for (let i = 0; i < count; i++) {
+            let requestPack = requests.splice(0, limit);
+            let responseRaw = sendPack(requestPack);
+            let responses = responseRaw.map((response, index) => {
+                return readResponse(response, requestPack[index].url, {
+                    headers: requestPack[index].headers,
+                    payload: requestPack[index].payload,
+                    muteHttpExceptions: requestPack[index].muteHttpExceptions,
+                });
+            });
+            Combiner.push(responseArray, responses);
+        }
+        return responseArray;
+
+        function sendPack(requests) {
+            let raw = UrlFetchApp.fetchAll(requests);
+            let result = [];
+            let failed = [];
+            let seconds = 0;
+            raw.forEach((response, index) => {
+                if (response.getResponseCode() == 429) {
+                    seconds = 1 + (response.getHeaders()['Retry-After'] || 2);
+                    failed.push(requests[index]);
+                } else {
+                    result.push(response);
+                }
+            });
+            if (seconds > 0) {
+                Utilities.sleep(seconds * 1000);
+                Combiner.push(result, sendPack(failed));
+            }
+            return result;
+        }
+    }
+
+    function readResponse(response, url, params = {}) {
         if (isSuccess(response.getResponseCode())) {
             return onSuccess();
         }
         return onError();
 
         function onRetryAfter() {
-            let value = response.getHeaders()['Retry-After'] || 2;
-            console.error('Ошибка 429. Пауза', value);
-            Utilities.sleep(value > 60 ? value : value * 1000);
+            let value = 1 + (response.getHeaders()['Retry-After'] || 2);
+            console.info('Пауза в отправке запросов', value);
+            Utilities.sleep(value);
             return fetch(url, params);
         }
 
         function tryFetchOnce() {
-            Utilities.sleep(3000);
+            Utilities.sleep(3500);
             countRequest++;
             response = UrlFetchApp.fetch(url, params);
             if (isSuccess(response.getResponseCode())) {
@@ -111,28 +156,53 @@ const Source = (function () {
         getTracksRandom: getTracksRandom,
         getPlaylistTracks: getPlaylistTracks,
         getTopTracks: getTopTracks,
+        getTopArtists: getTopArtists,
         getRecentTracks: getRecentTracks,
         getFollowedTracks: getFollowedTracks,
         getSavedTracks: getSavedTracks,
         getSavedAlbumTracks: getSavedAlbumTracks,
         getRecomTracks: getRecomTracks,
-        searchTrack: searchTrack,
-        searchArtist: searchArtist,
+        multisearchTracks: multisearchTracks,
+        multisearchArtists: multisearchArtists,
         getArtists: getArtists,
         getArtistsAlbums: getArtistsAlbums,
         getArtistsTracks: getArtistsTracks,
         getAlbumTracks: getAlbumTracks,
+        getArtistsTopTracks: getArtistsTopTracks,
     };
 
     function getTopTracks(timeRange) {
+        return getTop(timeRange, 'tracks');
+    }
+
+    function getTopArtists(timeRange) {
+        return getTop(timeRange, 'artists');
+    }
+
+    function getTop(timeRange, type) {
         timeRange = isValidTimeRange(timeRange) ? timeRange : 'medium';
         // Баг Spotify: https://community.spotify.com/t5/Spotify-for-Developers/Bug-with-offset-for-method-quot-Get-User-s-Top-Artists-and/td-p/5032362
-        let path = Utilities.formatString('me/top/tracks?limit=%s&time_range=%s_term', 45, timeRange);
-        return SpotifyRequest.getItemsByPath(path, 2);
+        let template = API_BASE_URL + '/me/top/%s?offset=%s&limit=%s&&time_range=%s_term';
+        return SpotifyRequest.getAll([
+            Utilities.formatString(template, type, 0, 49, timeRange),
+            Utilities.formatString(template, type, 49, 49, timeRange),
+        ]).reduce((items, response) => {
+            return Combiner.push(items, response.items);
+        }, []);
     }
 
     function isValidTimeRange(timeRange) {
         return ['short', 'medium', 'long'].includes(timeRange);
+    }
+
+    function getArtistsTopTracks(artists, isFlat = true) {
+        let template = API_BASE_URL + '/artists/%s/top-tracks?country=from_token';
+        let urls = artists.reduce((urls, artist) => {
+            urls.push(Utilities.formatString(template, artist.id));
+            return urls;
+        }, []);
+        let responses = SpotifyRequest.getAll(urls);
+        return isFlat ? responses.flat(1) : responses;
     }
 
     function getRecomTracks(queryObj) {
@@ -148,8 +218,7 @@ const Source = (function () {
         return Selector.sliceFirst(tracks, limit);
     }
 
-    function getFollowedTracks(params) {
-        params = params || {};
+    function getFollowedTracks(params = {}) {
         let items = getFollowedItems(params.type, params.userId, params.exclude);
         return getTracks(Selector.sliceRandom(items, params.limit));
     }
@@ -157,10 +226,9 @@ const Source = (function () {
     function getArtistsTracks(params) {
         let artists = getArtists(params.artist);
         params.album = params.album || {};
-        let albums = getArtistsAlbums(artists, params.album);
-        let tracks = [];
-        albums.forEach((album) => Combiner.push(tracks, getAlbumTracks(album, params.album.track_limit)));
-        return tracks;
+        return getArtistsAlbums(artists, params.album).reduce((tracks, album) => {
+            return Combiner.push(tracks, getAlbumTracks(album, params.album.track_limit));
+        }, []);
     }
 
     function getArtists(paramsArtist) {
@@ -196,13 +264,14 @@ const Source = (function () {
     }
 
     function getArtistsAlbums(artists, paramsAlbum = {}) {
-        let albums = [];
         let groups = paramsAlbum.groups || 'album,single';
-        artists.forEach((artist) => {
-            let path = Utilities.formatString('artists/%s/albums?country=from_token&include_groups=%s&limit=50', artist.id, groups);
-            Combiner.push(albums, SpotifyRequest.getItemsByPath(path));
-        });
-        albums = albums.filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, paramsAlbum.release_date));
+        let template = 'artists/%s/albums?country=from_token&include_groups=%s&limit=50';
+        let albums = artists
+            .reduce((albums, artist) => {
+                let path = Utilities.formatString(template, artist.id, groups);
+                return Combiner.push(albums, SpotifyRequest.getItemsByPath(path));
+            }, [])
+            .filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, paramsAlbum.release_date));
         return Selector.sliceRandom(albums, paramsAlbum.album_limit);
     }
 
@@ -210,8 +279,7 @@ const Source = (function () {
         let path = Utilities.formatString('albums/%s/tracks', album.id);
         let items = SpotifyRequest.getItemsByPath(path);
         Selector.keepRandom(items, limit);
-        items.forEach((item) => (item.album = album));
-        return items;
+        return items.map((item) => (item.album = album));
     }
 
     function getSavedAlbumTracks(limit) {
@@ -221,14 +289,11 @@ const Source = (function () {
     }
 
     function extractAlbumTracks(albums) {
-        let tracks = [];
-        albums.forEach((album) => Combiner.push(tracks, album.tracks.items));
-        return tracks;
+        return albums.reduce((tracks, album) => Combiner.push(tracks, album.tracks.items), []);
     }
 
     function getSavedAlbumItems() {
-        let albumItems = SpotifyRequest.getItemsByPath('me/albums?limit=50', 400);
-        return albumItems.map((item) => {
+        return SpotifyRequest.getItemsByPath('me/albums?limit=50', 400).map((item) => {
             let album = item.album;
             album.added_at = item.added_at;
             return album;
@@ -317,26 +382,23 @@ const Source = (function () {
         }, []);
     }
 
-    function searchTrack(trackname) {
-        return searchBestMatch(trackname, 'track');
+    function multisearchTracks(textArray) {
+        return multiBestSearch(textArray, 'track');
     }
 
-    function searchArtist(artistname) {
-        return searchBestMatch(artistname, 'artist');
+    function multisearchArtists(textArray) {
+        return multiBestSearch(textArray, 'artist');
     }
 
-    function searchBestMatch(text, type) {
-        let url = Utilities.formatString(
-            '%s/search/?%s',
-            API_BASE_URL,
-            CustomUrlFetchApp.parseQuery({
-                q: text,
-                type: type,
-                limit: '1',
-            })
-        );
-        let items = SpotifyRequest.get(url).items;
-        return items[0] ? items[0] : {};
+    function multiBestSearch(textArray, type) {
+        let template = API_BASE_URL + '/search/?%s';
+        let urls = textArray.map((text) => {
+            let queryObj = { q: text, type: type, limit: '1' };
+            return Utilities.formatString(template, CustomUrlFetchApp.parseQuery(queryObj));
+        });
+        return SpotifyRequest.getAll(urls).map((response) => {
+            return response && response.items ? response.items[0] : {};
+        });
     }
 })();
 
@@ -471,6 +533,7 @@ const RecentTracks = (function () {
 const Combiner = (function () {
     return {
         alternate: alternate,
+        mixinMulti: mixinMulti,
         mixin: mixin,
         replace: replace,
         push: push,
@@ -496,32 +559,65 @@ const Combiner = (function () {
         let limitLength = getLimitLength(bound, arrays);
         const resultArray = [];
         for (let i = 0; i < limitLength; i++) {
-            const index = i;
-            arrays.forEach((item) => {
-                if (item[index]) resultArray.push(item[index]);
-            });
+            pushPack(i);
         }
         return resultArray;
+
+        function pushPack(index) {
+            arrays.forEach((array) => {
+                if (array.length > index) {
+                    resultArray.push(array[index]);
+                }
+            });
+        }
     }
 
     function mixin(xArray, yArray, xRow, yRow, toLimitOn) {
+        return mixinMulti({
+            toLimitOn: toLimitOn || false,
+            source: [xArray, yArray],
+            inRow: [xRow, yRow],
+        });
+    }
+
+    function mixinMulti(params) {
         let resultArray = [];
-        let limitLength = getLimitLength('max', [xArray, yArray]);
+        if (params.source.length != params.inRow.length || (params.toLimitOn && !isEnoughItems())) {
+            return resultArray;
+        }
+        let limitLength = getLimitLength('max', params.source);
         for (let i = 0; i < limitLength; i++) {
-            let xNextEndIndex = pushPack(xArray, i, xRow);
-            let yNextEndIndex = pushPack(yArray, i, yRow);
-            let hasNextPack = xArray[xNextEndIndex] && yArray[yNextEndIndex];
-            if (toLimitOn && !hasNextPack) {
+            let hasNextFullPack = pushAllPack(i);
+            if (params.toLimitOn && !hasNextFullPack) {
                 break;
             }
         }
         return resultArray;
 
+        function pushAllPack(step) {
+            let hasNextFullPack = true;
+            params.source.forEach((array, rowIndex) => {
+                let hasNextPack = pushPack(array, step, params.inRow[rowIndex]);
+                hasNextFullPack = hasNextFullPack && hasNextPack;
+            });
+            return hasNextFullPack;
+        }
+
         function pushPack(array, step, inRow) {
             let startIndex = step * inRow;
             let endIndex = startIndex + inRow;
             push(resultArray, array.slice(startIndex, endIndex));
-            return endIndex + inRow - 1;
+            let nextEndIndex = endIndex + inRow - 1;
+            return array[nextEndIndex] != undefined;
+        }
+
+        function isEnoughItems() {
+            for (let i = 0; i < params.source.length; i++) {
+                if (params.source[i].length < params.inRow[i]) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 
@@ -1552,14 +1648,18 @@ const Lastfm = (function () {
 
     function multisearchTracks(items) {
         let tracks = [];
-        for (let i = 0; i < items.length; i++) {
-            let trackname = getLastfmTrackname(items[i]);
-            let track = Source.searchTrack(trackname);
-            if (track.id) {
+        if (!items) return tracks;
+        let textArray = items.map((item) => getLastfmTrackname(item));
+        let searchResult = Source.multisearchTracks(textArray);
+        for (let i = 0; i < searchResult.length; i++) {
+            let track = searchResult[i];
+            if (track && track.id) {
                 if (items[i].date) {
                     track.played_at = items[i].date['#text'];
                 }
                 tracks.push(track);
+            } else {
+                console.error('track', track, 'search result', searchResult[i], 'original', items[0]);
             }
         }
         return tracks;
@@ -1633,11 +1733,14 @@ const Yandex = (function () {
     function multisearchTracks(items) {
         let tracks = [];
         if (!items) return tracks;
-        for (let i = 0; i < items.length; i++) {
-            let trackname = getYandexTrackname(items[i]);
-            let track = Source.searchTrack(trackname);
-            if (track.id) {
+        let textArray = items.map((item) => getYandexTrackname(item));
+        let searchResult = Source.multisearchTracks(textArray);
+        for (let i = 0; i < searchResult.length; i++) {
+            let track = searchResult[i];
+            if (track && track.id) {
                 tracks.push(track);
+            } else {
+                console.error('track', track, 'search result', searchResult[i], 'original', items[0]);
             }
         }
         return tracks;
@@ -2028,6 +2131,7 @@ const User = (function () {
 const SpotifyRequest = (function () {
     return {
         get: get,
+        getAll: getAll,
         getItemsByPath: getItemsByPath,
         getItemsByNext: getItemsByNext,
         getFullObjByIds: getFullObjByIds,
@@ -2042,10 +2146,14 @@ const SpotifyRequest = (function () {
     function getItemsByPath(urlPath, limitRequestCount) {
         let url = Utilities.formatString('%s/%s', API_BASE_URL, urlPath);
         let response = get(url);
-        return getItemsByNext(response, limitRequestCount);
+        if (response.items.length < response.total) {
+            let method = response.cursors ? getItemsByCursor : getItemsByNext;
+            return method(response, limitRequestCount);
+        }
+        return response.items;
     }
 
-    function getItemsByNext(response, limitRequestCount = 220) {
+    function getItemsByCursor(response, limitRequestCount = 220) {
         let items = response.items;
         let count = 1;
         while (response.next != null && count != limitRequestCount) {
@@ -2056,25 +2164,82 @@ const SpotifyRequest = (function () {
         return items;
     }
 
+    function getItemsByNext(response, limitRequestCount = 220) {
+        let count = Math.ceil(response.total / response.limit);
+        if (count > limitRequestCount) {
+            count = limitRequestCount;
+        }
+
+        let href = response.href.split('?');
+        let baseurl = href[0];
+        let query = urlStringToObj(href[1]);
+        query.limit = query.limit || 50;
+        query.offset = query.offset || 0;
+
+        let urls = [];
+        for (let i = 1; i < count; i++) {
+            query.offset = parseInt(query.offset) + parseInt(query.limit);
+            urls.push(Utilities.formatString('%s?%s', baseurl, CustomUrlFetchApp.parseQuery(query)));
+        }
+
+        let items = response.items;
+        getAll(urls).forEach((responseItem) => {
+            responseItem = extractContent(responseItem);
+            if (responseItem && responseItem.items) {
+                Combiner.push(items, responseItem.items);
+            }
+        });
+        return items;
+    }
+
+    function urlStringToObj(str) {
+        try {
+            str = '{"' + decodeURI(str).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}';
+            return JSON.parse(str);
+        } catch (e) {
+            console.error('urlStringToObj', e, str);
+            return {};
+        }
+    }
+
     function getFullObjByIds(objType, ids, limit) {
         let requestCount = Math.ceil(ids.length / limit);
-        let fullObj = [];
+        let urls = [];
         for (let i = 0; i < requestCount; i++) {
             let strIds = ids.splice(0, limit).join(',');
-            let url = Utilities.formatString('%s/%s/?ids=%s', API_BASE_URL, objType, strIds);
-            let response = get(url);
-            Combiner.push(fullObj, response);
+            urls.push(Utilities.formatString('%s/%s/?ids=%s', API_BASE_URL, objType, strIds));
         }
+
+        let fullObj = [];
+        getAll(urls).forEach((response) => {
+            if (response) {
+                Combiner.push(fullObj, response);
+            }
+        });
         return fullObj;
     }
 
     function get(url) {
-        let response = fetch(url);
-        if (response) {
-            let keys = Object.keys(response);
-            if (keys.length == 1 && !response.items) {
-                response = response[keys[0]];
-            }
+        return extractContent(fetch(url));
+    }
+
+    function getAll(urls) {
+        let requests = [];
+        urls.forEach((url) =>
+            requests.push({
+                url: url,
+                headers: getHeaders(),
+                method: 'get',
+            })
+        );
+        return CustomUrlFetchApp.fetchAll(requests).map((response) => extractContent(response));
+    }
+
+    function extractContent(response) {
+        if (!response) return;
+        let keys = Object.keys(response);
+        if (keys.length == 1 && !response.items) {
+            response = response[keys[0]];
         }
         return response;
     }
