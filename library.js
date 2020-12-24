@@ -279,7 +279,10 @@ const Source = (function () {
         let path = Utilities.formatString('albums/%s/tracks', album.id);
         let items = SpotifyRequest.getItemsByPath(path);
         Selector.keepRandom(items, limit);
-        return items.map((item) => (item.album = album));
+        return items.map((item) => {
+            item.album = album;
+            return item;
+        });
     }
 
     function getSavedAlbumTracks(limit) {
