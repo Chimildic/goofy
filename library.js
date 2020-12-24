@@ -1209,12 +1209,19 @@ const Order = (function () {
 
         function sortMeta() {
             // name, popularity, duration_ms, explicit, added_at, played_at
-            if (_key == 'name') {
-                _tracks.sort((x, y) => compareString(x, y));
-            } else if (_key == 'added_at' || _key == 'played_at') {
-                _tracks.sort((x, y) => compareDate(x[_key], y[_key]));
+            let hasKey = _tracks.every((t) => t[_key] != undefined);
+            let items = {};
+            if (hasKey){
+                _tracks.forEach((t) => items[t.id] = t);
             } else {
-                _tracks.sort((x, y) => compareNumber(x, y));
+                items = getCachedTracks(_tracks, { meta: {} }).meta;
+            }
+            if (_key == 'name') {
+                _tracks.sort((x, y) => compareString(items[x.id], items[y.id]));
+            } else if (_key == 'added_at' || _key == 'played_at') {
+                _tracks.sort((x, y) => compareDate(items[x.id][_key], items[y.id][_key]));
+            } else {
+                _tracks.sort((x, y) => compareNumber(items[x.id], items[y.id]));
             }
         }
 
@@ -1662,7 +1669,7 @@ const Lastfm = (function () {
                 }
                 tracks.push(track);
             } else {
-                console.error('track', track, 'search result', searchResult[i], 'original', items[0]);
+                console.info('track', track, 'search result', searchResult[i], 'original', items[0]);
             }
         }
         return tracks;
@@ -1953,7 +1960,7 @@ const Cache = (function () {
 })();
 
 const getCachedTracks = (function () {
-    let cachedTracks = { meta: [], artists: {}, albums: {}, features: {} };
+    let cachedTracks = { meta: {}, artists: {}, albums: {}, features: {} };
     let uncachedTracks;
     let _tracks, _args;
 
