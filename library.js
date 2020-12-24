@@ -1241,9 +1241,9 @@ const Order = (function () {
     })();
 
     function compareDate(x, y) {
-        let xTime = new Date(x).getTime();
-        let yTime = new Date(y).getTime();
-        return xTime - yTime;
+        let xDate = x ? new Date(x) : new Date('2000-01-01');
+        let yDate = y ? new Date(y) : new Date('2000-01-01');
+        return xDate.getTime() - yDate.getTime();
     }
 
     function separateArtists(tracks, space, isRandom = false) {
