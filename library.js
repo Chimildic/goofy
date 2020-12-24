@@ -1,4 +1,4 @@
-const VERSION = '1.3.2 beta';
+const VERSION = '1.3.2';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const CLIENT_ID = KeyValue.CLIENT_ID;
@@ -65,7 +65,7 @@ const CustomUrlFetchApp = (function () {
             let seconds = 0;
             raw.forEach((response, index) => {
                 if (response.getResponseCode() == 429) {
-                    seconds = response.getHeaders()['Retry-After'] || 2;
+                    seconds = 1 + (response.getHeaders()['Retry-After'] || 2);
                     failed.push(requests[index]);
                 } else {
                     result.push(response);
@@ -86,14 +86,14 @@ const CustomUrlFetchApp = (function () {
         return onError();
 
         function onRetryAfter() {
-            let value = response.getHeaders()['Retry-After'] || 2;
-            console.error('Ошибка 429. Пауза', value);
-            Utilities.sleep(value > 60 ? value : value * 1000);
+            let value = 1 + (response.getHeaders()['Retry-After'] || 2);
+            console.info('Пауза в отправке запросов', value);
+            Utilities.sleep(value);
             return fetch(url, params);
         }
 
         function tryFetchOnce() {
-            Utilities.sleep(3000);
+            Utilities.sleep(3500);
             countRequest++;
             response = UrlFetchApp.fetch(url, params);
             if (isSuccess(response.getResponseCode())) {
