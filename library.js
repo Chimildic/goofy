@@ -1669,7 +1669,7 @@ const Lastfm = (function () {
                 }
                 tracks.push(track);
             } else {
-                console.info('track', track, 'search result', searchResult[i], 'original', items[0]);
+                console.info('track', track, 'search result', searchResult[i], 'original', items[i]);
             }
         }
         return tracks;
@@ -1750,7 +1750,7 @@ const Yandex = (function () {
             if (track && track.id) {
                 tracks.push(track);
             } else {
-                console.error('track', track, 'search result', searchResult[i], 'original', items[0]);
+                console.info('track', track, 'search result', searchResult[i], 'original', items[i]);
             }
         }
         return tracks;
