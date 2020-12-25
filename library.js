@@ -1,4 +1,4 @@
-const VERSION = '1.3.2';
+const VERSION = '1.3.3';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const CLIENT_ID = KeyValue.CLIENT_ID;
@@ -9,6 +9,7 @@ const ON_LASTFM_RECENT_TRACKS = 'true' === KeyValue.ON_LASTFM_RECENT_TRACKS;
 const LASTFM_RANGE_RECENT_TRACKS = parseInt(KeyValue.LASTFM_RANGE_RECENT_TRACKS);
 const LASTFM_LOGIN = KeyValue.LASTFM_LOGIN;
 const API_BASE_URL = 'https://api.spotify.com/v1';
+const DEFAULT_DATE = new Date('2000-01-01');
 
 function doGet() {
     return Auth.hasAccess() ? HtmlService.createHtmlOutput('Успешно') : Auth.displayAuthPage();
@@ -72,6 +73,7 @@ const CustomUrlFetchApp = (function () {
                 }
             });
             if (seconds > 0) {
+                console.info('Пауза в отправке запросов', seconds);
                 Utilities.sleep(seconds * 1000);
                 Combiner.push(result, sendPack(failed));
             }
@@ -138,7 +140,7 @@ const CustomUrlFetchApp = (function () {
         try {
             return JSON.parse(content);
         } catch (e) {
-            console.error(e, e.stack, content);
+            console.error('Не удалось перевести строку JSON в объект. ', e, e.stack, content);
             return [];
         }
     }
@@ -377,7 +379,7 @@ const Source = (function () {
         let key = items[0].played_at ? 'played_at' : 'added_at';
         return items.reduce((tracks, item) => {
             if ((!item.hasOwnProperty('is_local') || !item.is_local) && item.track && item.track.artists && item.track.artists.length > 0) {
-                let date = item[key] ? item[key] : new Date('2000-01-01').toISOString();
+                let date = item[key] ? item[key] : DEFAULT_DATE.toISOString();
                 item.track[key] = date;
                 tracks.push(item.track);
             }
@@ -463,26 +465,23 @@ const RecentTracks = (function () {
     }
 
     function updateRecentTracks() {
+        let hasUpdate = 0;
         if (ON_SPOTIFY_RECENT_TRACKS) {
-            updatePlatformRecentTracks(getSpotifyRecentTrackItems(), SPOTIFY_FILENAME);
+            hasUpdate += updatePlatformRecentTracks(getSpotifyRecentTracks(), SPOTIFY_FILENAME, findNewPlayed);
         }
         if (ON_LASTFM_RECENT_TRACKS) {
-            let recentTracks = Lastfm.getRecentTracks(LASTFM_LOGIN, LASTFM_RANGE_RECENT_TRACKS);
-            updatePlatformRecentTracks(recentTracks, LASTFM_FILENAME);
+            let lastfmTracks = Lastfm.getLastfmRecentTracks(LASTFM_LOGIN, LASTFM_RANGE_RECENT_TRACKS);
+            hasUpdate += updatePlatformRecentTracks(lastfmTracks, LASTFM_FILENAME, Lastfm.findNewPlayed);
         }
-        if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
+        if (hasUpdate > 0 && ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
             updateBothSourceRecentTracks();
         }
     }
 
-    function updatePlatformRecentTracks(recentTracks, filename) {
+    function updatePlatformRecentTracks(recentTracks, filename, findNewPlayedMethod) {
         let fileItems = Cache.read(filename);
-        let endIndexNewPlayed = findIndexNewPlayed(recentTracks, fileItems);
-        let newItems = recentTracks.slice(0, endIndexNewPlayed);
-        if (newItems.length > 0) {
-            Cache.compressTracks(newItems);
-            Cache.append(filename, newItems, 'begin', ITEMS_LIMIT);
-        }
+        let newItems = findNewPlayedMethod(recentTracks, fileItems);
+        return appendNewPlayed(newItems, filename);
     }
 
     function updateBothSourceRecentTracks() {
@@ -494,23 +493,36 @@ const RecentTracks = (function () {
         Cache.write(BOTH_SOURCE_FILENAME, spotifyTracks);
     }
 
-    function getSpotifyRecentTrackItems() {
+    function appendNewPlayed(newItems, filename) {
+        if (newItems.length == 0) {
+            console.info('Нет новых треков для файла', filename);
+            return false;
+        }
+        Cache.compressTracks(newItems);
+        console.info('Новых треков:', newItems.length, 'в файле', filename);
+        Cache.append(filename, newItems, 'begin', ITEMS_LIMIT);
+        console.info('Общее количество:', newItems.length);
+        return true;
+    }
+
+    function getSpotifyRecentTracks() {
         let url = Utilities.formatString('%s/me/player/recently-played?limit=50', API_BASE_URL);
         return SpotifyRequest.get(url).items;
     }
 
-    function findIndexNewPlayed(recentItems, fileItems) {
+    function findNewPlayed(recentItems, fileItems) {
         if (fileItems.length == 0) {
-            return recentItems.length;
+            return recentItems;
         }
 
-        let lastPlayedTime = fileItems[0].played_at;
+        let lastPlayedTime = new Date(fileItems[0].played_at).getTime();
         for (let i = recentItems.length - 1; i >= 0; i--) {
-            if (recentItems[i].played_at === lastPlayedTime) {
-                return i;
+            let time = new Date(recentItems[i].played_at).getTime();
+            if (time - lastPlayedTime == 0) {
+                return recentItems.slice(0, i);
             }
         }
-        return recentItems.length;
+        return recentItems;
     }
 
     function compress() {
@@ -744,7 +756,7 @@ const RangeTracks = (function () {
             return true;
         }
 
-        let releaseDate = new Date(albumReleaseDate);
+        let releaseDateTime = new Date(albumReleaseDate).getTime();
         let startDate, endDate;
         if (targetPeriod.sinceDays) {
             startDate = Filter.getDateRel(targetPeriod.sinceDays, 'startDay');
@@ -753,7 +765,7 @@ const RangeTracks = (function () {
             startDate = targetPeriod.startDate;
             endDate = targetPeriod.endDate;
         }
-        if (releaseDate < startDate || releaseDate > endDate) {
+        if (releaseDateTime < startDate.getTime() || releaseDateTime > endDate.getTime()) {
             return false;
         }
         return true;
@@ -878,7 +890,7 @@ const Filter = (function () {
 
         let filteredTracks = items.reduce((tracks, track) => {
             let key = track.played_at ? 'played_at' : 'added_at';
-            let date = track[key] ? new Date(track[key]) : new Date('2000-01-01');
+            let date = track[key] ? new Date(track[key]) : DEFAULT_DATE;
             let time = date.getTime();
             if (time >= startTime && time <= endTime) {
                 tracks.push(track);
@@ -1211,8 +1223,8 @@ const Order = (function () {
             // name, popularity, duration_ms, explicit, added_at, played_at
             let hasKey = _tracks.every((t) => t[_key] != undefined);
             let items = {};
-            if (hasKey){
-                _tracks.forEach((t) => items[t.id] = t);
+            if (hasKey) {
+                _tracks.forEach((t) => (items[t.id] = t));
             } else {
                 items = getCachedTracks(_tracks, { meta: {} }).meta;
             }
@@ -1241,8 +1253,8 @@ const Order = (function () {
     })();
 
     function compareDate(x, y) {
-        let xDate = x ? new Date(x) : new Date('2000-01-01');
-        let yDate = y ? new Date(y) : new Date('2000-01-01');
+        let xDate = x ? new Date(x) : DEFAULT_DATE;
+        let yDate = y ? new Date(y) : DEFAULT_DATE;
         return xDate.getTime() - yDate.getTime();
     }
 
@@ -1530,6 +1542,19 @@ const Library = (function () {
 const Lastfm = (function () {
     const LASTFM_API_BASE_URL = 'http://ws.audioscrobbler.com/2.0/?';
     const LASTFM_STATION = 'https://www.last.fm/player/station/user';
+    return {
+        removeRecentTracks: removeRecentTracks,
+        removeRecentArtists: removeRecentArtists,
+        getLovedTracks: getLovedTracks,
+        getRecentTracks: getRecentTracks,
+        getLastfmRecentTracks: getLastfmRecentTracks,
+        findNewPlayed: findNewPlayed,
+        getTopTracks: getTopTracks,
+        getMixStation: getMixStation,
+        getLibraryStation: getLibraryStation,
+        getRecomStation: getRecomStation,
+        getNeighboursStation: getNeighboursStation,
+    };
 
     function removeRecentTracks(sourceArray, lastfmUser, limit = 600) {
         let removedArray = getLastfmRecentTracks(lastfmUser, limit);
@@ -1570,15 +1595,32 @@ const Lastfm = (function () {
             user: user,
             limit: 200,
         };
-        return getAllPagesTracks(queryObj, limit);
+        let tracks = getAllPagesTracks(queryObj, limit);
+        if (isNowPlayling(tracks[0])) {
+            tracks.splice(0, 1);
+        }
+        return tracks;
     }
 
     function getRecentTracks(user, limit) {
         let tracks = getLastfmRecentTracks(user, limit);
-        if (isNowPlayling(tracks[0])) {
-            tracks.splice(0, 1);
-        }
         return multisearchTracks(tracks);
+    }
+
+    function findNewPlayed(lastfmTracks, spotifyTracks) {
+        if (spotifyTracks.length == 0) {
+            return multisearchTracks(lastfmTracks);
+        }
+
+        let lastPlayedTime = new Date(spotifyTracks[0].played_at).getTime();
+        for (let i = lastfmTracks.length - 1; i >= 0; i--) {
+            let time = new Date(lastfmTracks[i].date['#text']).getTime();
+            if (time - lastPlayedTime == 0) {
+                lastfmTracks = lastfmTracks.slice(0, i);
+                break;
+            }
+        }
+        return multisearchTracks(lastfmTracks);
     }
 
     function getLovedTracks(user, limit) {
@@ -1658,7 +1700,7 @@ const Lastfm = (function () {
 
     function multisearchTracks(items) {
         let tracks = [];
-        if (!items) return tracks;
+        if (!items || items.length == 0) return tracks;
         let textArray = items.map((item) => getLastfmTrackname(item));
         let searchResult = Source.multisearchTracks(textArray);
         for (let i = 0; i < searchResult.length; i++) {
@@ -1669,7 +1711,7 @@ const Lastfm = (function () {
                 }
                 tracks.push(track);
             } else {
-                console.info('track', track, 'search result', searchResult[i], 'original', items[i]);
+                console.info('Spotify не нашел трек:', getLastfmTrackname(items[i]));
             }
         }
         return tracks;
@@ -1678,18 +1720,6 @@ const Lastfm = (function () {
     function isNowPlayling(track) {
         return track['@attr'] && track['@attr'].nowplaying === 'true';
     }
-
-    return {
-        removeRecentTracks: removeRecentTracks,
-        removeRecentArtists: removeRecentArtists,
-        getLovedTracks: getLovedTracks,
-        getRecentTracks: getRecentTracks,
-        getTopTracks: getTopTracks,
-        getMixStation: getMixStation,
-        getLibraryStation: getLibraryStation,
-        getRecomStation: getRecomStation,
-        getNeighboursStation: getNeighboursStation,
-    };
 })();
 
 const Yandex = (function () {
@@ -1712,11 +1742,15 @@ const Yandex = (function () {
 
     function multisearchArtists(items) {
         let artists = [];
+        if (!items || items.length == 0) return artists;
+        let textArray = items.map(item => getYandexArtistname(item));
+        let searchResult = Source.multisearchArtists(textArray);
         for (let i = 0; i < items.length; i++) {
-            let artistname = getYandexArtistname(items[i]);
-            let artist = Source.searchArtist(artistname);
-            if (artist.id) {
+            let artist = searchResult[i];
+            if (artist && artist.id) {
                 artists.push(artist);
+            } else {
+                console.info('Spotify не нашел исполнителя:', getYandexArtistname(items[i]));
             }
         }
         return artists;
@@ -1742,7 +1776,7 @@ const Yandex = (function () {
 
     function multisearchTracks(items) {
         let tracks = [];
-        if (!items) return tracks;
+        if (!items || items.length == 0) return tracks;
         let textArray = items.map((item) => getYandexTrackname(item));
         let searchResult = Source.multisearchTracks(textArray);
         for (let i = 0; i < searchResult.length; i++) {
@@ -1750,7 +1784,7 @@ const Yandex = (function () {
             if (track && track.id) {
                 tracks.push(track);
             } else {
-                console.info('track', track, 'search result', searchResult[i], 'original', items[i]);
+                console.info('Spotify не нашел трек:', getYandexTrackname(items[i]));
             }
         }
         return tracks;
@@ -1878,7 +1912,7 @@ const Cache = (function () {
         try {
             return JSON.parse(file.getBlob().getDataAsString());
         } catch (e) {
-            console.error(e, e.stack, file.getBlob().getDataAsString());
+            console.error('Не удалось перевести строку JSON в объект.', e, e.stack, file.getBlob().getDataAsString());
             return [];
         }
     }
@@ -2207,7 +2241,7 @@ const SpotifyRequest = (function () {
             str = '{"' + decodeURI(str).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}';
             return JSON.parse(str);
         } catch (e) {
-            console.error('urlStringToObj', e, str);
+            console.error('urlStringToObj', e, e.stack, str);
             return {};
         }
     }
