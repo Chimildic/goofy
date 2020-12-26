@@ -1482,6 +1482,22 @@ let artists = Lastfm.getTopArtists({
 });
 ```
 
+### getTopAlbums
+
+Возвращает массив с топом альбомов по заданному периоду.
+
+Аргументы
+- (объект) `params` - параметры для выбора топа альбома. Аналогично параметрам [getTopTracks](/func?id=gettoptracks-1).
+
+Пример 1 - Получить топ-10 альбомов за полгода
+```js
+let artists = Lastfm.getTopAlbums({
+  user: 'ваш логин',
+  period: '6month',
+  limit: 10
+});
+```
+
 ### getMixStation
 
 Возвращает массив треков из радио last fm `Микс`. Содержит ранее заскроббленные треки и рекомендации last fm. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1).

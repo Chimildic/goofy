@@ -1530,6 +1530,7 @@ const Lastfm = (function () {
         findNewPlayed: findNewPlayed,
         getTopTracks: getTopTracks,
         getTopArtists: getTopArtists,
+        getTopAlbums: getTopAlbums,
         getMixStation: getMixStation,
         getLibraryStation: getLibraryStation,
         getRecomStation: getRecomStation,
@@ -1559,17 +1560,21 @@ const Lastfm = (function () {
         return Utilities.formatString('%s %s', item.name, item.artists[0].name).toLowerCase();
     }
 
-    function getLastfmTrackname(item) {
-        return Utilities.formatString('%s %s', getLastfmArtistname(item), item.name).toLowerCase();
+    function getTrackNameLastfm(item) {
+        return Utilities.formatString('%s %s', getArtistNameLastfm(item), item.name).toLowerCase();
     }
 
-    function getLastfmArtistname(item){
+    function getAlbumNameLastfm(item) {
+        return Utilities.formatString('%s %s', item.name, getArtistNameLastfm(item)).toLowerCase();
+    }
+
+    function getArtistNameLastfm(item) {
         let name;
-        if (item.artist){
+        if (item.artist) {
             name = item.artist.name || item.artist['#text'];
         } else if (item.artists) {
             name = item.artists[0].name;
-        } else if (item.name){
+        } else if (item.name) {
             name = item.name;
         }
         return name.toLowerCase();
@@ -1590,55 +1595,59 @@ const Lastfm = (function () {
 
     function getRecentTracks(user, limit) {
         let tracks = getLastfmRecentTracks(user, limit);
-        return Search.multisearchTracks(tracks, getLastfmTrackname);
+        return Search.multisearchTracks(tracks, getTrackNameLastfm);
     }
 
     function findNewPlayed(lastfmTracks, spotifyTracks) {
-        if (spotifyTracks.length == 0) {
-            return Search.multisearchTracks(lastfmTracks, getLastfmTrackname);
+        if (spotifyTracks.length > 0) {
+            let lastPlayedTime = new Date(spotifyTracks[0].played_at).getTime();
+            lastfmTracks = sliceOldPlayed(lastfmTracks, lastPlayedTime);
         }
+        return Search.multisearchTracks(lastfmTracks, getTrackNameLastfm);
+    }
 
-        let lastPlayedTime = new Date(spotifyTracks[0].played_at).getTime();
+    function sliceOldPlayed(lastfmTracks, lastPlayedTime) {
         for (let i = lastfmTracks.length - 1; i >= 0; i--) {
             let time = new Date(lastfmTracks[i].date['#text']).getTime();
             if (time - lastPlayedTime == 0) {
-                lastfmTracks = lastfmTracks.slice(0, i);
-                break;
+                return lastfmTracks.slice(0, i);
             }
         }
-        return Search.multisearchTracks(lastfmTracks, getLastfmTrackname);
+        return lastfmTracks;
     }
 
     function getLovedTracks(user, limit) {
-        let queryObj = {
-            method: 'user.getlovedtracks',
-            user: user,
-            limit: 200,
-        };
+        let queryObj = { method: 'user.getlovedtracks', user: user, limit: 200 };
         let tracks = getAllPagesTracks(queryObj, limit);
-        return Search.multisearchTracks(tracks, getLastfmTrackname);
+        return Search.multisearchTracks(tracks, getTrackNameLastfm);
     }
 
     function getTopTracks(params) {
-        let queryObj = {
-            method: 'user.gettoptracks',
-            user: params.user,
-            period: params.period || 'overall',
-            limit: 200,
-        };
-        let tracks = getAllPagesTracks(queryObj, params.limit || 50);
-        return Search.multisearchTracks(tracks, getLastfmTrackname);
+        params.method = 'user.gettoptracks';
+        let tracks = getTopPage(params).toptracks.track;
+        return Search.multisearchTracks(tracks, getTrackNameLastfm);
     }
 
-    function getTopArtists(params){
+    function getTopArtists(params) {
+        params.method = 'user.gettopartists';
+        let artists = getTopPage(params).topartists.artist;
+        return Search.multisearchArtists(artists, getArtistNameLastfm);
+    }
+
+    function getTopAlbums(params) {
+        params.method = 'user.gettopalbums';
+        let albums = getTopPage(params).topalbums.album;
+        return Search.multisearchAlbums(albums, getAlbumNameLastfm);
+    }
+
+    function getTopPage(params) {
         let queryObj = {
-            method: 'user.gettopartists',
+            method: params.method,
             user: params.user,
             period: params.period || 'overall',
             limit: params.limit || 50,
         };
-        let artists = getPage(queryObj).topartists.artist;
-        return Search.multisearchArtists(artists, getLastfmArtistname);
+        return getPage(queryObj);
     }
 
     function getMixStation(user, countRequest) {
@@ -1659,7 +1668,7 @@ const Lastfm = (function () {
 
     function getStationPlaylist(user, type, countRequest) {
         let stationTracks = getStationTracks(user, type, countRequest);
-        let tracks = Search.multisearchTracks(stationTracks, getLastfmTrackname);
+        let tracks = Search.multisearchTracks(stationTracks, getTrackNameLastfm);
         Filter.dedupTracks(tracks);
         return tracks;
     }
@@ -1941,45 +1950,46 @@ const Cache = (function () {
     }
 })();
 
-const Search = (function(){
+const Search = (function () {
     return {
         multisearchTracks: multisearchTracks,
         multisearchArtists: multisearchArtists,
+        multisearchAlbums: multisearchAlbums,
     };
 
     function multisearchTracks(items, parseNameMethod) {
-        let tracks = [];
-        if (!items || items.length == 0) return tracks;
-        let textArray = items.map((item) => parseNameMethod(item));
-        let searchResult = multiBestSearch(textArray, 'track');
-        for (let i = 0; i < searchResult.length; i++) {
-            let track = searchResult[i];
-            if (track && track.id) {
-                if (items[i].date) {
-                    track.played_at = items[i].date['#text'];
-                }
-                tracks.push(track);
-            } else {
-                console.info('Spotify не нашел трек:', parseNameMethod(items[i]));
+        return multisearch(items, 'track', parseNameMethod, (item, i) => {
+            if (items[i].date) {
+                item.played_at = items[i].date['#text'];
             }
-        }
-        return tracks;
+        });
     }
 
     function multisearchArtists(items, parseNameMethod) {
-        let artists = [];
-        if (!items || items.length == 0) return artists;
-        let textArray = items.map(item => parseNameMethod(item));
-        let searchResult = multiBestSearch(textArray, 'artist');
+        return multisearch(items, 'artist', parseNameMethod);
+    }
+
+    function multisearchAlbums(items, parseNameMethod) {
+        return multisearch(items, 'album', parseNameMethod);
+    }
+
+    function multisearch(items, type, parseNameMethod, formatMethod) {
+        let resultItems = [];
+        if (!items || items.length == 0) return resultItems;
+        let textArray = items.map((item) => parseNameMethod(item));
+        let searchResult = multiBestSearch(textArray, type);
         for (let i = 0; i < items.length; i++) {
-            let artist = searchResult[i];
-            if (artist && artist.id) {
-                artists.push(artist);
-            } else {
-                console.info('Spotify не нашел исполнителя:', parseNameMethod(items[i]));
+            let item = searchResult[i];
+            if (!item || !item.id) {
+                console.info('Spotify по типу', type, 'не нашел:', parseNameMethod(items[i]));
+                continue;
             }
+            if (formatMethod) {
+                formatMethod(item, i);
+            }
+            resultItems.push(item);
         }
-        return artists;
+        return resultItems;
     }
 
     function multiBestSearch(textArray, type) {
@@ -1992,7 +2002,6 @@ const Search = (function(){
             return response && response.items ? response.items[0] : {};
         });
     }
-
 })();
 
 const getCachedTracks = (function () {
