@@ -23,6 +23,12 @@ function updateRecentTracks() {
     RecentTracks.updateRecentTracks();
 }
 
+String.prototype.formatName = function(){
+    return this.replace(/[,!@#$%^&*()+-./\\]/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .toLowerCase();
+};
+
 const CustomUrlFetchApp = (function () {
     let countRequest = 0;
     return {
@@ -276,7 +282,7 @@ const Source = (function () {
         return Selector.sliceRandom(albums, paramsAlbum.album_limit);
     }
 
-    function getAlbumsTracks(albums){
+    function getAlbumsTracks(albums) {
         return albums.reduce((tracks, album) => {
             return Combiner.push(tracks, getAlbumTracks(album));
         }, []);
@@ -815,7 +821,7 @@ const Filter = (function () {
     }
 
     function getTrackKey(track) {
-        return Utilities.formatString('%s:%s', track.name, track.artists[0].name).toLowerCase();
+        return Utilities.formatString('%s:%s', track.name, track.artists[0].name).formatName();
     }
 
     function matchExceptMix(tracks) {
@@ -1560,19 +1566,19 @@ const Lastfm = (function () {
 
     function getLastfmTrackKey(item) {
         let artist = item.artist.name ? item.artist.name : item.artist['#text'];
-        return Utilities.formatString('%s %s', item.name, artist).toLowerCase();
+        return Utilities.formatString('%s %s', item.name, artist).formatName();
     }
 
     function getSpotifyTrackKey(item) {
-        return Utilities.formatString('%s %s', item.name, item.artists[0].name).toLowerCase();
+        return Utilities.formatString('%s %s', item.name, item.artists[0].name).formatName();
     }
 
     function getTrackNameLastfm(item) {
-        return Utilities.formatString('%s %s', getArtistNameLastfm(item), item.name).toLowerCase();
+        return Utilities.formatString('%s %s', getArtistNameLastfm(item), item.name).formatName();
     }
 
     function getAlbumNameLastfm(item) {
-        return Utilities.formatString('%s %s', item.name, getArtistNameLastfm(item)).toLowerCase();
+        return Utilities.formatString('%s %s', item.name, getArtistNameLastfm(item)).formatName();
     }
 
     function getArtistNameLastfm(item) {
@@ -1584,7 +1590,7 @@ const Lastfm = (function () {
         } else if (item.name) {
             name = item.name;
         }
-        return name.toLowerCase();
+        return name.formatName();
     }
 
     function getLastfmRecentTracks(user, limit) {
@@ -1742,13 +1748,13 @@ const Yandex = (function () {
     }
 
     function getArtists(owner, limit, offset) {
-        let responseLibrary = getLibrary({ owner: owner, filter: 'artists', });
+        let responseLibrary = getLibrary({ owner: owner, filter: 'artists' });
         let artistItems = slice(responseLibrary.artists, limit, offset);
         return Search.multisearchArtists(artistItems, getArtistNameYandex);
     }
 
-    function getAlbums(owner, limit, offset){
-        let responseLibrary = getLibrary({ owner: owner, filter: 'albums', });
+    function getAlbums(owner, limit, offset) {
+        let responseLibrary = getLibrary({ owner: owner, filter: 'albums' });
         let albumsItems = slice(responseLibrary.albums, limit, offset);
         return Search.multisearchAlbums(albumsItems, getAlbumNameYandex);
     }
@@ -1768,18 +1774,18 @@ const Yandex = (function () {
             return '';
         }
         if (item.artists.length == 0 || !item.artists[0].name) {
-            return item.title.toLowerCase();
+            return item.title.formatName();
         }
-        return Utilities.formatString('%s %s', item.artists[0].name, item.title).toLowerCase();
+        return Utilities.formatString('%s %s', item.artists[0].name, item.title).formatName();
     }
 
     function getArtistNameYandex(item) {
-        return item && item.name ? item.name.toLowerCase() : '';
+        return item && item.name ? item.name.formatName() : '';
     }
 
-    function getAlbumNameYandex(item){
+    function getAlbumNameYandex(item) {
         if (item && item.title) {
-            return Utilities.formatString('%s %s', item.title, item.artists[0].name).toLowerCase();
+            return Utilities.formatString('%s %s', item.title, item.artists[0].name).formatName();
         }
         return '';
     }
