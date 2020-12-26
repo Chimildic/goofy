@@ -1457,12 +1457,28 @@ let tracks = Lastfm.getLovedTracks('login', 200);
 }
 ```
 
-Пример 1 - Получить топ-40 за полгода
+Пример 1 - Получить топ-40 треков за полгода
 ```js
 let tracks = Lastfm.getTopTracks({
   user: 'ваш логин',
   period: '6month',
   limit: 40
+});
+```
+
+### getTopArtists
+
+Возвращает массив с топом исполнителей по заданному периоду.
+
+Аргументы
+- (объект) `params` - параметры для выбора топа исполнителей. Аналогично параметрам [getTopTracks](/func?id=gettoptracks-1).
+
+Пример 1 - Получить топ-10 исполнителей за полгода
+```js
+let artists = Lastfm.getTopArtists({
+  user: 'ваш логин',
+  period: '6month',
+  limit: 10
 });
 ```
 
