@@ -7,6 +7,8 @@
 ## Версия 1.3.3
 - Оптимизация запросов к Last.fm в механизме накопления. Поиск только тех треков, что являются новыми для истории прослушиваний.
 - Новые функции к Lastfm: [getTopArtists](/func?id=gettopartists-1), [getTopAlbums](/func?id=gettopalbums).
+- Новая функция к Yandex: [getAlbums](/func?id=getalbums).
+- Новая функция к Source: [getAlbumsTracks](/func?id=getalbumstracks).
 - Более информативные сообщения в логах для истории прослушиваний и при поиске.
 
 ## Версия 1.3.2

@@ -348,6 +348,19 @@ let tracks = [];
 albums.forEach((album) => Combiner.push(tracks, Source.getAlbumTracks(album)));
 ```
 
+### getAlbumsTracks
+
+Возвращает массив треков из всех альбомов.
+
+Аргументы
+- (массив) `albums` - перечень альбомов
+
+Пример 1 - Получить треки из топ-10 альбомов Lastfm
+```js
+let albums = Lastfm.getTopAlbums({ user: 'login', limit: 10 });
+let tracks = Source.getAlbumsTracks(albums);
+```
+
 ### getArtistsTracks
 
 Возвращает массив треков исполнителей согласно заданным `params`.
@@ -1623,6 +1636,20 @@ Playlist.saveAsNew({
 ```js
 let artists = Yandex.getArtists('owner', 50);
 Library.followArtists(artists);
+```
+
+### getAlbums
+
+Возвращает массив альбомов из подписко Яндекс.Музыки указзаного пользователя. Примечание смотреть в [getTracks](/func?id=gettracks-1).
+
+Аргументы
+- (строка) `owner` - логин пользователя Яндекс.Музыки
+- (число) `limit` - количество выбираемых альбомов. Если не указано, все.
+- (число) `offset` - смещение от первого альбома. Например, `limit` = 50 и `offset` = 50 вернут альбомы от 50-го до 100-го.
+
+Пример 1 - Получить все альбомы из подписок пользователя
+```js
+let albums = Yandex.getAlbums('owner');
 ```
 
 ## Cache

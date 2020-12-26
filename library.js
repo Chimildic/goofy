@@ -168,6 +168,7 @@ const Source = (function () {
         getArtistsAlbums: getArtistsAlbums,
         getArtistsTracks: getArtistsTracks,
         getAlbumTracks: getAlbumTracks,
+        getAlbumsTracks: getAlbumsTracks,
         getArtistsTopTracks: getArtistsTopTracks,
     };
 
@@ -273,6 +274,12 @@ const Source = (function () {
             }, [])
             .filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, paramsAlbum.release_date));
         return Selector.sliceRandom(albums, paramsAlbum.album_limit);
+    }
+
+    function getAlbumsTracks(albums){
+        return albums.reduce((tracks, album) => {
+            return Combiner.push(tracks, getAlbumTracks(album));
+        }, []);
     }
 
     function getAlbumTracks(album, limit) {
@@ -1715,19 +1722,11 @@ const Yandex = (function () {
     const YANDEX_PLAYLIST = 'https://music.mts.ru/handlers/playlist.jsx?';
     const YANDEX_LIBRARY = 'https://music.mts.ru/handlers/library.jsx?';
 
-    function getArtists(owner, limit, offset) {
-        let responseLibrary = getLibrary({
-            owner: owner,
-            filter: 'artists',
-        });
-        let artistItems = slice(responseLibrary.artists, limit, offset);
-        return Search.multisearchArtists(artistItems, getYandexArtistname);
-    }
-
-    function getLibrary(queryObj) {
-        let url = YANDEX_LIBRARY + CustomUrlFetchApp.parseQuery(queryObj);
-        return CustomUrlFetchApp.fetch(url) || {};
-    }
+    return {
+        getTracks: getTracks,
+        getArtists: getArtists,
+        getAlbums: getAlbums,
+    };
 
     function getTracks(owner, kinds, limit, offset) {
         let responsePlaylist = getPlaylist({
@@ -1739,7 +1738,24 @@ const Yandex = (function () {
             return [];
         }
         let trackItems = slice(responsePlaylist.playlist.tracks, limit, offset);
-        return Search.multisearchTracks(trackItems, getYandexTrackname);
+        return Search.multisearchTracks(trackItems, getTrackNameYandex);
+    }
+
+    function getArtists(owner, limit, offset) {
+        let responseLibrary = getLibrary({ owner: owner, filter: 'artists', });
+        let artistItems = slice(responseLibrary.artists, limit, offset);
+        return Search.multisearchArtists(artistItems, getArtistNameYandex);
+    }
+
+    function getAlbums(owner, limit, offset){
+        let responseLibrary = getLibrary({ owner: owner, filter: 'albums', });
+        let albumsItems = slice(responseLibrary.albums, limit, offset);
+        return Search.multisearchAlbums(albumsItems, getAlbumNameYandex);
+    }
+
+    function getLibrary(queryObj) {
+        let url = YANDEX_LIBRARY + CustomUrlFetchApp.parseQuery(queryObj);
+        return CustomUrlFetchApp.fetch(url) || {};
     }
 
     function getPlaylist(queryObj) {
@@ -1747,7 +1763,7 @@ const Yandex = (function () {
         return CustomUrlFetchApp.fetch(url) || {};
     }
 
-    function getYandexTrackname(item) {
+    function getTrackNameYandex(item) {
         if (!item.title) {
             return '';
         }
@@ -1757,11 +1773,15 @@ const Yandex = (function () {
         return Utilities.formatString('%s %s', item.artists[0].name, item.title).toLowerCase();
     }
 
-    function getYandexArtistname(item) {
-        if (!item.name) {
-            return '';
+    function getArtistNameYandex(item) {
+        return item && item.name ? item.name.toLowerCase() : '';
+    }
+
+    function getAlbumNameYandex(item){
+        if (item && item.title) {
+            return Utilities.formatString('%s %s', item.title, item.artists[0].name).toLowerCase();
         }
-        return item.name.toLowerCase();
+        return '';
     }
 
     function slice(array, limit, offset) {
@@ -1771,11 +1791,6 @@ const Yandex = (function () {
         }
         return array;
     }
-
-    return {
-        getTracks: getTracks,
-        getArtists: getArtists,
-    };
 })();
 
 const Cache = (function () {
