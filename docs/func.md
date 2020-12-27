@@ -1441,6 +1441,21 @@ Library.deleteFavoriteTracks(savedTracks);
 let tracks = Lastfm.getRecentTracks('login', 200);
 ```
 
+### getSimilarTracks
+
+Возвращает массив треков, которые похожи на входные треки согласно данным Lastfm.
+
+Аргументы
+- (массив) `tracks` - треки, для которых нужно найти похожие.
+- (число) `match` - минимальное значение похожести на оригинальный трек в границе от `0.0` до `1.0`. 
+- (число) `limit` - количество запрашиваемых похожих треков на один оригинальный трек.
+
+Пример 1 - Получить треки, похожие на плейлист
+```js
+let playlistTracks = Source.getPlaylistTracks('name', 'id');
+let similarTracks = Lastfm.getSimilarTracks(playlistTracks, 0.65, 30);
+```
+
 ### getLovedTracks
 
 Возвращает массив любимых треков пользователя `user`, ограниченного количеством `limit`. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1).

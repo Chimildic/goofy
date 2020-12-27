@@ -23,7 +23,7 @@ function updateRecentTracks() {
     RecentTracks.updateRecentTracks();
 }
 
-String.prototype.formatName = function(){
+String.prototype.formatName = function () {
     return this.replace(/[,!@#$%^&*()+-./\\]/g, ' ')
         .replace(/\s{2,}/g, ' ')
         .toLowerCase();
@@ -1548,7 +1548,36 @@ const Lastfm = (function () {
         getLibraryStation: getLibraryStation,
         getRecomStation: getRecomStation,
         getNeighboursStation: getNeighboursStation,
+        getSimilarTracks: getSimilarTracks,
     };
+
+    function getSimilarTracks(tracks, match, limit) {
+        let requests = createRequests();
+        return Search.multisearchTracks(getAll(), getTrackNameLastfm);
+
+        function createRequests() {
+            return tracks.reduce((requests, track) => {
+                let queryStr = CustomUrlFetchApp.parseQuery({
+                    method: 'track.getsimilar',
+                    autocorrect: '1',
+                    artist: track.artists[0].name,
+                    track: track.name,
+                    limit: limit || 50,
+                    format: 'json',
+                    api_key: LASTFM_API_KEY,
+                });
+                requests.push({ url: LASTFM_API_BASE_URL + queryStr });
+                return requests;
+            }, []);
+        }
+
+        function getAll(){
+            return CustomUrlFetchApp.fetchAll(requests).reduce((similarTracks, response) => {
+                let filteredTracks = response.similartracks.track.filter((track) => track.match >= match);
+                return Combiner.push(similarTracks, filteredTracks);
+            }, []);
+        }
+    }
 
     function removeRecentTracks(sourceArray, lastfmUser, limit = 600) {
         let removedArray = getLastfmRecentTracks(lastfmUser, limit);
@@ -1562,35 +1591,6 @@ const Lastfm = (function () {
         let removedNames = removedArray.map((item) => item.artist['#text']);
         let filteredTracks = sourceArray.filter((item) => !removedNames.includes(item.artists[0].name));
         Combiner.replace(sourceArray, filteredTracks);
-    }
-
-    function getLastfmTrackKey(item) {
-        let artist = item.artist.name ? item.artist.name : item.artist['#text'];
-        return Utilities.formatString('%s %s', item.name, artist).formatName();
-    }
-
-    function getSpotifyTrackKey(item) {
-        return Utilities.formatString('%s %s', item.name, item.artists[0].name).formatName();
-    }
-
-    function getTrackNameLastfm(item) {
-        return Utilities.formatString('%s %s', getArtistNameLastfm(item), item.name).formatName();
-    }
-
-    function getAlbumNameLastfm(item) {
-        return Utilities.formatString('%s %s', item.name, getArtistNameLastfm(item)).formatName();
-    }
-
-    function getArtistNameLastfm(item) {
-        let name;
-        if (item.artist) {
-            name = item.artist.name || item.artist['#text'];
-        } else if (item.artists) {
-            name = item.artists[0].name;
-        } else if (item.name) {
-            name = item.name;
-        }
-        return name.formatName();
     }
 
     function getLastfmRecentTracks(user, limit) {
@@ -1721,6 +1721,35 @@ const Lastfm = (function () {
 
     function isNowPlayling(track) {
         return track['@attr'] && track['@attr'].nowplaying === 'true';
+    }
+
+    function getLastfmTrackKey(item) {
+        let artist = item.artist.name ? item.artist.name : item.artist['#text'];
+        return Utilities.formatString('%s %s', item.name, artist).formatName();
+    }
+
+    function getSpotifyTrackKey(item) {
+        return Utilities.formatString('%s %s', item.name, item.artists[0].name).formatName();
+    }
+
+    function getTrackNameLastfm(item) {
+        return Utilities.formatString('%s %s', getArtistNameLastfm(item), item.name).formatName();
+    }
+
+    function getAlbumNameLastfm(item) {
+        return Utilities.formatString('%s %s', item.name, getArtistNameLastfm(item)).formatName();
+    }
+
+    function getArtistNameLastfm(item) {
+        let name;
+        if (item.artist) {
+            name = item.artist.name || item.artist['#text'];
+        } else if (item.artists) {
+            name = item.artists[0].name;
+        } else if (item.name) {
+            name = item.name;
+        }
+        return name.formatName();
     }
 })();
 
