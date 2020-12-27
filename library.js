@@ -176,6 +176,7 @@ const Source = (function () {
         getAlbumTracks: getAlbumTracks,
         getAlbumsTracks: getAlbumsTracks,
         getArtistsTopTracks: getArtistsTopTracks,
+        getRelatedArtists: getRelatedArtists,
     };
 
     function getTopTracks(timeRange) {
@@ -202,8 +203,16 @@ const Source = (function () {
         return ['short', 'medium', 'long'].includes(timeRange);
     }
 
+    function getRelatedArtists(artists, isFlat = true){
+        return getArtistsByPath(artists, '/artists/%s/related-artists', isFlat);
+    }
+
     function getArtistsTopTracks(artists, isFlat = true) {
-        let template = API_BASE_URL + '/artists/%s/top-tracks?country=from_token';
+        return getArtistsByPath(artists, '/artists/%s/top-tracks?country=from_token', isFlat);
+    }
+
+    function getArtistsByPath(artists, path, isFlat){
+        let template = API_BASE_URL + path;
         let urls = artists.reduce((urls, artist) => {
             urls.push(Utilities.formatString(template, artist.id));
             return urls;
@@ -907,7 +916,7 @@ const Filter = (function () {
         const TYPE_TRACKS = 'tracks';
         const TYPE_ARTISTS = 'artists';
 
-        let _tracks;
+        let _items;
         let _duplicates;
 
         function dedupTracks(tracks) {
@@ -919,19 +928,19 @@ const Filter = (function () {
         }
 
         function separateArtistsDuplicated(tracks) {
-            _tracks = tracks;
+            _items = tracks;
             _duplicates = findArtistsDuplicated();
             let indexArray = _duplicates.map((item) => item.index);
             let result = { original: [], duplicate: [] };
-            for (let i = 0; i < _tracks.length; i++) {
+            for (let i = 0; i < _items.length; i++) {
                 let key = indexArray.includes(i) ? 'duplicate' : 'original';
-                result[key].push(_tracks[i]);
+                result[key].push(_items[i]);
             }
             return result;
         }
 
-        function dedup(tracks, type) {
-            _tracks = tracks;
+        function dedup(items, type) {
+            _items = items;
             _duplicates = type == TYPE_ARTISTS ? findArtistsDuplicated() : findTracksDuplicated();
             removeTracksDuplicated();
         }
@@ -939,7 +948,7 @@ const Filter = (function () {
         function findTracksDuplicated() {
             const seenIds = {};
             const seenTrackKeys = {};
-            return _tracks.reduce((duplicates, track, index) => {
+            return _items.reduce((duplicates, track, index) => {
                 if (track === null || track.id === null) {
                     return duplicates;
                 }
@@ -975,22 +984,16 @@ const Filter = (function () {
 
         function findArtistsDuplicated() {
             const seenArtists = {};
-            return _tracks.reduce((duplicates, track, index) => {
-                if (
-                    track === null ||
-                    track.id === null ||
-                    track.artists === null ||
-                    track.artists.length == 0 ||
-                    track.artists[0].id === null
-                ) {
+            return _items.reduce((duplicates, item, index) => {
+                if (!isValidArtist(item)) {
                     return duplicates;
                 }
 
-                const artistId = getArtistId(track);
+                const artistId = getArtistId(item);
                 if (isDuplicateByArtistId(artistId)) {
                     duplicates.push({
                         index: index,
-                        track: track,
+                        item: item,
                         reason: 'same-artist-id',
                     });
                 } else {
@@ -999,12 +1002,16 @@ const Filter = (function () {
 
                 return duplicates;
 
-                function getArtistId(track) {
-                    return track.artists[0].id;
+                function getArtistId(item) {
+                    return item.followers ? item.id : item.artists[0].id;
                 }
 
                 function isDuplicateByArtistId(artistId) {
                     return artistId in seenArtists;
+                }
+
+                function isValidArtist(item){
+                    return item && item.id && (item.followers || (item.artists && item.artists.length > 0 && item.artists[0].id));
                 }
             }, []);
         }
@@ -1012,7 +1019,7 @@ const Filter = (function () {
         function removeTracksDuplicated() {
             let offset = 0;
             _duplicates.forEach((item) => {
-                _tracks.splice(item.index - offset, 1);
+                _items.splice(item.index - offset, 1);
                 offset++;
             });
         }

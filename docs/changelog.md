@@ -9,8 +9,9 @@
 ## Версия 1.3.3
 - Оптимизация запросов к Last.fm в механизме накопления. Поиск только тех треков, что являются новыми для истории прослушиваний.
 - Новые функции к Lastfm: [getSimilarTracks](/func?id=getsimilartracks), [getTopArtists](/func?id=gettopartists-1), [getTopAlbums](/func?id=gettopalbums).
+- Новые функция к Source: [getRelatedArtists](/func?id=getrelatedartists), [getAlbumsTracks](/func?id=getalbumstracks).
 - Новая функция к Yandex: [getAlbums](/func?id=getalbums).
-- Новая функция к Source: [getAlbumsTracks](/func?id=getalbumstracks).
+- Теперь [dedupArtists](/func?id=dedupartists) может удалить дубликаты из массива исполнителей.
 - При поиске и сравнивании из строки удаляются специальные символы (,!@# и тд).
 - Более информативные сообщения в логах для истории прослушиваний и при поиске.
 
