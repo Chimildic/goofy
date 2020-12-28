@@ -24,9 +24,11 @@ function updateRecentTracks() {
 }
 
 String.prototype.formatName = function () {
-    return this.replace(/[,!@#$%^&*()+-./\\]/g, ' ')
+    return this.toLowerCase()
+        .replace(/[,!@#$%^&*()+-./\\]/g, ' ')
         .replace(/\s{2,}/g, ' ')
-        .toLowerCase();
+        .replace(/ё/g, 'е')
+        .trim();
 };
 
 const CustomUrlFetchApp = (function () {
