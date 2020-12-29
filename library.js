@@ -1582,8 +1582,11 @@ const Lastfm = (function () {
 
         function getAll(){
             return CustomUrlFetchApp.fetchAll(requests).reduce((similarTracks, response) => {
-                let filteredTracks = response.similartracks.track.filter((track) => track.match >= match);
-                return Combiner.push(similarTracks, filteredTracks);
+                if (response.similartracks){
+                    let filteredTracks = response.similartracks.track.filter((track) => track.match >= match);
+                    return Combiner.push(similarTracks, filteredTracks);
+                }
+                return similarTracks;
             }, []);
         }
     }
@@ -1646,20 +1649,23 @@ const Lastfm = (function () {
 
     function getTopTracks(params) {
         params.method = 'user.gettoptracks';
-        let tracks = getTopPage(params).toptracks.track;
-        return Search.multisearchTracks(tracks, getTrackNameLastfm);
+        let tracks = getTopPage(params);
+        if (!tracks.toptracks) return [];
+        return Search.multisearchTracks(tracks.toptracks.track, getTrackNameLastfm);
     }
 
     function getTopArtists(params) {
         params.method = 'user.gettopartists';
-        let artists = getTopPage(params).topartists.artist;
-        return Search.multisearchArtists(artists, getArtistNameLastfm);
+        let artists = getTopPage(params);
+        if (!artists.topartists) return [];
+        return Search.multisearchArtists(artists.topartists.artist, getArtistNameLastfm);
     }
 
     function getTopAlbums(params) {
         params.method = 'user.gettopalbums';
-        let albums = getTopPage(params).topalbums.album;
-        return Search.multisearchAlbums(albums, getAlbumNameLastfm);
+        let albums = getTopPage(params);
+        if (!albums.topalbums) return [];
+        return Search.multisearchAlbums(albums.topalbums.album, getAlbumNameLastfm);
     }
 
     function getTopPage(params) {
