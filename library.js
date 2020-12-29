@@ -135,7 +135,7 @@ const CustomUrlFetchApp = (function () {
         }
 
         function writeErrorLog() {
-            console.error('URL:', url, '\nCode:', response.getResponseCode(), '\nParams:', params, '\nContent:', response.getContentText());
+            console.error('URL:', url, '\nCode:', response.getResponseCode(),'\nContent:', response.getContentText());
         }
     }
 
