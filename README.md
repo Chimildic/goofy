@@ -17,15 +17,17 @@
 - [Ограничения](https://chimildic.github.io/goofy/#/desc?id=Ограничения)
 
 ## Быстрый старт
-- [Установка и настройка](/install.md)
-- [Первый плейлист](/first-playlist.md)
+- [Установка и настройка](https://chimildic.github.io/goofy/#/install)
+- [Первый плейлист](https://chimildic.github.io/goofy/#/first-playlist)
 
 ## Справочник
-- [Шаблоны плейлистов](/template)
-- [Список функций](/func)
+- [Шаблоны плейлистов](https://chimildic.github.io/goofy/#/template)
+- [Список функций](https://chimildic.github.io/goofy/#/func)
+- [Дополнительное описание](https://chimildic.github.io/goofy/#/guide)
 
 ## Помощь
 
 Для помощи с алгоритмом или ошибкой, создайте новую тему [здесь](https://github.com/Chimildic/goofy/discussions).
+Подробная документация доступна [здесь](https://chimildic.github.io/goofy/). Перед тем, как задать вопрос, пожалуйста, ознакомьтесь с ней.
 
 [☕ Поддержать проект](https://yoomoney.ru/to/410014208620686)
