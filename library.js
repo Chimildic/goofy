@@ -824,15 +824,19 @@ const Filter = (function () {
     }
 
     function removeArtists(sourceArray, removedArray, invert = false) {
-        let removedIds = removedArray.map((item) => item.artists[0].id);
+        let removedIds = removedArray.map((item) => getArtistId(item));
         let filteredTracks = sourceArray.filter((item) => {
-            return invert ^ !removedIds.includes(item.artists[0].id);
+            return invert ^ !removedIds.includes(getArtistId(item));
         });
         Combiner.replace(sourceArray, filteredTracks);
     }
 
     function getTrackKey(track) {
         return Utilities.formatString('%s:%s', track.name, track.artists[0].name).formatName();
+    }
+
+    function getArtistId(item){
+        return item.artists ? item.artists[0].id : item.id;
     }
 
     function matchExceptMix(tracks) {

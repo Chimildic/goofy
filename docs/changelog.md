@@ -12,6 +12,7 @@
 - Новые функция к Source: [getRelatedArtists](/func?id=getrelatedartists), [getAlbumsTracks](/func?id=getalbumstracks).
 - Новая функция к Yandex: [getAlbums](/func?id=getalbums).
 - Теперь [dedupArtists](/func?id=dedupartists) может удалить дубликаты из массива исполнителей.
+- Теперь [removeArtists](/func?id=removeartists) может удалять по массиву исполнителей.
 - При поиске и сравнивании из строки удаляются специальные символы (,!@# и тд).
 - Более информативные сообщения в логах для истории прослушиваний и при поиске.
 
