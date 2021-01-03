@@ -135,7 +135,7 @@ const CustomUrlFetchApp = (function () {
         }
 
         function writeErrorLog() {
-            console.error('URL:', url, '\nCode:', response.getResponseCode(),'\nContent:', response.getContentText());
+            console.error('URL:', url, '\nCode:', response.getResponseCode(), '\nContent:', response.getContentText());
         }
     }
 
@@ -205,7 +205,7 @@ const Source = (function () {
         return ['short', 'medium', 'long'].includes(timeRange);
     }
 
-    function getRelatedArtists(artists, isFlat = true){
+    function getRelatedArtists(artists, isFlat = true) {
         return getArtistsByPath(artists, '/artists/%s/related-artists', isFlat);
     }
 
@@ -213,7 +213,7 @@ const Source = (function () {
         return getArtistsByPath(artists, '/artists/%s/top-tracks?country=from_token', isFlat);
     }
 
-    function getArtistsByPath(artists, path, isFlat){
+    function getArtistsByPath(artists, path, isFlat) {
         let template = API_BASE_URL + path;
         let urls = artists.reduce((urls, artist) => {
             urls.push(Utilities.formatString(template, artist.id));
@@ -835,7 +835,7 @@ const Filter = (function () {
         return Utilities.formatString('%s:%s', track.name, track.artists[0].name).formatName();
     }
 
-    function getArtistId(item){
+    function getArtistId(item) {
         return item.artists ? item.artists[0].id : item.id;
     }
 
@@ -844,15 +844,15 @@ const Filter = (function () {
     }
 
     function matchExceptRu(tracks) {
-        matchExcept(tracks, '^[а-яА-Я]+');
+        matchExcept(tracks, '[а-яА-ЯёЁ]+');
     }
 
     function matchLatinOnly(tracks) {
-        match(tracks, '^[a-zA-Z0-9]+');
+        match(tracks, '^[a-zA-Z0-9 ]+$');
     }
 
     function matchOriginalOnly(tracks) {
-        matchExcept(tracks, 'mix|club|radio|piano|acoustic|edit|live|version|cover');
+        matchExcept(tracks, 'mix|club|radio|piano|acoustic|edit|live|version|cover|karaoke');
     }
 
     function matchExcept(tracks, strRegex) {
@@ -862,7 +862,7 @@ const Filter = (function () {
     function match(tracks, strRegex, invert = false) {
         let regex = new RegExp(strRegex, 'i');
         let filteredTracks = tracks.filter((track) => {
-            return invert ^ (regex.test(track.name) || regex.test(track.album.name));
+            return invert ^ regex.test(track.name.formatName()) && invert ^ regex.test(track.album.name.formatName());
         });
         Combiner.replace(tracks, filteredTracks);
     }
@@ -1016,7 +1016,7 @@ const Filter = (function () {
                     return artistId in seenArtists;
                 }
 
-                function isValidArtist(item){
+                function isValidArtist(item) {
                     return item && item.id && (item.followers || (item.artists && item.artists.length > 0 && item.artists[0].id));
                 }
             }, []);
@@ -1584,9 +1584,9 @@ const Lastfm = (function () {
             }, []);
         }
 
-        function getAll(){
+        function getAll() {
             return CustomUrlFetchApp.fetchAll(requests).reduce((similarTracks, response) => {
-                if (response.similartracks){
+                if (response.similartracks) {
                     let filteredTracks = response.similartracks.track.filter((track) => track.match >= match);
                     return Combiner.push(similarTracks, filteredTracks);
                 }

@@ -975,7 +975,7 @@ Filter.match(tracks, 'cover|live', true);
 Аргументы
 - (массив) `tracks` - массив треков.
 
-Аналогично [matchExcept](/func?id=matchexcept) с аргументом `strRegex = '^[а-яА-Я]+'`
+Аналогично [matchExcept](/func?id=matchexcept) с аргументом `strRegex = '[а-яА-ЯёЁ]+'`
 
 ### matchLatinOnly
 
@@ -984,7 +984,7 @@ Filter.match(tracks, 'cover|live', true);
 Аргументы
 - (массив) `tracks` - массив треков.
 
-Аналогично [match](/func?id=match) с аргументом `strRegex = '^[a-zA-Z0-9]+'`
+Аналогично [match](/func?id=match) с аргументом `strRegex = '^[a-zA-Z0-9 ]+$'`
 
 ### matchOriginalOnly
 
@@ -993,7 +993,7 @@ Filter.match(tracks, 'cover|live', true);
 Аргументы
 - (массив) `tracks` - массив треков.
 
-Аналогично [matchExcept](/func?id=matchexcept) с аргументом `strRegex = 'mix|club|radio|piano|acoustic|edit|live|version|cover'`
+Аналогично [matchExcept](/func?id=matchexcept) с аргументом `strRegex = 'mix|club|radio|piano|acoustic|edit|live|version|cover|karaoke'`
 
 ## Selector
 
