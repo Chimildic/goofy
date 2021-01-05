@@ -1509,31 +1509,31 @@ const Playlist = (function () {
 
 const Library = (function () {
     function followArtists(artists) {
-        modifyFollowArtists(SpotifyRequest.putIds, artists);
+        modifyFollowArtists(SpotifyRequest.putItems, artists);
     }
 
     function unfollowArtists(artists) {
-        modifyFollowArtists(SpotifyRequest.deleteIds, artists);
+        modifyFollowArtists(SpotifyRequest.deleteItems, artists);
     }
 
     function modifyFollowArtists(method, artists) {
         let url = Utilities.formatString('%s/%s', API_BASE_URL, 'me/following?type=artist');
         let ids = artists.map((artist) => artist.id);
-        method(url, ids, 50);
+        method({ url: url, items: ids, limit: 50, key: 'ids' });
     }
 
     function saveFavoriteTracks(tracks) {
-        modifyFavoriteTracks(SpotifyRequest.putIds, tracks);
+        modifyFavoriteTracks(SpotifyRequest.putItems, tracks);
     }
 
     function deleteFavoriteTracks(tracks) {
-        modifyFavoriteTracks(SpotifyRequest.deleteIds, tracks);
+        modifyFavoriteTracks(SpotifyRequest.deleteItems, tracks);
     }
 
     function modifyFavoriteTracks(method, tracks) {
         let url = Utilities.formatString('%s/%s', API_BASE_URL, 'me/tracks');
         let ids = tracks.map((track) => track.id);
-        method(url, ids, 50);
+        method({ url: url, items: ids, limit: 50, key: 'ids' });
     }
 
     return {
@@ -2262,8 +2262,8 @@ const SpotifyRequest = (function () {
         post: post,
         put: put,
         putImage: putImage,
-        putIds: putIds,
-        deleteIds: deleteIds,
+        putItems: putItems,
+        deleteItems: deleteItems,
         deleteRequest: deleteRequest,
     };
 
@@ -2400,15 +2400,20 @@ const SpotifyRequest = (function () {
         });
     }
 
-    function putIds(url, ids, limit) {
-        for (let i = 0; i < Math.ceil(ids.length / limit); i++) {
-            put(url, { ids: ids.splice(0, limit) });
-        }
+    function putItems(params) {
+        pushRequestsWithItems(put, params);
     }
 
-    function deleteIds(url, ids, limit) {
-        for (let i = 0; i < Math.ceil(ids.length / limit); i++) {
-            deleteRequest(url, { ids: ids.splice(0, limit) });
+    function deleteItems(params) {
+        pushRequestsWithItems(deleteRequest, params);
+    }
+
+    function pushRequestsWithItems(method, params){
+        let count = Math.ceil(params.items.length / params.limit);
+        for (let i = 0; i < count; i++) {
+            let payload = {};
+            payload[params.key] = params.items.splice(0, params.limit);
+            method(params.url, payload);
         }
     }
 
