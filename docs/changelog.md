@@ -6,6 +6,9 @@
 
 Для добавления своих функций или переопределения существующих, используйте [инструкциию](https://github.com/Chimildic/goofy/discussions/18).
 
+## Версия 1.3.4 
+- Новые функции к Source: [getCategoryTracks](/func?id=getcategorytracks), [getListCategory](/func?id=getlistcategory).
+
 ## Версия 1.3.3
 - Оптимизация запросов к Last.fm в механизме накопления. Поиск только тех треков, что являются новыми для истории прослушиваний.
 - Новые функции к Lastfm: [getSimilarTracks](/func?id=getsimilartracks), [getTopArtists](/func?id=gettopartists-1), [getTopAlbums](/func?id=gettopalbums).

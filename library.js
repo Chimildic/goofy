@@ -1,4 +1,4 @@
-const VERSION = '1.3.3';
+const VERSION = '1.3.4';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const CLIENT_ID = KeyValue.CLIENT_ID;
@@ -179,6 +179,8 @@ const Source = (function () {
         getAlbumsTracks: getAlbumsTracks,
         getArtistsTopTracks: getArtistsTopTracks,
         getRelatedArtists: getRelatedArtists,
+        getCategoryTracks: getCategoryTracks,
+        getListCategory: getListCategory,
     };
 
     function getTopTracks(timeRange) {
@@ -203,6 +205,20 @@ const Source = (function () {
 
     function isValidTimeRange(timeRange) {
         return ['short', 'medium', 'long'].includes(timeRange);
+    }
+
+    function getListCategory(params={}){
+        let template = '%s/browse/categories?%s';
+        let query = CustomUrlFetchApp.parseQuery(params);
+        let url = Utilities.formatString(template, API_BASE_URL, query);
+        return SpotifyRequest.get(url).items;
+    }
+
+    function getCategoryTracks(category_id, params={}){
+        let template = '%s/browse/categories/%s/playlists?%s';
+        let query = CustomUrlFetchApp.parseQuery(params);
+        let url = Utilities.formatString(template, API_BASE_URL, category_id, query);
+        return getTracks(SpotifyRequest.get(url).items);
     }
 
     function getRelatedArtists(artists, isFlat = true) {
