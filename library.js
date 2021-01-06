@@ -1279,15 +1279,15 @@ const Order = (function () {
         return xDate.getTime() - yDate.getTime();
     }
 
-    function separateArtists(tracks, space, isRandom = false) {
+    function separateArtists(items, space, isRandom = false) {
         if (isRandom) {
-            shuffle(tracks);
+            shuffle(items);
         }
-        let items = Filter.separateArtistsDuplicated(tracks);
-        let original = items.original;
-        let duplicate = items.duplicate;
+        let response = Filter.separateArtistsDuplicated(items);
+        let original = response.original;
+        let duplicate = response.duplicate;
         duplicate.forEach((item) => tryInsert(item));
-        Combiner.replace(tracks, original);
+        Combiner.replace(items, original);
 
         function tryInsert(item) {
             for (let i = 0; i <= original.length; i++) {
@@ -1301,12 +1301,17 @@ const Order = (function () {
         }
 
         function isCorrectRow(item, startIndex, endIndex) {
+            let id = getArtistId(item);
             for (let i = startIndex; i <= endIndex; i++) {
-                if (original[i] && original[i].artists[0].id === item.artists[0].id) {
+                if (original[i] && getArtistId(original[i]) === id) {
                     return false;
                 }
             }
             return true;
+        }
+
+        function getArtistId(item) {
+            return item.followers ? item.id : item.artists[0].id;
         }
     }
 
