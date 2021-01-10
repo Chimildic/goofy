@@ -1528,7 +1528,7 @@ let similarTracks = Lastfm.getSimilarTracks(playlistTracks, 0.65, 30);
 
 ### getLovedTracks
 
-Возвращает массив любимых треков пользователя `user`, ограниченного количеством `limit`. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1).
+Возвращает массив любимых треков пользователя `user`, ограниченного количеством `limit`. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1). Включает дату добавления, можно использовать фильтр по дате.
 
 Аргументы
 - (строка) `user` - логин пользователя Last.fm, чьи любимые треки нужно искать.

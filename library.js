@@ -1667,29 +1667,42 @@ const Lastfm = (function () {
     }
 
     function getLovedTracks(user, limit) {
-        let queryObj = { method: 'user.getlovedtracks', user: user, limit: 200 };
-        let tracks = getAllPagesTracks(queryObj, limit);
-        return Search.multisearchTracks(tracks, getTrackNameLastfm);
+        let queryObj = { method: 'user.getlovedtracks', user: user, limit: limit || 200 };
+        let tracks = getPage(queryObj);
+        if (!tracks.lovedtracks) {
+            console.error('Ошибка при получении любимых треков', tracks);
+            return [];
+        }
+        return Search.multisearchTracks(tracks.lovedtracks.track, getTrackNameLastfm);
     }
 
     function getTopTracks(params) {
         params.method = 'user.gettoptracks';
         let tracks = getTopPage(params);
-        if (!tracks.toptracks) return [];
+        if (!tracks.toptracks) {
+            console.error('Ошибка при получении топа треков', tracks);
+            return [];
+        }
         return Search.multisearchTracks(tracks.toptracks.track, getTrackNameLastfm);
     }
 
     function getTopArtists(params) {
         params.method = 'user.gettopartists';
         let artists = getTopPage(params);
-        if (!artists.topartists) return [];
+        if (!artists.topartists) {
+            console.error('Ошибка при получении топа исполнителей', artists);
+            return [];
+        }
         return Search.multisearchArtists(artists.topartists.artist, getArtistNameLastfm);
     }
 
     function getTopAlbums(params) {
         params.method = 'user.gettopalbums';
         let albums = getTopPage(params);
-        if (!albums.topalbums) return [];
+        if (!albums.topalbums) {
+            console.error('Ошибка при получении топа альбомов', albums);
+            return [];
+        }
         return Search.multisearchAlbums(albums.topalbums.album, getAlbumNameLastfm);
     }
 
