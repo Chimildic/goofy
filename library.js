@@ -207,14 +207,14 @@ const Source = (function () {
         return ['short', 'medium', 'long'].includes(timeRange);
     }
 
-    function getListCategory(params={}){
+    function getListCategory(params = {}) {
         let template = '%s/browse/categories?%s';
         let query = CustomUrlFetchApp.parseQuery(params);
         let url = Utilities.formatString(template, API_BASE_URL, query);
         return SpotifyRequest.get(url).items;
     }
 
-    function getCategoryTracks(category_id, params={}){
+    function getCategoryTracks(category_id, params = {}) {
         let template = '%s/browse/categories/%s/playlists?%s';
         let query = CustomUrlFetchApp.parseQuery(params);
         let url = Utilities.formatString(template, API_BASE_URL, category_id, query);
@@ -1956,11 +1956,13 @@ const Cache = (function () {
 
     function tryParseJSON(file) {
         if (!file) return [];
+        let content = file.getBlob().getDataAsString();
         try {
-            return JSON.parse(file.getBlob().getDataAsString());
+            return JSON.parse(content);
         } catch (e) {
-            console.error('Не удалось перевести строку JSON в объект.', e, e.stack, file.getBlob().getDataAsString());
-            return [];
+            console.error('Не удалось перевести строку JSON в объект. Length:', content.length, 'content:', content);
+            console.error(e, e.stack);
+            throw 'Ошибка чтения файла';
         }
     }
 
@@ -2429,7 +2431,7 @@ const SpotifyRequest = (function () {
         pushRequestsWithItems(deleteRequest, params);
     }
 
-    function pushRequestsWithItems(method, params){
+    function pushRequestsWithItems(method, params) {
         let count = Math.ceil(params.items.length / params.limit);
         for (let i = 0; i < count; i++) {
             let payload = {};
