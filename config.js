@@ -7,6 +7,7 @@ function setProperties(){
     UserProperties.setProperty('ON_LASTFM_RECENT_TRACKS', 'false');
     UserProperties.setProperty('LASTFM_RANGE_RECENT_TRACKS', '30');
     UserProperties.setProperty('LASTFM_LOGIN', 'вашЛогин');
+    UserProperties.setProperty('REQUESTS_IN_ROW', '40');
 }
 
 function logProperties(){

@@ -1,13 +1,6 @@
 const VERSION = '1.3.4';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
-const CLIENT_ID = KeyValue.CLIENT_ID;
-const CLIENT_SECRET = KeyValue.CLIENT_SECRET;
-const LASTFM_API_KEY = KeyValue.LASTFM_API_KEY;
-const ON_SPOTIFY_RECENT_TRACKS = 'true' === KeyValue.ON_SPOTIFY_RECENT_TRACKS;
-const ON_LASTFM_RECENT_TRACKS = 'true' === KeyValue.ON_LASTFM_RECENT_TRACKS;
-const LASTFM_RANGE_RECENT_TRACKS = parseInt(KeyValue.LASTFM_RANGE_RECENT_TRACKS);
-const LASTFM_LOGIN = KeyValue.LASTFM_LOGIN;
 const API_BASE_URL = 'https://api.spotify.com/v1';
 const DEFAULT_DATE = new Date('2000-01-01');
 
@@ -51,7 +44,7 @@ const CustomUrlFetchApp = (function () {
         countRequest += requests.length;
         requests.forEach((request) => (request.muteHttpExceptions = true));
         let responseArray = [];
-        let limit = 40;
+        let limit = KeyValue.REQUESTS_IN_ROW || 40;
         let count = Math.ceil(requests.length / limit);
         for (let i = 0; i < count; i++) {
             let requestPack = requests.splice(0, limit);
@@ -427,6 +420,8 @@ const Source = (function () {
 })();
 
 const RecentTracks = (function () {
+    const ON_SPOTIFY_RECENT_TRACKS = 'true' === KeyValue.ON_SPOTIFY_RECENT_TRACKS;
+    const ON_LASTFM_RECENT_TRACKS = 'true' === KeyValue.ON_LASTFM_RECENT_TRACKS;
     const SPOTIFY_FILENAME = 'SpotifyRecentTracks.json';
     const LASTFM_FILENAME = 'LastfmRecentTracks.json';
     const BOTH_SOURCE_FILENAME = 'BothRecentTracks.json';
@@ -489,7 +484,7 @@ const RecentTracks = (function () {
             hasUpdate += updatePlatformRecentTracks(getSpotifyRecentTracks(), SPOTIFY_FILENAME, findNewPlayed);
         }
         if (ON_LASTFM_RECENT_TRACKS) {
-            let lastfmTracks = Lastfm.getLastfmRecentTracks(LASTFM_LOGIN, LASTFM_RANGE_RECENT_TRACKS);
+            let lastfmTracks = Lastfm.getLastfmRecentTracks(KeyValue.LASTFM_LOGIN, parseInt(KeyValue.LASTFM_RANGE_RECENT_TRACKS));
             hasUpdate += updatePlatformRecentTracks(lastfmTracks, LASTFM_FILENAME, Lastfm.findNewPlayed);
         }
         if (hasUpdate > 0 && ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
@@ -1598,7 +1593,7 @@ const Lastfm = (function () {
                     track: track.name,
                     limit: limit || 50,
                     format: 'json',
-                    api_key: LASTFM_API_KEY,
+                    api_key: KeyValue.LASTFM_API_KEY,
                 });
                 requests.push({ url: LASTFM_API_BASE_URL + queryStr });
                 return requests;
@@ -1766,7 +1761,7 @@ const Lastfm = (function () {
     }
 
     function getPage(queryObj) {
-        queryObj.api_key = LASTFM_API_KEY;
+        queryObj.api_key = KeyValue.LASTFM_API_KEY;
         queryObj.format = 'json';
         let url = LASTFM_API_BASE_URL + CustomUrlFetchApp.parseQuery(queryObj);
         return CustomUrlFetchApp.fetch(url) || [];
@@ -2215,8 +2210,8 @@ const Auth = (function () {
         return OAuth2.createService('spotify')
             .setAuthorizationBaseUrl('https://accounts.spotify.com/authorize')
             .setTokenUrl('https://accounts.spotify.com/api/token')
-            .setClientId(CLIENT_ID)
-            .setClientSecret(CLIENT_SECRET)
+            .setClientId(KeyValue.CLIENT_ID)
+            .setClientSecret(KeyValue.CLIENT_SECRET)
             .setCallbackFunction('displayAuthResult')
             .setPropertyStore(UserProperties)
             .setScope(SCOPE)
