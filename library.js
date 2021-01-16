@@ -850,32 +850,38 @@ const Filter = (function () {
         return item.artists ? item.artists[0].id : item.id;
     }
 
-    function matchExceptMix(tracks) {
-        matchExcept(tracks, 'mix|club');
+    function matchExceptMix(items) {
+        matchExcept(items, 'mix|club');
     }
 
-    function matchExceptRu(tracks) {
-        matchExcept(tracks, '[а-яА-ЯёЁ]+');
+    function matchExceptRu(items) {
+        matchExcept(items, '[а-яА-ЯёЁ]+');
     }
 
-    function matchLatinOnly(tracks) {
-        match(tracks, '^[a-zA-Z0-9 ]+$');
+    function matchLatinOnly(items) {
+        match(items, '^[a-zA-Z0-9 ]+$');
     }
 
-    function matchOriginalOnly(tracks) {
-        matchExcept(tracks, 'mix|club|radio|piano|acoustic|edit|live|version|cover|karaoke');
+    function matchOriginalOnly(items) {
+        matchExcept(items, 'mix|club|radio|piano|acoustic|edit|live|version|cover|karaoke');
     }
 
-    function matchExcept(tracks, strRegex) {
-        match(tracks, strRegex, true);
+    function matchExcept(items, strRegex) {
+        match(items, strRegex, true);
     }
 
-    function match(tracks, strRegex, invert = false) {
+    function match(items, strRegex, invert = false) {
         let regex = new RegExp(strRegex, 'i');
-        let filteredTracks = tracks.filter((track) => {
-            return invert ^ regex.test(track.name.formatName()) && invert ^ regex.test(track.album.name.formatName());
+        let filteredTracks = items.filter((item) => {
+            if (typeof item == 'undefined') { 
+                return false; 
+            } else if (item.hasOwnProperty('album')) { 
+                return invert ^ regex.test(item.name.formatName()) && 
+                       invert ^ regex.test(item.album.name.formatName());
+            }
+            return invert ^ regex.test(item.name.formatName());
         });
-        Combiner.replace(tracks, filteredTracks);
+        Combiner.replace(items, filteredTracks);
     }
 
     function rangeDateRel(tracks, sinceDays, beforeDays) {
