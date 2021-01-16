@@ -1368,23 +1368,18 @@ const Playlist = (function () {
         }
     })();
 
-    function create(payload) {
-        let url = Utilities.formatString('%s/users/%s/playlists', API_BASE_URL, User.getId());
-        return SpotifyRequest.post(url, payload);
-    }
-
     function saveAsNew(data) {
         let payload = createPayload(data);
-        let createdPlaylist = create(payload);
-
-        addTracks({
-            id: createdPlaylist.id,
-            tracks: data.tracks,
-        });
-
+        let playlist = createPlaylist(payload);
+        addTracks({ id: playlist.id, tracks: data.tracks });
         if (data.hasOwnProperty('randomCover')) {
-            setRandomCover(createdPlaylist.id);
+            setRandomCover(playlist.id);
         }
+    }
+
+    function createPlaylist(payload) {
+        let url = Utilities.formatString('%s/users/%s/playlists', API_BASE_URL, User.getId());
+        return SpotifyRequest.post(url, payload);
     }
 
     function saveWithReplace(data) {
@@ -1395,19 +1390,27 @@ const Playlist = (function () {
         saveWithModify(addTracks, data);
     }
 
+    function saveWithUpdate(data){
+        saveWithModify(updateTracks, data);
+    }
+
     function saveWithModify(modifyMethod, data) {
+        if (data.tracks.length > LIMIT_TRACKS) {
+            Selector.keepFirst(data.tracks, LIMIT_TRACKS);
+        }
+
         if (data.id) {
             modifyMethod(data);
             changeDetails(data);
-            changeCover(data);
+            changeCover(data.id, data.randomCover);
             return;
         }
 
-        let response = getByName(data.name);
-        if (response == null) {
+        let playlist = getByName(data.name);
+        if (playlist == null) {
             saveAsNew(data);
         } else {
-            data.id = response.id;
+            data.id = playlist.id;
             saveWithModify(modifyMethod, data);
         }
     }
@@ -1420,10 +1423,39 @@ const Playlist = (function () {
         modifyTracks('put', data);
     }
 
-    function modifyTracks(requestType, data) {
-        if (data.tracks.length > LIMIT_TRACKS) {
-            Selector.keepFirst(data.tracks, LIMIT_TRACKS);
+    function updateTracks(data){
+        let url = Utilities.formatString('%s/playlists/%s/tracks', API_BASE_URL, data.id);
+        let currentTracks = Source.getPlaylistTracks('', data.id);
+
+        addNewTracks();
+        removeOldTracks();
+
+        function addNewTracks() {
+            let currentIds = currentTracks.map((t) => t.id);
+            let tracksToAdd = data.tracks.filter((t) => !currentIds.includes(t.id));
+            if (tracksToAdd.length > 0) {
+                addTracks({ id: data.id, tracks: tracksToAdd, toEnd: data.toEnd });
+            }
         }
+
+        function removeOldTracks() {
+            let newIds = data.tracks.map((t) => t.id);
+            let tracksToDelete = currentTracks.filter((t) => !newIds.includes(t.id));
+            if (tracksToDelete.length == 0) {
+                return;
+            }
+            SpotifyRequest.deleteItems({
+                url: url,
+                key: 'tracks',
+                limit: 100,
+                items: getTrackUris(tracksToDelete).map((uri) => {
+                    return { uri: uri };
+                }),
+            });
+        }
+    }
+
+    function modifyTracks(requestType, data) {
         let size = 100;
         let uris = getTrackUris(data.tracks);
         let count = Math.ceil(uris.length / size);
@@ -1438,7 +1470,7 @@ const Playlist = (function () {
             let begin = i * size;
             let end = begin + size;
             let payload = { uris: uris.slice(begin, end) };
-            if (!data.toEnd && requestType === 'post') {
+            if ((!data.hasOwnProperty('toEnd') || !data.toEnd) && requestType === 'post') {
                 // добавлять треки вначало плейлиста со смещением begin, чтобы сохранить оригинальную сортировку
                 payload.position = begin;
             }
@@ -1472,9 +1504,9 @@ const Playlist = (function () {
         SpotifyRequest.put(url, payload);
     }
 
-    function changeCover(data) {
-        if (data.randomCover == 'update' || (data.randomCover == 'once' && hasMosaicCover(data.id))) {
-            setRandomCover(data.id);
+    function changeCover(playlistId, randomCover) {
+        if (randomCover == 'update' || (randomCover == 'once' && hasMosaicCover(playlistId))) {
+            setRandomCover(playlistId);
         }
     }
 
@@ -1520,6 +1552,7 @@ const Playlist = (function () {
         saveAsNew: saveAsNew,
         saveWithReplace: saveWithReplace,
         saveWithAppend: saveWithAppend,
+        saveWithUpdate: saveWithUpdate,
     };
 })();
 
