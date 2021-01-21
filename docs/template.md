@@ -285,3 +285,167 @@ function templateYandexSync() {
     Library.saveFavoriteTracks(yandexTracks);
 }
 ```
+
+# Исполнитель дня
+
+Механизм выбора случайного исполнителя из отслеживаемых, которого не было в предыдущие дни. Логика отбора треков на ваше усмотрение.
+
+## Константы
+
+`BORDER_DATE_REL`  - граница в днях, после которой исполнитель может повториться. В случае, когда все исполнители уже были по одному разу.
+`RECENT_TRACKS` - число удаляемых из выборки треков истории прослушиваний.
+`ARTISTS` - перечень исполнителей для выбора. По умолчанию, все отслеживаемые. Соответствует аргументам [getArtists](https://chimildic.github.io/goofy/#/func?id=getartists).
+`FILENAME` - имя кэш-файла на Google Диск
+
+## Функции
+
+Следующий код выбирает исполнителя
+```js
+let todayArtist = [findNextArtist()];
+```
+Можно сразу несколько
+```js
+let todayArtist = [findNextArtist(), findNextArtist()];
+```
+
+Вся логика отбора треков и создания плейлиста находится в функции `createPlaylist`. В примере это альбомы и синглы исполнителя, которые выпущены за последние 4 года, исключая 1 последний. Удалена недавняя история прослушиваний и выполнен отбор только оригинальных версий треков. 
+
+Следующий блок из функции `createPlaylist` отвечает за то, чтобы, в случае нулевого количества треков после всех фильтров, повторить механизм поиска исполнителя. Поэтому функция `createPlaylist` должна возвращать `true` в случае успешного обновления плейлиста.
+```js
+if (tracks.length == 0){
+    return false;
+}
+```
+
+Остальные функции не требуют никаких изменений.
+
+## Код 
+```js
+function templateArtistOfDay() {
+    const FILENAME = 'FollowedArtists.json';
+    const BORDER_DATE_REL = 30;
+    const RECENT_TRACKS = 1000;
+    const ARTISTS = { followed_include: true };
+
+    let cacheArtists = Cache.read(FILENAME);
+    if (cacheArtists.length == 0 || Selector.isDayOfWeek('monday')) {
+        updateArtists();
+    }
+
+    let todayArtist = [findNextArtist()];
+    Cache.write(FILENAME, cacheArtists);
+    let isSuccess = createPlaylist();
+    if (!isSuccess){
+        templateArtistOfDay();
+    }
+
+    function createPlaylist() {
+        let tracks = Source.getArtistsTracks({
+            artist: { followed_include: false, include: todayArtist },
+            album: { groups: 'album,single', release_date: { sinceDays: 1825, beforeDays: 365 },},
+        });
+        
+        Filter.removeTracks(tracks, RecentTracks.get(RECENT_TRACKS));
+        Filter.matchOriginalOnly(tracks);
+        
+        if (tracks.length == 0){
+            return false;
+        }
+        
+        Playlist.saveWithReplace({
+            // id: 'id вашего плейлиста', // после первого создания
+            name: 'Исполнитель дня',
+            tracks: tracks,
+        });
+        
+        return true;
+    }
+
+    function findNextArtist() {
+        let artist = getNextArtist();
+        if (!artist) {
+            updateArtists();
+            cleanOldTags();
+            artist = getNextArtist();
+        }
+        return artist || cacheArtists[0];
+    }
+
+    function getNextArtist() {
+        Order.shuffle(cacheArtists);
+        return cacheArtists.find((artist) => {
+            if (!artist.hasOwnProperty('wasArtistOfDay')) {
+                artist.wasArtistOfDay = new Date().toISOString();
+                return artist;
+            }
+        });
+    }
+
+    function cleanOldTags() {
+        let borderDateTime = Filter.getDateRel(BORDER_DATE_REL, 'startDay').getTime();
+        cacheArtists.forEach((artist) => {
+            if (artist.hasOwnProperty('wasArtistOfDay') && new Date(artist.wasArtistOfDay).getTime() <= borderDateTime) {
+                delete artist.wasArtistOfDay;
+            }
+        });
+    }
+
+    function updateArtists() {
+        let spotifyArtists = Source.getArtists(ARTISTS);
+        let ids = cacheArtists.map((artist) => artist.id);
+        spotifyArtists.forEach((artist) => {
+            if (!ids.includes(artist.id)) {
+                cacheArtists.push(artist);
+            }
+        });
+    }
+}
+```
+
+# Назад в этот день
+
+Собирает альбомы отслеживаемых исполнителей, которые вышли в этот день (число, месяц), но в другие года. Удаляет миксы и слишком короткие треки (интро). 
+
+Текущий год не включается. Чтобы включался, удалите условие `&& releaseDate.getFullYear() < year`
+
+Можно менять смещение дня, изменив значение `0` в `Filter.getDateRel(0, 'endDay')`
+
+## Код
+```js
+function templateOnThisDay() {
+    let artists = Source.getArtists({ followed_include: true });
+    let albums = filterAlbums(Source.getArtistsAlbums(artists, {}));
+    let tracks = getAlbumsTracks(albums);
+    Filter.matchExceptMix(tracks, 'mix');
+    Filter.rangeTracks(tracks, {
+        meta: {
+            duration_ms: { min: 120000 },
+        },
+    });
+    Playlist.saveWithReplace({
+        // id: 'вашеId',
+        name: 'Назад в этот день',
+        tracks: tracks, 
+        randomCover: 'update',
+    });
+    
+    function filterAlbums(albums) {
+        let today = Filter.getDateRel(0, 'endDay');
+        let date = today.getDate();
+        let month = today.getMonth();
+        let year = today.getFullYear();
+        return albums.filter((album) => {
+            let releaseDate = new Date(album.release_date);
+            return releaseDate.getDate() == date && 
+                   releaseDate.getMonth() == month && 
+                   releaseDate.getFullYear() < year;
+        });
+    }
+
+    function getAlbumsTracks(albums){
+        let tracks = [];
+        albums.forEach((album) => Combiner.push(tracks, Source.getAlbumTracks(album)));
+        return tracks;
+    }
+}
+```
