@@ -10,7 +10,7 @@
 - Новые функции к Source: [getCategoryTracks](/func?id=getcategorytracks), [getListCategory](/func?id=getlistcategory).
 - Появился параметр [REQUESTS_IN_ROW](/guide?id=Параметры).
 - При чтении пустого файла через Cache.read выбрасывается исключение, чтобы предотвратить перезапись файла при баге со стороны Google ([подробнее](https://github.com/Chimildic/goofy/discussions/26)).
-- Новая функция [Playlist.saveWithUpdate](//func?id=savewithupdate).
+- Новая функция [Playlist.saveWithUpdate](/func?id=savewithupdate).
 - Функции match* могут принимать массив исполнителей. В случае массива треков, сравнение по названию трека и альбома (без исполнителя). В случае массива исполнителей, только его имя.
 - В документацию добавлены шаблоны с форума (Назад в этот день, исполнитель дня)
 
