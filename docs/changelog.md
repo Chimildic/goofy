@@ -6,6 +6,9 @@
 
 Для добавления своих функций или переопределения существующих, используйте [инструкциию](https://github.com/Chimildic/goofy/discussions/18).
 
+## Версия 1.3.5
+- Новая функция к Source: [mineTracks](/func?id=minetracks).
+
 ## Версия 1.3.4 
 - Новые функции к Source: [getCategoryTracks](/func?id=getcategorytracks), [getListCategory](/func?id=getlistcategory).
 - Появился параметр [REQUESTS_IN_ROW](/guide?id=Параметры).

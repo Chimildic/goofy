@@ -1,4 +1,4 @@
-const VERSION = '1.3.4';
+const VERSION = '1.3.5';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -174,6 +174,7 @@ const Source = (function () {
         getRelatedArtists: getRelatedArtists,
         getCategoryTracks: getCategoryTracks,
         getListCategory: getListCategory,
+        mineTracks: mineTracks,
     };
 
     function getTopTracks(timeRange) {
@@ -351,6 +352,15 @@ const Source = (function () {
         return playlistArray;
     }
 
+    function mineTracks(params) {
+        let result = Search.multisearchPlaylists(params.keyword, params.requestCount);
+        return result.reduce((tracks, array) => {
+            Selector.keepRandom(array, params.playlistCount || 3);
+            let playlistTracks = getTracks(array).filter((t) => t.popularity >= (params.popularity || 0));
+            return Combiner.push(tracks, playlistTracks);
+        }, []);
+    }
+
     function getTracksRandom(playlistArray, countPlaylist = 1) {
         return getTracks(Selector.sliceRandom(playlistArray, countPlaylist));
     }
@@ -366,6 +376,9 @@ const Source = (function () {
     function getTrackItems(playlistArray) {
         return playlistArray.reduce((items, playlist) => {
             let playlistItems = [];
+            if (typeof playlist == 'undefined') {
+                return items;
+            }
             if (playlist.id) {
                 playlistItems = getItemsByPlaylistId(playlist.id);
             } else if (playlist.name) {
@@ -873,11 +886,10 @@ const Filter = (function () {
     function match(items, strRegex, invert = false) {
         let regex = new RegExp(strRegex, 'i');
         let filteredTracks = items.filter((item) => {
-            if (typeof item == 'undefined') { 
-                return false; 
-            } else if (item.hasOwnProperty('album')) { 
-                return invert ^ regex.test(item.name.formatName()) && 
-                       invert ^ regex.test(item.album.name.formatName());
+            if (typeof item == 'undefined') {
+                return false;
+            } else if (item.hasOwnProperty('album')) {
+                return invert ^ regex.test(item.name.formatName()) && invert ^ regex.test(item.album.name.formatName());
             }
             return invert ^ regex.test(item.name.formatName());
         });
@@ -1396,7 +1408,7 @@ const Playlist = (function () {
         saveWithModify(addTracks, data);
     }
 
-    function saveWithUpdate(data){
+    function saveWithUpdate(data) {
         saveWithModify(updateTracks, data);
     }
 
@@ -1429,7 +1441,7 @@ const Playlist = (function () {
         modifyTracks('put', data);
     }
 
-    function updateTracks(data){
+    function updateTracks(data) {
         let url = Utilities.formatString('%s/playlists/%s/tracks', API_BASE_URL, data.id);
         let currentTracks = Source.getPlaylistTracks('', data.id);
 
@@ -2094,6 +2106,7 @@ const Search = (function () {
         multisearchTracks: multisearchTracks,
         multisearchArtists: multisearchArtists,
         multisearchAlbums: multisearchAlbums,
+        multisearchPlaylists: multisearchPlaylists,
     };
 
     function multisearchTracks(items, parseNameMethod) {
@@ -2112,13 +2125,17 @@ const Search = (function () {
         return multisearch(items, 'album', parseNameMethod);
     }
 
+    function multisearchPlaylists(items, requestCount) {
+        return search(items, 'playlist', requestCount);
+    }
+
     function multisearch(items, type, parseNameMethod, formatMethod) {
         let resultItems = [];
         if (!items || items.length == 0) return resultItems;
         let textArray = items.map((item) => parseNameMethod(item));
-        let searchResult = multiBestSearch(textArray, type);
+        let searchResult = search(textArray, type);
         for (let i = 0; i < items.length; i++) {
-            let item = searchResult[i];
+            let item = searchResult[i][0];
             if (!item || !item.id) {
                 console.info('Spotify по типу', type, 'не нашел:', parseNameMethod(items[i]));
                 continue;
@@ -2131,15 +2148,23 @@ const Search = (function () {
         return resultItems;
     }
 
-    function multiBestSearch(textArray, type) {
+    function search(textArray, type, requestCount) {
         let template = API_BASE_URL + '/search/?%s';
-        let urls = textArray.map((text) => {
-            let queryObj = { q: text, type: type, limit: '1' };
-            return Utilities.formatString(template, CustomUrlFetchApp.parseQuery(queryObj));
+        let searchResult = [];
+        textArray.forEach((text) => {
+            let urls = [];
+            let result = [];
+            let limit = 50;
+            for (let i = 0; i < (requestCount || 1); i++) {
+                let queryObj = { q: text, type: type, limit: limit, offset: i * limit };
+                urls.push(Utilities.formatString(template, CustomUrlFetchApp.parseQuery(queryObj)));
+            }
+            SpotifyRequest.getAll(urls).map((response) => {
+                Combiner.push(result, response ? response.items : []);
+            });
+            searchResult.push(result);
         });
-        return SpotifyRequest.getAll(urls).map((response) => {
-            return response && response.items ? response.items[0] : {};
-        });
+        return searchResult;
     }
 })();
 
