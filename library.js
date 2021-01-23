@@ -2102,6 +2102,7 @@ const Cache = (function () {
 })();
 
 const Search = (function () {
+    const TEMPLATE = API_BASE_URL + '/search/?%s';
     return {
         multisearchTracks: multisearchTracks,
         multisearchArtists: multisearchArtists,
@@ -2125,17 +2126,13 @@ const Search = (function () {
         return multisearch(items, 'album', parseNameMethod);
     }
 
-    function multisearchPlaylists(items, requestCount) {
-        return search(items, 'playlist', requestCount);
-    }
-
     function multisearch(items, type, parseNameMethod, formatMethod) {
         let resultItems = [];
         if (!items || items.length == 0) return resultItems;
         let textArray = items.map((item) => parseNameMethod(item));
-        let searchResult = search(textArray, type);
+        let searchResult = multiBestSearch(textArray, type);
         for (let i = 0; i < items.length; i++) {
-            let item = searchResult[i][0];
+            let item = searchResult[i];
             if (!item || !item.id) {
                 console.info('Spotify по типу', type, 'не нашел:', parseNameMethod(items[i]));
                 continue;
@@ -2148,16 +2145,29 @@ const Search = (function () {
         return resultItems;
     }
 
-    function search(textArray, type, requestCount) {
-        let template = API_BASE_URL + '/search/?%s';
+    function multiBestSearch(textArray, type) {
+        let urls = textArray.map((text) => {
+            let queryObj = { q: text, type: type, limit: '1' };
+            return Utilities.formatString(TEMPLATE, CustomUrlFetchApp.parseQuery(queryObj));
+        });
+        return SpotifyRequest.getAll(urls).map((response) => {
+            return response && response.items ? response.items[0] : {};
+        });
+    }
+
+    function multisearchPlaylists(items, requestCount) {
+        return search(items, 'playlist', requestCount);
+    }
+
+    function search(textArray, type, requestCount = 1) {
         let searchResult = [];
         textArray.forEach((text) => {
             let urls = [];
             let result = [];
             let limit = 50;
-            for (let i = 0; i < (requestCount || 1); i++) {
+            for (let i = 0; i < requestCount; i++) {
                 let queryObj = { q: text, type: type, limit: limit, offset: i * limit };
-                urls.push(Utilities.formatString(template, CustomUrlFetchApp.parseQuery(queryObj)));
+                urls.push(Utilities.formatString(TEMPLATE, CustomUrlFetchApp.parseQuery(queryObj)));
             }
             SpotifyRequest.getAll(urls).map((response) => {
                 Combiner.push(result, response ? response.items : []);
