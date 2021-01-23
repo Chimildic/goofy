@@ -8,6 +8,7 @@
 
 ## Версия 1.3.5
 - Новая функция к Source: [mineTracks](/func?id=minetracks).
+- К Library добавлены функции сохранения и удаления альбомов библиотеки.
 
 ## Версия 1.3.4 
 - Новые функции к Source: [getCategoryTracks](/func?id=getcategorytracks), [getListCategory](/func?id=getlistcategory).

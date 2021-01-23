@@ -1576,6 +1576,15 @@ const Playlist = (function () {
 })();
 
 const Library = (function () {
+    return {
+        followArtists: followArtists,
+        unfollowArtists: unfollowArtists,
+        saveFavoriteTracks: saveFavoriteTracks,
+        deleteFavoriteTracks: deleteFavoriteTracks,
+        saveAlbums: saveAlbums,
+        deleteAlbums: deleteAlbums,
+    };
+    
     function followArtists(artists) {
         modifyFollowArtists(SpotifyRequest.putItems, artists);
     }
@@ -1604,12 +1613,19 @@ const Library = (function () {
         method({ url: url, items: ids, limit: 50, key: 'ids' });
     }
 
-    return {
-        followArtists: followArtists,
-        unfollowArtists: unfollowArtists,
-        saveFavoriteTracks: saveFavoriteTracks,
-        deleteFavoriteTracks: deleteFavoriteTracks,
-    };
+    function saveAlbums(albums){
+        modifyAlbums(SpotifyRequest.putItems, albums);
+    }
+
+    function deleteAlbums(albums){
+        modifyAlbums(SpotifyRequest.deleteItems, albums);
+    }
+
+    function modifyAlbums(method, albums){
+        let url = Utilities.formatString('%s/%s', API_BASE_URL, 'me/albums');
+        let ids = albums.map((album) => album.id);
+        method({ url: url, items: ids, limit: 50, key: 'ids' });
+    }
 })();
 
 const Lastfm = (function () {

@@ -1534,6 +1534,21 @@ let savedTracks = Source.getSavedTracks();
 Library.deleteFavoriteTracks(savedTracks);
 ```
 
+### saveAlbums
+
+Добавить альбомы в библиотеку.
+
+Аргументы
+- (массив) `albums` - перечень альбомов для добавления. Значимо только `id`.
+
+
+### deleteAlbums
+
+Удалить альбомы из библиотеки.
+
+Аргументы
+- (массив) `albums` - перечень альбомов для удаления. Значимо только `id`.
+
 ## Lastfm
 
 Модуль по работе с сервисом Last fm
