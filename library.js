@@ -354,8 +354,9 @@ const Source = (function () {
 
     function mineTracks(params) {
         let result = Search.multisearchPlaylists(params.keyword, params.requestCount);
+        let selectMethod = params.hasOwnProperty('inRow') && params.inRow ? Selector.keepFirst : Selector.keepRandom;
         return result.reduce((tracks, array) => {
-            Selector.keepRandom(array, params.playlistCount || 3);
+            selectMethod(array, params.playlistCount || 3);
             let playlistTracks = getTracks(array).filter((t) => t.popularity >= (params.popularity || 0));
             return Combiner.push(tracks, playlistTracks);
         }, []);
