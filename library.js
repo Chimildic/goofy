@@ -1,4 +1,4 @@
-const VERSION = '1.3.5';
+const VERSION = '1.4.0';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -448,6 +448,7 @@ const RecentTracks = (function () {
         updateRecentTracks: updateRecentTracks,
         compress: compress,
         get: getRecentTracks,
+        appendTracks: appendTracks,
     };
 
     function deleteTrigger() {
@@ -507,7 +508,7 @@ const RecentTracks = (function () {
         let lastfmTracks = readValidArray(LASTFM_FILENAME);
         Combiner.push(spotifyTracks, lastfmTracks);
         Filter.dedupTracks(spotifyTracks);
-        spotifyTracks.sort((x, y) => Order.compareDate(y.played_at, x.played_at));
+        sortByPlayedDate(spotifyTracks);
         Cache.write(BOTH_SOURCE_FILENAME, spotifyTracks);
     }
 
@@ -541,6 +542,26 @@ const RecentTracks = (function () {
             }
         }
         return recentItems;
+    }
+
+    function appendTracks(filename, tracks){
+        Cache.compressTracks(tracks);
+        tracks.forEach(t => {
+            if (t.hasOwnProperty('added_at')){
+                t.played_at = t.added_at;
+                delete t.added_at;
+            } else if (!t.hasOwnProperty('played_at')){
+                t.played_at = DEFAULT_DATE;
+            }
+        });       
+        let fileItems = readValidArray(filename);
+        Combiner.push(fileItems, tracks);
+        sortByPlayedDate(fileItems);
+        Cache.write(filename, fileItems);
+    }
+
+    function sortByPlayedDate(items){
+        items.sort((x, y) => Order.compareDate(y.played_at, x.played_at));
     }
 
     function readValidArray(filename) {

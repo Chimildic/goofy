@@ -24,7 +24,7 @@
 function templateUnknownSet() {
     let banTracks = [];
     let savedTracks = Source.getSavedTracks();
-    let recentTracks = Source.getRecentTracks(1000);
+    let recentTracks = RecentTracks.get(1000);
     Combiner.push(banTracks, savedTracks, recentTracks);
 
     let onlyForYouTracks = Source.getTracks([
@@ -100,7 +100,7 @@ function templateFollowedTracks(){
 
 ```js
 function templateSavedAndForgot(){
-    let recentTracks = Source.getRecentTracks(2500);
+    let recentTracks = RecentTracks.get(2500);
     let savedTracks = Source.getSavedTracks(); 
     Filter.removeTracks(savedTracks, recentTracks);
     
@@ -128,7 +128,7 @@ function templateSavedAndForgot(){
 
 ```js
 function templateNewRelease(){
-    let recentTracks = Source.getRecentTracks(1000);
+    let recentTracks = RecentTracks.get(1000);
     let newReleaseTracks = Source.getTracks([
         // Популярные редакции
         { name: 'All New Indie', id: '37i9dQZF1DXdbXrPNafg9d' },
@@ -252,7 +252,7 @@ function templateRandarGenre(){
 
 ```js
 function templateCollectPlaylist(){
-    let recentTracks = Source.getRecentTracks(1000);
+    let recentTracks = RecentTracks.get(1000);
     let newTracks = Source.getPlaylistTracks('Радар новинок', 'вашеId');
 
     // После первого создания плейлиста 

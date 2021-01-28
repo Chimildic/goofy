@@ -594,6 +594,24 @@ let tracks = RecentTracks.get();
 let tracks = RecentTracks.get(100);
 ```
 
+### appendTracks
+
+Добавляет массив треков к файлу истории прослушиваний. Дата добавления в плейлист `added_at` становится датой прослушивания `played_at`. Если даты нет, устанавливается значение `01.01.2000`. Сортируется по дате прослушивания от свежих к более старым.
+
+> Если дата добавляемого трека из плейлиста новее даты последнего прослушивания, добавляемый трек станет первым в списке. Это вызовет логическую ошибку вычисления последнего прослушивания в триггере. Поэтому вместо игнорования или пары треков, триггер добавит весь доступный массив. По умолчанию это 50 треков для Spotify, 30 для Lastfm. Следующий триггер сработает корректно. 
+
+> Обратите внимание на ограничение в 20 тысяч треков для истории прослушиваний. Все элементы сверх предела удаляются. 
+
+Аргументы
+- (строка) `filename` - имя файла истории прослушиваний. Допустимо: `SpotifyRecentTracks` и `LastfmRecentTracks`.
+- (массив) `tracks` - добавляемые треки.
+
+Пример 1 - Добавить в историю прослушиваний все любимые треки
+```js
+let tracks = Source.getSavedTracks();
+RecentTracks.appendTracks('SpotifyRecentTracks', tracks);
+```
+
 ### compress
 
 Сжимает треки в существующих накопительных файлах истории прослушиваний в зависимости от [параметров](/guide?id=Параметры). Предварительно создает копию файла.
@@ -631,7 +649,7 @@ Combiner.push(firstArray, secondeArray);
 ```js
 let firstArray = Source.getTracks(playlistArray); // допустим, 25 треков
 let secondeArray = Source.getSavedTracks(); // допустим, 100 треков
-let thirdArray = Source.getRecentTracks(); // допустим, 20 треков
+let thirdArray = Source.getPlaylistTracks(); // допустим, 20 треков
 Combiner.push(firstArray, secondeArray, thirdArray);
 // теперь в firstArray 145 треков
 ```
@@ -1360,7 +1378,7 @@ Playlist.saveAsNew({
 
 Пример 2 - Создать приватный плейлист с недавней историей прослушиваний и описанием без обложки.
 ```js
-let tracks = Source.getRecentTracks(200);
+let tracks = RecentTracks.get(200);
 Playlist.saveAsNew({
   name: 'История прослушиваний',
   description: '200 недавно прослушанных треков'
@@ -1399,9 +1417,9 @@ Playlist.saveWithReplace({
 
 Пример 2 - Обновить содержимое плейлиста из примера 1. Поиск по названию.
 ```js
-let tracks = Source.getRecentTracks();
+let tracks = RecentTracks.get();
 Playlist.saveWithReplace({
-    name: 'Микс дня',
+    name: 'История',
     description: 'Новое описание плейлиста',
     tracks: tracks,
     randomCover: 'update',

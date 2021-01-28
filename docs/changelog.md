@@ -6,9 +6,10 @@
 
 Для добавления своих функций или переопределения существующих, используйте [инструкциию](https://github.com/Chimildic/goofy/discussions/18).
 
-## Версия 1.3.5
+## Версия 1.4.0
+- **Удалена** функция `Source.getRecentTracks`. Используйте `RecentTracks.get` или `Cache.read` для нужного файла истории.
 - Новая функция к Source: [mineTracks](/func?id=minetracks).
-- Удалена функция `Source.getRecentTracks`. Используйте `RecentTracks.get` или `Cache.read` нужного файла истории.
+- Новая функция к RecentTracks: [appendTracks](/func?id=appendtracks).
 - Структура файла `SpotifyRecentTracks` обновлена до обычного массива треков (как у остальных файлов истории). Обновление произойдет автоматически при первом запуске триггера. До этого момента `Cache.read` будет возвращать старую структуру.
 - К Library добавлены функции сохранения и удаления альбомов библиотеки.
 
