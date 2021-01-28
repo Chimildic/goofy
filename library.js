@@ -160,7 +160,6 @@ const Source = (function () {
         getPlaylistTracks: getPlaylistTracks,
         getTopTracks: getTopTracks,
         getTopArtists: getTopArtists,
-        getRecentTracks: getRecentTracks,
         getFollowedTracks: getFollowedTracks,
         getSavedTracks: getSavedTracks,
         getSavedAlbumTracks: getSavedAlbumTracks,
@@ -175,6 +174,7 @@ const Source = (function () {
         getCategoryTracks: getCategoryTracks,
         getListCategory: getListCategory,
         mineTracks: mineTracks,
+        extractTracks: extractTracks,
     };
 
     function getTopTracks(timeRange) {
@@ -239,11 +239,6 @@ const Source = (function () {
         let query = CustomUrlFetchApp.parseQuery(queryObj);
         let url = Utilities.formatString('%s/recommendations?%s', API_BASE_URL, query);
         return SpotifyRequest.get(url).tracks;
-    }
-
-    function getRecentTracks(limit = 200) {
-        let tracks = extractTracks(RecentTracks.readSpotifyRecentTrackItems());
-        return Selector.sliceFirst(tracks, limit);
     }
 
     function getFollowedTracks(params = {}) {
@@ -451,14 +446,9 @@ const RecentTracks = (function () {
 
     return {
         updateRecentTracks: updateRecentTracks,
-        readSpotifyRecentTrackItems: readSpotifyRecentTrackItems,
         compress: compress,
         get: getRecentTracks,
     };
-
-    function readSpotifyRecentTrackItems() {
-        return Cache.read(SPOTIFY_FILENAME);
-    }
 
     function deleteTrigger() {
         let trigger = getTrigger();
@@ -483,11 +473,11 @@ const RecentTracks = (function () {
     function getRecentTracks(limit) {
         let tracks = [];
         if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
-            tracks = Cache.read(BOTH_SOURCE_FILENAME);
+            tracks = readValidArray(BOTH_SOURCE_FILENAME);
         } else if (ON_SPOTIFY_RECENT_TRACKS) {
-            tracks = Source.getRecentTracks(ITEMS_LIMIT);
+            tracks = readValidArray(SPOTIFY_FILENAME);
         } else if (ON_LASTFM_RECENT_TRACKS) {
-            tracks = Cache.read(LASTFM_FILENAME);
+            tracks = readValidArray(LASTFM_FILENAME);
         }
         return Selector.sliceFirst(tracks, limit);
     }
@@ -507,14 +497,14 @@ const RecentTracks = (function () {
     }
 
     function updatePlatformRecentTracks(recentTracks, filename, findNewPlayedMethod) {
-        let fileItems = Cache.read(filename);
+        let fileItems = readValidArray(filename);
         let newItems = findNewPlayedMethod(recentTracks, fileItems);
         return appendNewPlayed(newItems, filename);
     }
 
     function updateBothSourceRecentTracks() {
-        let spotifyTracks = Source.getRecentTracks(ITEMS_LIMIT);
-        let lastfmTracks = Cache.read(LASTFM_FILENAME);
+        let spotifyTracks = readValidArray(SPOTIFY_FILENAME);
+        let lastfmTracks = readValidArray(LASTFM_FILENAME);
         Combiner.push(spotifyTracks, lastfmTracks);
         Filter.dedupTracks(spotifyTracks);
         spotifyTracks.sort((x, y) => Order.compareDate(y.played_at, x.played_at));
@@ -535,7 +525,7 @@ const RecentTracks = (function () {
 
     function getSpotifyRecentTracks() {
         let url = Utilities.formatString('%s/me/player/recently-played?limit=50', API_BASE_URL);
-        return SpotifyRequest.get(url).items;
+        return Source.extractTracks(SpotifyRequest.get(url).items);
     }
 
     function findNewPlayed(recentItems, fileItems) {
@@ -553,6 +543,20 @@ const RecentTracks = (function () {
         return recentItems;
     }
 
+    function readValidArray(filename) {
+        let items = Cache.read(filename);
+        if (items[0].hasOwnProperty('track')) {
+            return updateToValidArray(items, filename);
+        }
+        return items;
+    }
+
+    function updateToValidArray(data, filename){
+        let items = Source.extractTracks(data);
+        Cache.write(filename, items);
+        return items;
+    }
+
     function compress() {
         if (ON_SPOTIFY_RECENT_TRACKS) {
             compressFile(SPOTIFY_FILENAME);
@@ -567,7 +571,7 @@ const RecentTracks = (function () {
 
     function compressFile(filename) {
         Cache.copy(filename);
-        let tracks = Cache.read(filename);
+        let tracks = readValidArray(filename);
         Cache.compressTracks(tracks);
         Cache.write(filename, tracks);
     }
@@ -1584,7 +1588,7 @@ const Library = (function () {
         saveAlbums: saveAlbums,
         deleteAlbums: deleteAlbums,
     };
-    
+
     function followArtists(artists) {
         modifyFollowArtists(SpotifyRequest.putItems, artists);
     }
@@ -1613,15 +1617,15 @@ const Library = (function () {
         method({ url: url, items: ids, limit: 50, key: 'ids' });
     }
 
-    function saveAlbums(albums){
+    function saveAlbums(albums) {
         modifyAlbums(SpotifyRequest.putItems, albums);
     }
 
-    function deleteAlbums(albums){
+    function deleteAlbums(albums) {
         modifyAlbums(SpotifyRequest.deleteItems, albums);
     }
 
-    function modifyAlbums(method, albums){
+    function modifyAlbums(method, albums) {
         let url = Utilities.formatString('%s/%s', API_BASE_URL, 'me/albums');
         let ids = albums.map((album) => album.id);
         method({ url: url, items: ids, limit: 50, key: 'ids' });
