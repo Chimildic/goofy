@@ -174,6 +174,7 @@ const Source = (function () {
         getCategoryTracks: getCategoryTracks,
         getListCategory: getListCategory,
         mineTracks: mineTracks,
+        craftTracks: craftTracks,
         extractTracks: extractTracks,
     };
 
@@ -355,6 +356,26 @@ const Source = (function () {
             let playlistTracks = getTracks(array).filter((t) => t.popularity >= (params.popularity || 0));
             return Combiner.push(tracks, playlistTracks);
         }, []);
+    }
+
+    function craftTracks(tracks, params){
+        let ids;
+        if (params.key == 'seed_artists'){
+            ids = tracks.map(t => t.artists[0].id);
+        } else {
+            ids = tracks.map(t => t.id);
+            params.key = 'seed_tracks';
+        }
+
+        ids = [...new Set(ids)];
+        let queryObj = params.query || {};
+        let recomTracks = [];
+        for (let i = 0; i < Math.ceil(ids.length / 5); i++){
+            queryObj[params.key] = ids.splice(0, 5).join(',');
+            Combiner.push(recomTracks, getRecomTracks(queryObj));
+        }
+        Filter.dedupTracks(recomTracks);
+        return recomTracks.filter(t => t.popularity >= (params.popularity || 0));
     }
 
     function getTracksRandom(playlistArray, countPlaylist = 1) {
