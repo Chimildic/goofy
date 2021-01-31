@@ -360,24 +360,24 @@ const Source = (function () {
         return tracks;
     }
 
-    function craftTracks(tracks, params){
+    function craftTracks(tracks, params = {}) {
         let ids;
-        if (params.key == 'seed_artists'){
-            ids = tracks.map(t => t.artists[0].id);
+        if (params.key == 'seed_artists') {
+            ids = tracks.map((t) => t.artists[0].id);
         } else {
-            ids = tracks.map(t => t.id);
+            ids = tracks.map((t) => t.id);
             params.key = 'seed_tracks';
         }
 
         ids = [...new Set(ids)];
         let queryObj = params.query || {};
         let recomTracks = [];
-        for (let i = 0; i < Math.ceil(ids.length / 5); i++){
+        for (let i = 0; i < Math.ceil(ids.length / 5); i++) {
             queryObj[params.key] = ids.splice(0, 5).join(',');
             Combiner.push(recomTracks, getRecomTracks(queryObj));
         }
         Filter.dedupTracks(recomTracks);
-        return recomTracks.filter(t => t.popularity >= (params.popularity || 0));
+        return recomTracks.filter((t) => t.popularity >= (params.popularity || 0));
     }
 
     function getTracksRandom(playlistArray, countPlaylist = 1) {
@@ -567,23 +567,23 @@ const RecentTracks = (function () {
         return recentItems;
     }
 
-    function appendTracks(filename, tracks){
+    function appendTracks(filename, tracks) {
         Cache.compressTracks(tracks);
-        tracks.forEach(t => {
-            if (t.hasOwnProperty('added_at')){
+        tracks.forEach((t) => {
+            if (t.hasOwnProperty('added_at')) {
                 t.played_at = t.added_at;
                 delete t.added_at;
-            } else if (!t.hasOwnProperty('played_at')){
+            } else if (!t.hasOwnProperty('played_at')) {
                 t.played_at = DEFAULT_DATE;
             }
-        });       
+        });
         let fileItems = readValidArray(filename);
         Combiner.push(fileItems, tracks);
         sortByPlayedDate(fileItems);
         Cache.write(filename, fileItems);
     }
 
-    function sortByPlayedDate(items){
+    function sortByPlayedDate(items) {
         items.sort((x, y) => Order.compareDate(y.played_at, x.played_at));
     }
 
@@ -595,7 +595,7 @@ const RecentTracks = (function () {
         return items;
     }
 
-    function updateToValidArray(data, filename){
+    function updateToValidArray(data, filename) {
         let items = Source.extractTracks(data);
         Cache.write(filename, items);
         return items;
