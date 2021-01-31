@@ -350,7 +350,7 @@ const Source = (function () {
 
     function mineTracks(params) {
         let result = Search.multisearchPlaylists(params.keyword, params.requestCount);
-        if (params.followers) {
+        if (params.hasOwnProperty('followers') && typeof params.followers == 'object') {
             filterByFollowers();
         }
         let selectMethod = params.hasOwnProperty('inRow') && params.inRow ? Selector.keepFirst : Selector.keepRandom;
