@@ -350,6 +350,9 @@ const Source = (function () {
 
     function mineTracks(params) {
         let result = Search.multisearchPlaylists(params.keyword, params.requestCount);
+        if (params.followers) {
+            filterByFollowers();
+        }
         let selectMethod = params.hasOwnProperty('inRow') && params.inRow ? Selector.keepFirst : Selector.keepRandom;
         let tracks = result.reduce((tracks, array) => {
             selectMethod(array, params.playlistCount || 3);
@@ -358,6 +361,26 @@ const Source = (function () {
         }, []);
         Filter.dedupTracks(tracks);
         return tracks;
+
+        function filterByFollowers(){
+            for (let i = 0; i < result.length; i++) {
+                result[i] = getFullPlaylistObject(result[i]).filter((p) => {
+                    return isBelongRangeFollowers(p.followers.total);
+                });
+            }
+        }
+
+        function getFullPlaylistObject(array) {
+            let urls = [];
+            array.forEach((playlist) => {
+                urls.push(`https://api.spotify.com/v1/playlists/${playlist.id}`);
+            });
+            return SpotifyRequest.getAll(urls);
+        }
+
+        function isBelongRangeFollowers(value){
+            return value >= params.followers.min && value <= params.followers.max;
+        }
     }
 
     function craftTracks(tracks, params = {}) {
