@@ -240,6 +240,8 @@ let tracks = Source.getSavedAlbumTracks();
 - min_* - минимальное значение одной из [особенностей (features) трека](/guide?id=Особенности-трека-features).
 - target_* - целевое значение одной из [особенностей (features) трека](/guide?id=Особенности-трека-features). Выбираются наиболее близкие по значению.
 
+> Кроме того, в `features` доступен ключ `populatiry`. Например, `target_popularity`. В документации к API Spotify этого не написано.
+
 Пример объекта с параметрами
 ```js
 let queryObj = {
@@ -584,7 +586,6 @@ let tracks = Source.mineTracks({
 
 Описание параметров
 - (строка) `key` - определяет по какому ключу рекомендации. Допустипо: `seed_tracks` и `seed_artists`. По умолчанию `seed_tracks`.
-- (число) `popularity` - минимальное значение популярности рекомендованого трека. По умолчанию ноль.
 - (объект) `query` - доступны все ключи [getRecomTracks](/func?id=getrecomtracks), кроме группы `seed_*`. Не обязательно.
 
 Пример 1 - Получить рекомендации по всем любимым трекам по их исполнителям
@@ -592,11 +593,18 @@ let tracks = Source.mineTracks({
 let tracks = Source.getSavedTracks();
 let recomTracks = Source.craftTracks(tracks, {
     key: 'seed_artists',
-    popularity: 70,
     query: {
         min_energy: 0.4,
+        min_popularity: 60,
+        // target_popularity: 60,
     }
 });
+```
+
+Пример 2 - Можно указать только массив треков. Тогда будут рекомендации по ключу `seed_tracks`.
+```js
+let tracks = Source.getSavedTracks();
+let recomTracks = Source.craftTracks(tracks);
 ```
 
 ## RecentTracks

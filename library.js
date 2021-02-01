@@ -400,7 +400,7 @@ const Source = (function () {
             Combiner.push(recomTracks, getRecomTracks(queryObj));
         }
         Filter.dedupTracks(recomTracks);
-        return recomTracks.filter((t) => t.popularity >= (params.popularity || 0));
+        return recomTracks;
     }
 
     function getTracksRandom(playlistArray, countPlaylist = 1) {
