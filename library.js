@@ -2610,7 +2610,7 @@ const Admin = (function () {
         sendVersion(VERSION);
     }
 
-    if (new Date().getDate() % 3 == 0 && hasUpdate()) {
+    if (new Date().getDate() % 5 == 0 && hasUpdate()) {
         console.log(
             'Доступно обновление. Локальный код отличается от версии на Github.',
             'Проверьте список изменений: chimildic.github.io/goofy/#/changelog',
