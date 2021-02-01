@@ -8,6 +8,9 @@
 
 [Перейти к обновленному коду](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+## Версия 1.4.1
+- Добавлена периодическая проверка наличия обновлений. Если доступно, в консоле появится соответствующее сообщение.
+
 ## Версия 1.4.0
 - **Удалена** функция `Source.getRecentTracks`. Используйте `RecentTracks.get` или `Cache.read` для нужного файла истории.
 - Новые функции к Source: [mineTracks](/func?id=minetracks), [craftTracks](/func?id=crafttracks).
