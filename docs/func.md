@@ -1290,7 +1290,7 @@ if (Selector.isDayOfWeek('friday')){
 | meta | name, popularity, duration_ms, explicit, added_at, played_at |
 | features | acousticness, danceability, energy, instrumentalness, liveness, loudness, speechiness, valence, tempo, key, mode, time_signature, duration_ms |
 | artist | popularity, followers, name |
-| album | Не рекомендуется использовать. popularity, name |
+| album | popularity, name, release_date |
 
 Пример 1 - Сортировка по убывающей популярности исполнителей
 ```js

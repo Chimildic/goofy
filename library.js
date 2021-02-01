@@ -1344,9 +1344,22 @@ const Order = (function () {
         }
 
         function sortAlbum() {
-            // popularity, name
-            let items = getCachedTracks(_tracks, { album: {} }).albums;
-            _tracks.sort((x, y) => items[x.album.id][_key] - items[y.album.id][_key]);
+            // popularity, name, release_date
+            let hasKey = _tracks.every((t) => t.album[_key] != undefined);
+            let items = {};
+            if (hasKey){
+                _tracks.forEach((t) => items[t.album.id] = t.album);
+            } else {
+                _tracks = getCachedTracks(_tracks, { album: {} }).albums;
+            }
+
+            if (_key == 'name') {
+                _tracks.sort((x, y) => compareString(items[x.album.id], items[y.album.id]));
+            } else if (_key == 'release_date') {
+                _tracks.sort((x, y) => compareDate(items[x.album.id][_key], items[y.album.id][_key]));
+            } else if (_key == 'popularity') {
+                _tracks.sort((x, y) => compareNumber(items[x.album.id], items[y.album.id]));
+            }
         }
 
         function compareNumber(x, y) {
