@@ -2355,11 +2355,6 @@ const Auth = (function () {
     ];
     const service = createService();
 
-    if (VERSION != KeyValue.VERSION) {
-        UserProperties.setProperty('VERSION', VERSION);
-        sendVersion(VERSION);
-    }
-
     return {
         reset: reset,
         hasAccess: hasAccess,
@@ -2396,19 +2391,6 @@ const Auth = (function () {
         let scriptId = encodeURIComponent(ScriptApp.getScriptId());
         let template = 'https://script.google.com/macros/d/%s/usercallback';
         return Utilities.formatString(template, scriptId);
-    }
-
-    function sendVersion(value) {
-        CustomUrlFetchApp.fetch(
-            'https://docs.google.com/forms/u/0/d/e/1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw/formResponse',
-            {
-                method: 'post',
-                payload: {
-                    'entry.1598003363': value,
-                    'entry.1594601658': ScriptApp.getScriptId(),
-                },
-            }
-        );
     }
 
     function hasAccess() {
@@ -2623,12 +2605,28 @@ const SpotifyRequest = (function () {
 })();
 
 const Admin = (function () {
+    if (VERSION != KeyValue.VERSION) {
+        UserProperties.setProperty('VERSION', VERSION);
+        sendVersion(VERSION);
+    }
+
     if (new Date().getDate() % 3 == 0 && hasUpdate()) {
         console.log(
             'Доступно обновление. Локальный код отличается от версии на Github.',
             'Проверьте список изменений: chimildic.github.io/goofy/#/changelog',
             'Если их нет, были произведены правки без присвоения новой версии.'
         );
+    }
+
+    function sendVersion(value) {
+        let id = '1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw';
+        CustomUrlFetchApp.fetch(`https://docs.google.com/forms/u/0/d/e/${id}/formResponse`, {
+            method: 'post',
+            payload: {
+                'entry.1598003363': value,
+                'entry.1594601658': ScriptApp.getScriptId(),
+            },
+        });
     }
 
     function hasUpdate() {
