@@ -235,10 +235,7 @@ const Source = (function () {
     }
 
     function getRecomTracks(queryObj) {
-        queryObj.limit = queryObj.limit > 100 ? 100 : queryObj.limit || 100;
-        queryObj.market = queryObj.market || 'from_token';
-        let query = CustomUrlFetchApp.parseQuery(queryObj);
-        let url = Utilities.formatString('%s/recommendations?%s', API_BASE_URL, query);
+        let url = createUrlForRecomTracks(queryObj);
         return SpotifyRequest.get(url).tracks;
     }
 
@@ -394,13 +391,23 @@ const Source = (function () {
 
         ids = [...new Set(ids)];
         let queryObj = params.query || {};
-        let recomTracks = [];
+        let urls = [];
         for (let i = 0; i < Math.ceil(ids.length / 5); i++) {
             queryObj[params.key] = ids.splice(0, 5).join(',');
-            Combiner.push(recomTracks, getRecomTracks(queryObj));
+            urls.push(createUrlForRecomTracks(queryObj));
         }
+        let recomTracks = SpotifyRequest.getAll(urls).reduce((recomTracks, response) => {
+            return Combiner.push(recomTracks, response.tracks);
+        }, []);
         Filter.dedupTracks(recomTracks);
         return recomTracks;
+    }
+
+    function createUrlForRecomTracks(queryObj){
+        queryObj.limit = queryObj.limit > 100 ? 100 : queryObj.limit || 100;
+        queryObj.market = queryObj.market || 'from_token';
+        let query = CustomUrlFetchApp.parseQuery(queryObj);
+        return Utilities.formatString('%s/recommendations?%s', API_BASE_URL, query);
     }
 
     function getTracksRandom(playlistArray, countPlaylist = 1) {
