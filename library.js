@@ -2636,14 +2636,6 @@ const Admin = (function () {
         sendVersion(VERSION);
     }
 
-    if (new Date().getDate() % 5 == 0 && hasUpdate()) {
-        console.log(
-            'Доступно обновление. Локальный код отличается от версии на Github.',
-            'Проверьте список изменений: chimildic.github.io/goofy/#/changelog',
-            'Если их нет, были произведены правки без присвоения новой версии.'
-        );
-    }
-
     function sendVersion(value) {
         let id = '1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw';
         CustomUrlFetchApp.fetch(`https://docs.google.com/forms/u/0/d/e/${id}/formResponse`, {
@@ -2653,32 +2645,5 @@ const Admin = (function () {
                 'entry.1594601658': ScriptApp.getScriptId(),
             },
         });
-    }
-
-    function hasUpdate() {
-        const KEY = 'DATE_LAST_COMMIT';
-        let remoteCommit = getLastCommit();
-        if (typeof remoteCommit == 'undefined') {
-            return false;
-        }
-        let remoteDate = new Date(remoteCommit.commit.committer.date);
-        if (!KeyValue.hasOwnProperty(KEY)) {
-            UserProperties.setProperty(KEY, remoteDate.toISOString());
-            return false;
-        }
-        return remoteDate > new Date(KeyValue[KEY]);
-    }
-
-    function getLastCommit() {
-        let url = 'https://api.github.com/repos/chimildic/goofy/commits?path=library.js&per_page=1';
-        try {
-            let response = UrlFetchApp.fetch(url, { headers: { accept: 'application/vnd.github.v3+json' } });
-            return response[0];
-        } catch (e) {
-            console.error(
-                'Произошла ошибка при попытке проверить наличие обновлений.',
-                'Вероятно, Apps Script выбрал сервер, который исчерпал лимит запросов к GitHub.'
-            );
-        }
     }
 })();
