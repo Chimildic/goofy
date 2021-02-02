@@ -1,3 +1,4 @@
+// Документация: chimildic.github.io/goofy/#/func
 const VERSION = '1.4.1';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
@@ -8,12 +9,12 @@ function doGet() {
     return Auth.hasAccess() ? HtmlService.createHtmlOutput('Успешно') : Auth.displayAuthPage();
 }
 
-function displayAuthResult(request) {
+function displayAuthResult_(request) {
     return Auth.displayAuthResult(request);
 }
 
-function updateRecentTracks() {
-    RecentTracks.updateRecentTracks();
+function updateRecentTracks_() {
+    RecentTracks.update();
 }
 
 String.prototype.formatName = function () {
@@ -487,44 +488,49 @@ const RecentTracks = (function () {
     const SPOTIFY_FILENAME = 'SpotifyRecentTracks.json';
     const LASTFM_FILENAME = 'LastfmRecentTracks.json';
     const BOTH_SOURCE_FILENAME = 'BothRecentTracks.json';
-    const TRIGGER_FUCTION_NAME = 'updateRecentTracks';
+    const TRIGGER_FUCTION_NAME = 'updateRecentTracks_';
     const MINUTES = 15;
     const ITEMS_LIMIT = 20000;
 
+    if (getTrigger('updateRecentTracks')){
+        // Удаляет триггер предыдущих версий библиотеки
+        deleteTrigger('updateRecentTracks');
+    } 
+
     if (!ON_SPOTIFY_RECENT_TRACKS && !ON_LASTFM_RECENT_TRACKS) {
-        deleteTrigger();
-    } else if (!getTrigger()) {
-        createTrigger();
+        deleteTrigger(TRIGGER_FUCTION_NAME);
+    } else if (!getTrigger(TRIGGER_FUCTION_NAME)) {
+        createTrigger(TRIGGER_FUCTION_NAME);
     }
 
     return {
-        updateRecentTracks: updateRecentTracks,
+        get: get,
+        update: update,
         compress: compress,
-        get: getRecentTracks,
         appendTracks: appendTracks,
     };
 
-    function deleteTrigger() {
-        let trigger = getTrigger();
+    function deleteTrigger(name) {
+        let trigger = getTrigger(name);
         if (trigger) {
             ScriptApp.deleteTrigger(trigger);
         }
     }
 
-    function createTrigger() {
-        ScriptApp.newTrigger(TRIGGER_FUCTION_NAME).timeBased().everyMinutes(MINUTES).create();
+    function createTrigger(name) {
+        ScriptApp.newTrigger(name).timeBased().everyMinutes(MINUTES).create();
     }
 
-    function getTrigger() {
+    function getTrigger(name) {
         let triggers = ScriptApp.getProjectTriggers();
         for (let i = 0; i < triggers.length; i++) {
-            if (TRIGGER_FUCTION_NAME === triggers[i].getHandlerFunction()) {
+            if (name === triggers[i].getHandlerFunction()) {
                 return triggers[i];
             }
         }
     }
 
-    function getRecentTracks(limit) {
+    function get(limit) {
         let tracks = [];
         if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
             tracks = readValidArray(BOTH_SOURCE_FILENAME);
@@ -536,7 +542,7 @@ const RecentTracks = (function () {
         return Selector.sliceFirst(tracks, limit);
     }
 
-    function updateRecentTracks() {
+    function update() {
         let hasUpdate = 0;
         if (ON_SPOTIFY_RECENT_TRACKS) {
             hasUpdate += updatePlatformRecentTracks(getSpotifyRecentTracks(), SPOTIFY_FILENAME, findNewPlayed);
@@ -2389,7 +2395,7 @@ const Auth = (function () {
             .setTokenUrl('https://accounts.spotify.com/api/token')
             .setClientId(KeyValue.CLIENT_ID)
             .setClientSecret(KeyValue.CLIENT_SECRET)
-            .setCallbackFunction('displayAuthResult')
+            .setCallbackFunction('displayAuthResult_')
             .setPropertyStore(UserProperties)
             .setScope(SCOPE)
             .setParam('response_type', 'code')

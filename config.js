@@ -1,5 +1,5 @@
 function setProperties(){
-    // Описание параметров: https://chimildic.github.io/goofy/#/guide?id=Параметры
+    // Описание параметров: chimildic.github.io/goofy/#/guide?id=Параметры
     UserProperties.setProperty('CLIENT_ID', 'вашеЗначение');
     UserProperties.setProperty('CLIENT_SECRET', 'вашеЗначение');
     UserProperties.setProperty('LASTFM_API_KEY', 'вашеЗначение');
@@ -10,6 +10,8 @@ function setProperties(){
     UserProperties.setProperty('REQUESTS_IN_ROW', '40');
 }
 
-function logProperties(){
-    console.log(UserProperties.getProperties());
-}
+// Чтобы посмотреть текущие значения параметров
+// console.log(UserProperties.getProperties());
+
+// Чтобы сбросить авторизацию и удалить параметры
+// Auth.reset();

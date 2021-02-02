@@ -13,6 +13,7 @@
 - Ускорено время выполнения функции `craftTracks`.
 - Найдена недокументированная возможность Spotify API. Функция [getRecomTracks](/func?id=getrecomtracks) поддерживает ключ `popularity`. В связи с этим он **удален** у [craftTracks](/func?id=crafttracks). Переместите его в параметр `query`, если использовали. 
 - К `Order.sort` добавлена возможность сортировки по дате релиза альбома, которому принадлежит трек.
+- Из списка функций, которым можно задать триггер скрыты `displayAuthResult`, `updateRecentTracks`, `logProperties`.
 
 ## Версия 1.4.0
 - **Удалена** функция `Source.getRecentTracks`. Используйте `RecentTracks.get` или `Cache.read` для нужного файла истории.
