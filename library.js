@@ -1,5 +1,5 @@
 // Документация: chimildic.github.io/goofy/#/func
-const VERSION = '1.4.1';
+const VERSION = '1.4.2';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -404,7 +404,7 @@ const Source = (function () {
         return recomTracks;
     }
 
-    function createUrlForRecomTracks(queryObj){
+    function createUrlForRecomTracks(queryObj) {
         queryObj.limit = queryObj.limit > 100 ? 100 : queryObj.limit || 100;
         queryObj.market = queryObj.market || 'from_token';
         let query = CustomUrlFetchApp.parseQuery(queryObj);
@@ -492,10 +492,10 @@ const RecentTracks = (function () {
     const MINUTES = 15;
     const ITEMS_LIMIT = 20000;
 
-    if (getTrigger('updateRecentTracks')){
+    if (getTrigger('updateRecentTracks')) {
         // Удаляет триггер предыдущих версий библиотеки
         deleteTrigger('updateRecentTracks');
-    } 
+    }
 
     if (!ON_SPOTIFY_RECENT_TRACKS && !ON_LASTFM_RECENT_TRACKS) {
         deleteTrigger(TRIGGER_FUCTION_NAME);
@@ -1360,8 +1360,8 @@ const Order = (function () {
             // popularity, name, release_date
             let hasKey = _tracks.every((t) => t.album[_key] != undefined);
             let items = {};
-            if (hasKey){
-                _tracks.forEach((t) => items[t.album.id] = t.album);
+            if (hasKey) {
+                _tracks.forEach((t) => (items[t.album.id] = t.album));
             } else {
                 _tracks = getCachedTracks(_tracks, { album: {} }).albums;
             }
@@ -1426,11 +1426,23 @@ const Order = (function () {
         }
     }
 
+    function separateYears(tracks) {
+        return tracks.reduce((tracksByYear, track) => {
+            if (track.hasOwnProperty('album') && track.album.hasOwnProperty('release_date')) {
+                let year = new Date(track.album.release_date).getFullYear();
+                tracksByYear[year] = tracksByYear[year] || [];
+                tracksByYear[year].push(track);
+            }
+            return tracksByYear;
+        }, {});
+    }
+
     return {
         shuffle: shuffle,
         reverse: reverse,
         sort: sort,
         separateArtists: separateArtists,
+        separateYears: separateYears,
         compareDate: compareDate,
     };
 })();

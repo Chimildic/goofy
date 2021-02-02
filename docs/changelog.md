@@ -8,6 +8,9 @@
 
 [Перейти к обновленному коду](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+## Версия 1.4.2
+- Новая функция к Order: [separateYears](/func?id=separateyears).
+
 ## Версия 1.4.1
 - Ускорено время выполнения функции `craftTracks`.
 - Найдена недокументированная возможность Spotify API. Функция [getRecomTracks](/func?id=getrecomtracks) поддерживает ключ `popularity`. В связи с этим он **удален** у [craftTracks](/func?id=crafttracks). Переместите его в параметр `query`, если использовали. 

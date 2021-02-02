@@ -1391,6 +1391,45 @@ let tracks = Source.getTracks(playlistArray);
 Order.separateArtists(tracks, 2);
 ```
 
+### separateYears
+
+Возвращает объект, в котором по ключу с годом будет массив с треками, вышедших в этот год. Треки массива не сортируются.
+
+Аргументы
+- (массив) `tracks` - массив треков, которые нужно разделить по годам.
+
+Пример 1 - Получить треки вышедшие только в 2020 году
+```js
+let tracks2020 = Order.separateYears(tracks)['2020'];
+```
+
+Пример 2 - Возможна ошибка, при которой среди треков нет указанного года. Выполните проверку или подмените пустым массивом.
+```js
+// Подминить на пустой массив, если нет треков указанного года
+let tracks2020 = Order.separateYears(tracks)['2020'] || [];
+
+// Проверка через условие
+let tracksByYear = Order.separateYears(tracks);
+if (typeof tracksByYear['2020'] != 'undefined'){
+    // треки есть
+} else {
+    // треков нет
+}
+```
+
+Пример 3 - Получить треки указанного года. Если его нет, вернуть ближайший.
+```js
+let validTracks = getTracksByNearestYear(Order.separateYears(tracks), '2020');
+
+function getTracksByNearestYear(tracksByYear, year){
+    if (!tracksByYear.hasOwnProperty(year)){
+        let nums = Object.keys(tracksByYear).map(item => parseInt(item));
+        year = nums.sort((x, y) => Math.abs(year - x) - Math.abs(year - y))[0];
+    }
+    return tracksByYear[year.toString()];
+}
+```
+
 ## Playlist
 
 Создание или обновление плейлиста
