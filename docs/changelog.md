@@ -9,6 +9,7 @@
 [Перейти к обновленному коду](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
 ## Версия 1.4.2
+- Теперь [craftTracks](/func?id=crafttracks) может принимать статичные `seed_*` отличные от `key`.
 - Новая функция к Order: [separateYears](/func?id=separateyears).
 
 ## Версия 1.4.1

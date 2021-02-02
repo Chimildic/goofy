@@ -382,26 +382,52 @@ const Source = (function () {
     }
 
     function craftTracks(tracks, params = {}) {
-        let ids;
-        if (params.key == 'seed_artists') {
-            ids = tracks.map((t) => t.artists[0].id);
-        } else {
-            ids = tracks.map((t) => t.id);
-            params.key = 'seed_tracks';
-        }
-
-        ids = [...new Set(ids)];
-        let queryObj = params.query || {};
-        let urls = [];
-        for (let i = 0; i < Math.ceil(ids.length / 5); i++) {
-            queryObj[params.key] = ids.splice(0, 5).join(',');
-            urls.push(createUrlForRecomTracks(queryObj));
-        }
-        let recomTracks = SpotifyRequest.getAll(urls).reduce((recomTracks, response) => {
+        let recomTracks = SpotifyRequest.getAll(createUrls()).reduce((recomTracks, response) => {
             return Combiner.push(recomTracks, response.tracks);
         }, []);
         Filter.dedupTracks(recomTracks);
         return recomTracks;
+
+        function createUrls(){
+            let urls = [];
+            let queryObj = params.query || {};
+            let ids = mapToIds();
+            let availablePosition = findAvailablePosition();
+            let count = Math.ceil(ids.length / availablePosition);
+            for (let i = 0; i < count; i++) {
+                queryObj[params.key] = ids.splice(0, availablePosition).join(',');
+                urls.push(createUrlForRecomTracks(queryObj));
+            }
+            return urls;
+        }
+
+        function mapToIds(){
+            let ids;
+            if (params.key == 'seed_artists') {
+                ids = tracks.map((t) => t.artists[0].id);
+            } else {
+                ids = tracks.map((t) => t.id);
+                params.key = 'seed_tracks';
+            }
+            return Array.from(new Set(ids));
+        }
+
+        function findAvailablePosition(){
+            let value = 5;
+            if (params.query.hasOwnProperty('seed_genres')){
+                value -= params.query.seed_genres.split(',').length;
+            }
+            if (params.query.hasOwnProperty('seed_tracks') && params.key != 'seed_tracks'){
+                value -= params.query.seed_tracks.split(',').length;
+            }
+            if (params.query.hasOwnProperty('seed_artists') && params.key != 'seed_artists'){
+                value -= params.query.seed_artists.split(',').length;
+            }
+            if (value <= 0){
+                throw `Не осталось места под ${params.key}. Уменьшите количество значения других seed_*`;
+            }
+            return value;
+        }
     }
 
     function createUrlForRecomTracks(queryObj) {
