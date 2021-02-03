@@ -2684,17 +2684,3 @@ const Admin = (function () {
         });
     }
 })();
-
-
-function trigger(){
-    playlist1();
-    playlist2();
-}
-
-function playlist1(){
-
-}
-
-function playlist2(){
-
-}
