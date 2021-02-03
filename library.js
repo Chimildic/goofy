@@ -388,7 +388,7 @@ const Source = (function () {
         Filter.dedupTracks(recomTracks);
         return recomTracks;
 
-        function createUrls(){
+        function createUrls() {
             let urls = [];
             let queryObj = params.query || {};
             let ids = mapToIds();
@@ -401,7 +401,7 @@ const Source = (function () {
             return urls;
         }
 
-        function mapToIds(){
+        function mapToIds() {
             let ids;
             if (params.key == 'seed_artists') {
                 ids = tracks.map((t) => t.artists[0].id);
@@ -412,18 +412,18 @@ const Source = (function () {
             return Array.from(new Set(ids));
         }
 
-        function findAvailablePosition(){
+        function findAvailablePosition() {
             let value = 5;
-            if (params.query.hasOwnProperty('seed_genres')){
+            if (params.query.hasOwnProperty('seed_genres')) {
                 value -= params.query.seed_genres.split(',').length;
             }
-            if (params.query.hasOwnProperty('seed_tracks') && params.key != 'seed_tracks'){
+            if (params.query.hasOwnProperty('seed_tracks') && params.key != 'seed_tracks') {
                 value -= params.query.seed_tracks.split(',').length;
             }
-            if (params.query.hasOwnProperty('seed_artists') && params.key != 'seed_artists'){
+            if (params.query.hasOwnProperty('seed_artists') && params.key != 'seed_artists') {
                 value -= params.query.seed_artists.split(',').length;
             }
-            if (value <= 0){
+            if (value <= 0) {
                 throw `Не осталось места под ${params.key}. Уменьшите количество значения других seed_*`;
             }
             return value;
@@ -2262,10 +2262,12 @@ const Search = (function () {
     };
 
     function multisearchTracks(items, parseNameMethod) {
-        return multisearch(items, 'track', parseNameMethod, (item, i) => {
-            if (items[i].date) {
+        let tracks = multisearch(items, 'track', parseNameMethod);
+        return tracks.map((item) => {
+            if (item.hasOwnProperty('date')) {
                 item.played_at = items[i].date['#text'];
             }
+            return item;
         });
     }
 
@@ -2277,23 +2279,43 @@ const Search = (function () {
         return multisearch(items, 'album', parseNameMethod);
     }
 
-    function multisearch(items, type, parseNameMethod, formatMethod) {
-        let resultItems = [];
-        if (!items || items.length == 0) return resultItems;
-        let textArray = items.map((item) => parseNameMethod(item));
-        let searchResult = multiBestSearch(textArray, type);
-        for (let i = 0; i < items.length; i++) {
-            let item = searchResult[i];
-            if (!item || !item.id) {
-                console.info('Spotify по типу', type, 'не нашел:', parseNameMethod(items[i]));
-                continue;
-            }
-            if (formatMethod) {
-                formatMethod(item, i);
-            }
-            resultItems.push(item);
+    function multisearch(items, type, parseNameMethod) {
+        if (!items || items.length == 0) {
+            return [];
         }
-        return resultItems;
+        let originKeyword = items.map((item) => parseNameMethod(item));
+        let uniqueItems = findUniqueItems(originKeyword);
+        if (uniqueItems.length == originKeyword.length) {
+            return uniqueItems;
+        }
+        return insertDuplicate();
+
+        function findUniqueItems(){
+            let uniqueKeyword = Array.from(new Set(originKeyword));
+            let searchResult = multiBestSearch(uniqueKeyword, type);
+            let resultItems = [];
+            for (let i = 0; i < uniqueKeyword.length; i++) {
+                let item = searchResult[i];
+                if (item && item.id) {
+                    item.keyword = uniqueKeyword[i];
+                    resultItems.push(item);
+                } else {
+                    console.info('Spotify по типу', type, 'не нашел:', uniqueKeyword[i]);
+                }
+            }
+            return resultItems;
+        }
+
+        function insertDuplicate(){
+            return originKeyword.map((keyword) => {
+                let item = uniqueItems.find((item) => item.keyword == keyword);
+                if (typeof item != 'undefined') {
+                    delete item.keyword;
+                    return item;
+                }
+            })
+            .filter((item) => typeof item != 'undefined');
+        }
     }
 
     function multiBestSearch(textArray, type) {
