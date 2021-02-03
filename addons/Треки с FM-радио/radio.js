@@ -1,11 +1,10 @@
 const Radio = (function () {
     const URL_BASE = 'https://top-radio.ru/';
     return {
-        getTracks: getTracks, // треки за день, не более недели
-        getTopTracks: getTopTracks, // топ-100
+        getTracks: getTracks,
+        getTopTracks: getTopTracks,
     };
 
-    
     function getTracks(station, date) {
         let url = `${URL_BASE}playlist/${station}`;
         if (typeof date != 'undefined') {
@@ -19,22 +18,23 @@ const Radio = (function () {
         return Search.multisearchTracks(parseTracks(url), parseNameTrack);
     }
 
-    function parseNameTrack(str) {
-        return str
-            .formatName()
-            .replace(/( x )/g, ' ')
-            .replace(/( feat )/g, ' ');
+    function parseNameTrack(item) {
+        let re = /( x | feat*\w+| vs*\W+|,|&|\/|[(])/gi;
+        let artist = item.artist.split(re)[0];
+        let song = item.song.split(re)[0];
+        return `${artist} ${song}`.formatName();
     }
 
     function parseTracks(url) {
-        let tracks = [];
         let cheerio = createCherio(url);
         let songs = cheerio('.song');
-        cheerio('.artist').each((index, node) => {
-            let artist = cheerio(node).text().split(/,|&|x|feat/)[0];
-            let track = cheerio(songs[index]).text().split('(')[0];
-            tracks.push(`${artist} ${track}`);
-        });
+        let tracks = [];
+        cheerio('.artist').each((index, node) =>
+            tracks.push({
+                artist: cheerio(node).text(),
+                song: cheerio(songs[index]).text(),
+            })
+        );
         return tracks;
     }
 
