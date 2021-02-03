@@ -2290,7 +2290,7 @@ const Search = (function () {
         }
         return insertDuplicate();
 
-        function findUniqueItems(){
+        function findUniqueItems() {
             let uniqueKeyword = Array.from(new Set(originKeyword));
             let searchResult = multiBestSearch(uniqueKeyword, type);
             let resultItems = [];
@@ -2306,15 +2306,16 @@ const Search = (function () {
             return resultItems;
         }
 
-        function insertDuplicate(){
-            return originKeyword.map((keyword) => {
-                let item = uniqueItems.find((item) => item.keyword == keyword);
-                if (typeof item != 'undefined') {
-                    delete item.keyword;
-                    return item;
-                }
-            })
-            .filter((item) => typeof item != 'undefined');
+        function insertDuplicate() {
+            return originKeyword
+                .map((keyword) => {
+                    let item = uniqueItems.find((item) => item.keyword == keyword);
+                    if (typeof item != 'undefined') {
+                        delete item.keyword;
+                        return item;
+                    }
+                })
+                .filter((item) => typeof item != 'undefined');
         }
     }
 
@@ -2332,22 +2333,26 @@ const Search = (function () {
         return search(items, 'playlist', requestCount);
     }
 
-    function search(textArray, type, requestCount = 1) {
-        let searchResult = [];
-        textArray.forEach((text) => {
-            let urls = [];
+    function search(keywords, type, requestCount = 1) {
+        const limit = 50;
+        let resultForKeyword = [];
+        keywords.forEach((text) => {
             let result = [];
-            let limit = 50;
-            for (let i = 0; i < requestCount; i++) {
-                let queryObj = { q: text, type: type, limit: limit, offset: i * limit };
-                urls.push(Utilities.formatString(TEMPLATE, CustomUrlFetchApp.parseQuery(queryObj)));
-            }
-            SpotifyRequest.getAll(urls).map((response) => {
+            SpotifyRequest.getAll(createUrls(text)).forEach((response) => {
                 Combiner.push(result, response ? response.items : []);
             });
-            searchResult.push(result);
+            resultForKeyword.push(result);
         });
-        return searchResult;
+        return resultForKeyword;
+
+        function createUrls(keyword) {
+            let urls = [];
+            for (let i = 0; i < requestCount; i++) {
+                let queryObj = { q: keyword, type: type, limit: limit, offset: i * limit };
+                urls.push(Utilities.formatString(TEMPLATE, CustomUrlFetchApp.parseQuery(queryObj)));
+            }
+            return urls;
+        }
     }
 })();
 
