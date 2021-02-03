@@ -394,7 +394,7 @@ let tracks = Source.getAlbumsTracks(albums);
     album: {
         groups: 'album,single',
         release_date: { sinceDays: 6, beforeDays: 0 },
-        // release_date: { startDate: new Date('2020.12.01'), endDate: new Date('2020.12.08') },
+        // release_date: { startDate: new Date('2020.11.30'), endDate: new Date('2020.12.30') },
         album_limit: 10,
         track_limit: 1,
     }
@@ -1023,7 +1023,7 @@ let args = {
         popularity: { min: 30, max: 70 },
         genres: [], // Тесты показывают, что у альбомов список жанров всегда пуст
         release_date: { sinceDays: 6, beforeDays: 0 },
-        // или release_date: { startDate: new Date('2020.12.01'), endDate: new Date('2020.12.08') },
+        // или release_date: { startDate: new Date('2020.11.30'), endDate: new Date('2020.12.30') },
     },
 };
 ```
@@ -1422,7 +1422,7 @@ let tracks2020 = Order.separateYears(tracks)['2020'];
 
 Пример 2 - Возможна ошибка, при которой среди треков нет указанного года. Выполните проверку или подмените пустым массивом.
 ```js
-// Подминить на пустой массив, если нет треков указанного года
+// Подменить на пустой массив, если нет треков указанного года
 let tracks2020 = Order.separateYears(tracks)['2020'] || [];
 
 // Проверка через условие

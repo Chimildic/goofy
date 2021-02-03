@@ -789,7 +789,6 @@ const RangeTracks = (function () {
         'include',
         'exclude',
         'groups',
-        'release_date',
         'artist_limit',
         'album_limit',
         'track_limit',
@@ -2685,3 +2684,17 @@ const Admin = (function () {
         });
     }
 })();
+
+
+function trigger(){
+    playlist1();
+    playlist2();
+}
+
+function playlist1(){
+
+}
+
+function playlist2(){
+
+}
