@@ -30,9 +30,17 @@
                     args: [{ name: 'Ссылка на плейлист' }],
                 },
                 {
-                    name: 'myFunction',
-                    text: 'Описание',
-                    args: [{ name: 'Описание первого аргумента' }, { name: 'Описание второго аргумента' }],
+                    name: 'updateRadio',
+                    text: 'Радио',
+                    args: [
+                        {
+                            select: [
+                                { value: 'evropa-plyus-light', name: 'Европа Плюс Лайт' },
+                                { value: 'energy', name: 'Радио ENERGY' },
+                            ],
+                        },
+                        { name: 'Кастомная станция' },
+                    ],
                 },
             ];
 
@@ -49,7 +57,7 @@
             function createItemListFunction(obj) {
                 let link = document.createElement('a');
                 if (obj.hasOwnProperty('args')) {
-                    let subitem = createSubItemFunction(obj);
+                    let subitem = createSubitem(obj);
                     link.insertAdjacentElement('afterbegin', subitem);
                     link.setAttribute('class', 'list-group-item');
                 } else {
@@ -60,17 +68,53 @@
                 return link;
             }
 
-            function createSubItemFunction(obj) {
-                let html = `<p style="color: #495057;">${obj.text || obj.name}</p>`;
-                for (let i = 0; i < obj.args.length; i++) {
-                    html += `<div class="input-group mb-3"><input class="form-control" placeholder="${obj.args[i].name}" data-${obj.name}="${i}"></input></div>`;
-                }
+            function createSubitem(obj) {
+                let html = createTitle(obj);
+                obj.args.forEach((form, index) => {
+                    if (form.hasOwnProperty('select')) {
+                        html += createSelectForm(obj, form, index);
+                    } else {
+                        html += createTextForm(form.name, obj.name, index);
+                    }
+                });
+                let button = createStartButton(obj);
+                return createContainer(html, button);
+            }
 
+            function createTextForm(placeholder, dataName, index) {
+                let html = `<input class="form-control" placeholder="${placeholder}" data-${dataName}="${index}"></input>`;
+                return createInputGroup(html);
+            }
+
+            function createSelectForm(obj, formData, index) {
+                let select = document.createElement('select');
+                select.setAttribute('class', 'form-select');
+                select.setAttribute(`data-${obj.name}`, index);
+                for (let i = 0; i < formData.select.length; i++) {
+                    let item = formData.select[i];
+                    let option = `<option value="${item.value}">${item.name}</option>`;
+                    select.insertAdjacentHTML('beforeend', option);
+                }
+                return createInputGroup(select.outerHTML);
+            }
+
+            function createTitle(obj) {
+                return `<p style="color: #495057;">${obj.text || obj.name}</p>`;
+            }
+
+            function createStartButton(obj) {
                 let button = document.createElement('button');
                 button.setAttribute('class', 'btn btn-primary');
                 button.innerText = 'Запустить';
                 button.addEventListener('click', () => call(obj.name, true));
+                return button;
+            }
 
+            function createInputGroup(html) {
+                return `<div class="input-group mb-3">${html}</div>`;
+            }
+
+            function createContainer(html, button) {
                 let container = document.createElement('div');
                 container.setAttribute('class', 'input-group mb-3');
                 container.insertAdjacentHTML('afterbegin', html);
