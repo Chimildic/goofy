@@ -474,12 +474,12 @@ const Source = (function () {
     }
 
     function getItemsByPlaylistObject(obj) {
-        if (!obj || !obj.tracks || !obj.tracks.items) {
-            return [];
-        } else if (obj.tracks.total > 100) {
-            return SpotifyRequest.getItemsByNext(obj.tracks);
+        let items = [];
+        if (obj && obj.tracks && obj.tracks.items) {
+            items = obj.tracks.total <= 100 ? obj.tracks.items : SpotifyRequest.getItemsByNext(obj.tracks);
+            items.forEach(item => item.track.origin = { id: obj.id, name: obj.name, type: obj.type });
         }
-        return obj.tracks.items;
+        return items;
     }
 
     function getSavedTracks() {
