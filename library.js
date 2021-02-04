@@ -62,7 +62,10 @@ const CustomUrlFetchApp = (function () {
         return responseArray;
 
         function sendPack(requests) {
-            let raw = UrlFetchApp.fetchAll(requests);
+            let raw = tryFetchAll(requests);
+            if (typeof raw == 'undefined') {
+                return [];
+            }
             let result = [];
             let failed = [];
             let seconds = 0;
@@ -80,6 +83,19 @@ const CustomUrlFetchApp = (function () {
                 Combiner.push(result, sendPack(failed));
             }
             return result;
+        }
+
+        function tryFetchAll(requests, attempt = 0) {
+            try {
+                return UrlFetchApp.fetchAll(requests);
+            } catch (e) {
+                console.error(e.stack);
+                if (attempt++ < 2) {
+                    console.error(`Повторная отправка через 10 секунд. Попытка ${attempt}`);
+                    Utilities.sleep(10000);
+                    return tryFetchAll(requests, attempt);
+                }
+            }
         }
     }
 
@@ -477,7 +493,7 @@ const Source = (function () {
         let items = [];
         if (obj && obj.tracks && obj.tracks.items) {
             items = obj.tracks.total <= 100 ? obj.tracks.items : SpotifyRequest.getItemsByNext(obj.tracks);
-            items.forEach(item => item.track.origin = { id: obj.id, name: obj.name, type: obj.type });
+            items.forEach((item) => (item.track.origin = { id: obj.id, name: obj.name, type: obj.type }));
         }
         return items;
     }
