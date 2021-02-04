@@ -2308,14 +2308,13 @@ const Search = (function () {
 
         function insertDuplicate() {
             return originKeyword
-                .map((keyword) => {
-                    let item = uniqueItems.find((item) => item.keyword == keyword);
+                .map((keyword) => uniqueItems.find((item) => item.keyword == keyword))
+                .filter((item) => {
                     if (typeof item != 'undefined') {
                         delete item.keyword;
-                        return item;
+                        return true;
                     }
-                })
-                .filter((item) => typeof item != 'undefined');
+                });
         }
     }
 
