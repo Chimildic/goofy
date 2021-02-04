@@ -1280,6 +1280,23 @@ const Selector = (function () {
         return strDay.toLowerCase() === strWeekday.toLowerCase();
     }
 
+    function pickYear(tracks, year, offset = 5) {
+        let tracksByYear = Order.separateYears(tracks);
+        if (tracksByYear.hasOwnProperty(year) || tracks.length == 0) {
+            return tracksByYear[year] || [];
+        }
+        console.log(`Среди ${tracks.length} треков нет вышедших в ${year} году`);
+        year = parseInt(year);
+        let keys = Object.keys(tracksByYear).map((item) => parseInt(item));
+        let nearYear = keys.sort((x, y) => Math.abs(year - x) - Math.abs(year - y))[0];
+        if (typeof nearYear != 'undefined' && Math.abs(nearYear - year) <= offset) {
+            console.log(`Выбран ближайший год: ${nearYear}`);
+            return tracksByYear[nearYear.toString()];
+        }
+        console.log(`При смещении ${offset}, ближайший год не найден`);
+        return [];
+    }
+
     return {
         keepFirst: keepFirst,
         keepLast: keepLast,
@@ -1287,7 +1304,6 @@ const Selector = (function () {
         keepAllExceptLast: keepAllExceptLast,
         keepRandom: keepRandom,
         keepNoLongerThan: keepNoLongerThan,
-
         sliceFirst: sliceFirst,
         sliceLast: sliceLast,
         sliceAllExceptFirst: sliceAllExceptFirst,
@@ -1295,7 +1311,7 @@ const Selector = (function () {
         sliceRandom: sliceRandom,
         sliceNoLongerThan: sliceNoLongerThan,
         sliceCopy: sliceCopy,
-
+        pickYear: pickYear,
         isWeekend: isWeekend,
         isDayOfWeekRu: isDayOfWeekRu,
         isDayOfWeek: isDayOfWeek,

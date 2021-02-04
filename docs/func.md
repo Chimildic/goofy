@@ -1243,6 +1243,20 @@ let tracks = Source.getTracks(playlistArray);
 let tracksCopy = Selector.sliceCopy(tracks);
 ```
 
+## pickYear
+
+Возвращает массив треков, релиз которых был в указанном году. Если таких треков нет, выбирается ближайший год.
+
+Аргументы
+- (массив) `tracks` - треки, среди которых выбирать.
+- (строка) `year` - год релиза.
+- (число) `offset` - допустимое смещение для ближайшего года. По умолчанию 5.
+
+Пример 1 - Выбрать любимые треки, вышедшие в 2020 году
+```js
+let tracks = Selector.pickYear(savedTracks, '2020');
+```
+
 ### isWeekend
 
 Возвращает булево значение: `true` если сегодня суббота или пятница и `false` если нет.
@@ -1420,7 +1434,10 @@ Order.separateArtists(tracks, 2);
 let tracks2020 = Order.separateYears(tracks)['2020'];
 ```
 
-Пример 2 - Возможна ошибка, при которой среди треков нет указанного года. Выполните проверку или подмените пустым массивом.
+Пример 2 - Возможна ошибка, при которой среди треков нет указанного года. Выберите одно из:
+- Используйте [pickYear](/func?id=pickyear)
+- Подмените пустым массивом
+- Проверьте условием
 ```js
 // Подменить на пустой массив, если нет треков указанного года
 let tracks2020 = Order.separateYears(tracks)['2020'] || [];
@@ -1431,19 +1448,6 @@ if (typeof tracksByYear['2020'] != 'undefined'){
     // треки есть
 } else {
     // треков нет
-}
-```
-
-Пример 3 - Получить треки указанного года. Если его нет, вернуть ближайший.
-```js
-let validTracks = getTracksByNearestYear(Order.separateYears(tracks), '2020');
-
-function getTracksByNearestYear(tracksByYear, year){
-    if (!tracksByYear.hasOwnProperty(year)){
-        let nums = Object.keys(tracksByYear).map(item => parseInt(item));
-        year = nums.sort((x, y) => Math.abs(year - x) - Math.abs(year - y))[0];
-    }
-    return tracksByYear[year.toString()];
 }
 ```
 
