@@ -204,16 +204,14 @@ const Source = (function () {
     }
 
     function getListCategory(params = {}) {
-        let template = '%s/browse/categories?%s';
         let query = CustomUrlFetchApp.parseQuery(params);
-        let url = Utilities.formatString(template, API_BASE_URL, query);
+        let url = `${API_BASE_URL}/browse/categories?${query}`;
         return SpotifyRequest.get(url).items;
     }
 
     function getCategoryTracks(category_id, params = {}) {
-        let template = '%s/browse/categories/%s/playlists?%s';
         let query = CustomUrlFetchApp.parseQuery(params);
-        let url = Utilities.formatString(template, API_BASE_URL, category_id, query);
+        let url = `${API_BASE_URL}/browse/categories/${category_id}/playlists?${query}`;
         return getTracks(SpotifyRequest.get(url).items);
     }
 
@@ -287,10 +285,9 @@ const Source = (function () {
 
     function getArtistsAlbums(artists, paramsAlbum = {}) {
         let groups = paramsAlbum.groups || 'album,single';
-        let template = 'artists/%s/albums?country=from_token&include_groups=%s&limit=50';
         let albums = artists
             .reduce((albums, artist) => {
-                let path = Utilities.formatString(template, artist.id, groups);
+                let path = `artists/${artist.id}/albums?country=from_token&include_groups=${groups}&limit=50`;
                 return Combiner.push(albums, SpotifyRequest.getItemsByPath(path));
             }, [])
             .filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, paramsAlbum.release_date));
@@ -304,8 +301,7 @@ const Source = (function () {
     }
 
     function getAlbumTracks(album, limit) {
-        let path = Utilities.formatString('albums/%s/tracks', album.id);
-        let items = SpotifyRequest.getItemsByPath(path);
+        let items = SpotifyRequest.getItemsByPath(`albums/${album.id}/tracks`);
         Selector.keepRandom(items, limit);
         return items.map((item) => {
             item.album = album;
@@ -434,7 +430,7 @@ const Source = (function () {
         queryObj.limit = queryObj.limit > 100 ? 100 : queryObj.limit || 100;
         queryObj.market = queryObj.market || 'from_token';
         let query = CustomUrlFetchApp.parseQuery(queryObj);
-        return Utilities.formatString('%s/recommendations?%s', API_BASE_URL, query);
+        return `${API_BASE_URL}/recommendations?${query}`;
     }
 
     function getTracksRandom(playlistArray, countPlaylist = 1) {
@@ -610,7 +606,7 @@ const RecentTracks = (function () {
     }
 
     function getSpotifyRecentTracks() {
-        let url = Utilities.formatString('%s/me/player/recently-played?limit=50', API_BASE_URL);
+        let url = `${API_BASE_URL}/me/player/recently-played?limit=50`;
         return Source.extractTracks(SpotifyRequest.get(url).items);
     }
 
@@ -966,7 +962,7 @@ const Filter = (function () {
     }
 
     function getTrackKey(track) {
-        return Utilities.formatString('%s:%s', track.name, track.artists[0].name).formatName();
+        return `${track.name} ${track.artists[0].name}`.formatName();
     }
 
     function getArtistId(item) {
@@ -1478,13 +1474,13 @@ const Playlist = (function () {
     const SIZE = ['500', '600', '700', '800', '900', '1000'];
 
     function getById(playlistId) {
-        let url = Utilities.formatString('%s/playlists/%s', API_BASE_URL, playlistId);
+        let url = `${API_BASE_URL}/playlists/${playlistId}`;
         return SpotifyRequest.get(url);
     }
 
     function getByName(playlistName, userId) {
-        let path = userId == null ? 'me/playlists?limit=50' : Utilities.formatString('users/%s/playlists?limit=50', userId);
-        let url = Utilities.formatString('%s/%s', API_BASE_URL, path);
+        let path = userId == null ? 'me/playlists?limit=50' : `users/${userId}/playlists?limit=50`;
+        let url = `${API_BASE_URL}/${path}`;
         let response = SpotifyRequest.get(url);
         while (true) {
             const name = playlistName;
@@ -1504,7 +1500,7 @@ const Playlist = (function () {
         Filter.dedupArtists(copyTracks);
         let artists = Selector.sliceRandom(copyTracks, limit);
         let strArtists = artists.map((track) => track.artists[0].name).join(', ');
-        return Utilities.formatString('%s и не только', strArtists);
+        return `${strArtists} и не только`;
     }
 
     const getPlaylistArray = (function () {
@@ -1514,7 +1510,7 @@ const Playlist = (function () {
         function get(userId) {
             let key = userId == null ? 'me' : userId;
             if (playlistsOfUsers[key] == null) {
-                let path = userId == null ? 'me/playlists?limit=50' : Utilities.formatString('users/%s/playlists?limit=50', userId);
+                let path = userId == null ? 'me/playlists?limit=50' : `users/${userId}/playlists?limit=50`;
                 playlistsOfUsers[key] = SpotifyRequest.getItemsByPath(path);
             }
             return playlistsOfUsers[key];
@@ -1531,7 +1527,7 @@ const Playlist = (function () {
     }
 
     function createPlaylist(payload) {
-        let url = Utilities.formatString('%s/users/%s/playlists', API_BASE_URL, User.getId());
+        let url = `${API_BASE_URL}/users/${User.getId()}/playlists`;
         return SpotifyRequest.post(url, payload);
     }
 
@@ -1577,7 +1573,7 @@ const Playlist = (function () {
     }
 
     function updateTracks(data) {
-        let url = Utilities.formatString('%s/playlists/%s/tracks', API_BASE_URL, data.id);
+        let url = `${API_BASE_URL}/playlists/${data.id}/tracks`;
         let currentTracks = Source.getPlaylistTracks('', data.id);
 
         addNewTracks();
@@ -1612,7 +1608,7 @@ const Playlist = (function () {
         let size = 100;
         let uris = getTrackUris(data.tracks);
         let count = Math.ceil(uris.length / size);
-        let url = Utilities.formatString('%s/playlists/%s/tracks', API_BASE_URL, data.id);
+        let url = `${API_BASE_URL}/playlists/${data.id}/tracks`;
         if (count == 0 && requestType == 'put') {
             // Удалить треки в плейлисте
             SpotifyRequest.put(url, { uris: [] });
@@ -1642,17 +1638,13 @@ const Playlist = (function () {
 
     function getTrackUris(tracks) {
         return tracks.reduce((uris, track) => {
-            let uri = track.uri;
-            if (!uri) {
-                uri = Utilities.formatString('spotify:track:%s', track.id);
-            }
-            uris.push(uri);
+            uris.push(track.uri || `spotify:track:${track.id}`);
             return uris;
         }, []);
     }
 
     function changeDetails(data) {
-        let url = Utilities.formatString('%s/playlists/%s', API_BASE_URL, data.id);
+        let url = `${API_BASE_URL}/playlists/${data.id}`;
         let payload = createPayload(data);
         SpotifyRequest.put(url, payload);
     }
@@ -1682,7 +1674,7 @@ const Playlist = (function () {
     }
 
     function setRandomCover(playlistId) {
-        let url = Utilities.formatString('%s/playlists/%s/images', API_BASE_URL, playlistId);
+        let url = `${API_BASE_URL}/playlists/${playlistId}/images`;
         SpotifyRequest.putImage(url, getRandomCover());
     }
 
@@ -1728,7 +1720,7 @@ const Library = (function () {
     }
 
     function modifyFollowArtists(method, artists) {
-        let url = Utilities.formatString('%s/%s', API_BASE_URL, 'me/following?type=artist');
+        let url = `${API_BASE_URL}/me/following?type=artist`;
         let ids = artists.map((artist) => artist.id);
         method({ url: url, items: ids, limit: 50, key: 'ids' });
     }
@@ -1742,7 +1734,7 @@ const Library = (function () {
     }
 
     function modifyFavoriteTracks(method, tracks) {
-        let url = Utilities.formatString('%s/%s', API_BASE_URL, 'me/tracks');
+        let url = `${API_BASE_URL}/me/tracks`;
         let ids = tracks.map((track) => track.id);
         method({ url: url, items: ids, limit: 50, key: 'ids' });
     }
@@ -1756,7 +1748,7 @@ const Library = (function () {
     }
 
     function modifyAlbums(method, albums) {
-        let url = Utilities.formatString('%s/%s', API_BASE_URL, 'me/albums');
+        let url = `${API_BASE_URL}/me/albums`;
         let ids = albums.map((album) => album.id);
         method({ url: url, items: ids, limit: 50, key: 'ids' });
     }
@@ -1937,7 +1929,7 @@ const Lastfm = (function () {
     }
 
     function getStationTracks(user, type, countRequest) {
-        let url = Utilities.formatString('%s/%s/%s', LASTFM_STATION, user, type);
+        let url = `${LASTFM_STATION}/${user}/${type}`;
         let stationTracks = [];
         for (let i = 0; i < countRequest; i++) {
             let response = CustomUrlFetchApp.fetch(url);
@@ -1975,19 +1967,19 @@ const Lastfm = (function () {
 
     function getLastfmTrackKey(item) {
         let artist = item.artist.name ? item.artist.name : item.artist['#text'];
-        return Utilities.formatString('%s %s', item.name, artist).formatName();
+        return `${item.name} ${artist}`.formatName();
     }
 
     function getSpotifyTrackKey(item) {
-        return Utilities.formatString('%s %s', item.name, item.artists[0].name).formatName();
+        return `${item.name} ${item.artists[0].name}`.formatName();
     }
 
     function getTrackNameLastfm(item) {
-        return Utilities.formatString('%s %s', getArtistNameLastfm(item), item.name).formatName();
+        return `${getArtistNameLastfm(item)} ${item.name}`.formatName();
     }
 
     function getAlbumNameLastfm(item) {
-        return Utilities.formatString('%s %s', item.name, getArtistNameLastfm(item)).formatName();
+        return `${item.name} ${getArtistNameLastfm(item)}`.formatName();
     }
 
     function getArtistNameLastfm(item) {
@@ -2055,7 +2047,7 @@ const Yandex = (function () {
         if (item.artists.length == 0 || !item.artists[0].name) {
             return item.title.formatName();
         }
-        return Utilities.formatString('%s %s', item.artists[0].name, item.title).formatName();
+        return `${item.artists[0].name} ${item.title}`.formatName();
     }
 
     function getArtistNameYandex(item) {
@@ -2064,7 +2056,7 @@ const Yandex = (function () {
 
     function getAlbumNameYandex(item) {
         if (item && item.title) {
-            return Utilities.formatString('%s %s', item.title, item.artists[0].name).formatName();
+            return `${item.title} ${item.artists[0].name}`.formatName();
         }
         return '';
     }
@@ -2478,8 +2470,7 @@ const Auth = (function () {
 
     function getRedirectUri() {
         let scriptId = encodeURIComponent(ScriptApp.getScriptId());
-        let template = 'https://script.google.com/macros/d/%s/usercallback';
-        return Utilities.formatString(template, scriptId);
+        return `https://script.google.com/macros/d/${scriptId}/usercallback`;
     }
 
     function hasAccess() {
@@ -2532,7 +2523,7 @@ const SpotifyRequest = (function () {
     };
 
     function getItemsByPath(urlPath, limitRequestCount) {
-        let url = Utilities.formatString('%s/%s', API_BASE_URL, urlPath);
+        let url = `${API_BASE_URL}/${urlPath}`;
         let response = get(url);
         if (response.items.length < response.total) {
             let method = response.cursors ? getItemsByCursor : getItemsByNext;
@@ -2567,7 +2558,7 @@ const SpotifyRequest = (function () {
         let urls = [];
         for (let i = 1; i < count; i++) {
             query.offset = parseInt(query.offset) + parseInt(query.limit);
-            urls.push(Utilities.formatString('%s?%s', baseurl, CustomUrlFetchApp.parseQuery(query)));
+            urls.push(`${baseurl}?${CustomUrlFetchApp.parseQuery(query)}`);
         }
 
         let items = response.items;
@@ -2595,7 +2586,7 @@ const SpotifyRequest = (function () {
         let urls = [];
         for (let i = 0; i < requestCount; i++) {
             let strIds = ids.splice(0, limit).join(',');
-            urls.push(Utilities.formatString('%s/%s/?ids=%s', API_BASE_URL, objType, strIds));
+            urls.push(`${API_BASE_URL}/${objType}/?ids=${strIds}`);
         }
 
         let fullObj = [];
