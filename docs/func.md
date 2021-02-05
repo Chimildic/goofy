@@ -1396,6 +1396,7 @@ let tracks2020 = Order.separateYears(tracks)['2020'];
 - Используйте [pickYear](/func?id=pickyear)
 - Подмените пустым массивом
 - Проверьте условием
+  
 ```js
 // Подменить на пустой массив, если нет треков указанного года
 let tracks2020 = Order.separateYears(tracks)['2020'] || [];
