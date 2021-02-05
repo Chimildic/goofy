@@ -10,6 +10,7 @@
 
 ## Версия 1.4.2
 - Теперь [craftTracks](/func?id=crafttracks) может принимать статичные `seed_*` отличные от `key`.
+- Новая функция к Lastfm: [getCustomTop](/func?id=getcustomtop).
 - Новая функция к Selector: [pickYear](/func?id=pickyear).
 - Новая функция к Order: [separateYears](/func?id=separateyears).
 - Улучшение для поиска. Если один и тот же элемент присутствует в массиве несколько раз (то есть имеет одинаковое ключевое слово для поиска), будет затрачен только один запрос поиска.

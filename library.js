@@ -1804,6 +1804,7 @@ const Lastfm = (function () {
         getRecomStation: getRecomStation,
         getNeighboursStation: getNeighboursStation,
         getSimilarTracks: getSimilarTracks,
+        getCustomTop: getCustomTop,
     };
 
     function getSimilarTracks(tracks, match, limit) {
@@ -1983,11 +1984,77 @@ const Lastfm = (function () {
         return Selector.sliceFirst(response, count);
     }
 
+    function getCustomTop(params){
+        params.type = params.type || 'track';
+        let tracks = getTracksForPeriod(params);
+        let played = calcCountPlayed(tracks, params.type);
+        played.sort((x, y) => y.count - x.count);
+        Selector.keepAllExceptFirst(played, params.offset || 0);
+        Selector.keepFirst(played, params.count || 40);
+        let items = played.map(p => p.item);
+        if (params.type == 'track') {
+            return Search.multisearchTracks(items, formatTrackNameLastfm);
+        } else if (params.type == 'artist') {
+            return Search.multisearchArtists(items, formatArtistNameLastfm);
+        }
+
+        function getTracksForPeriod(params){
+            let queryObj = {
+                method: 'user.getrecenttracks',
+                user: params.user,
+                from: new Date(params.from).getTime() / 1000,
+                to: new Date(params.to).getTime() / 1000,
+                limit: 200,
+                page: 1,
+            };
+            let firstPage = getPage(queryObj);
+            let totalPages = parseInt(firstPage.recenttracks['@attr'].totalPages);
+    
+            let urls = [];
+            for (let i = 2; i <= totalPages; i++){
+                queryObj.page = i;
+                urls.push(createUrl(queryObj));
+            }
+    
+            let tracks = [...firstPage.recenttracks.track];
+            CustomUrlFetchApp.fetchAll(urls).forEach(response => {
+                if (response.recenttracks) {
+                    let items = response.recenttracks.track;
+                    if (isNowPlayling(items[0])) {
+                        items.splice(0, 1);
+                    }
+                    Combiner.push(tracks, items);
+                }
+            });
+            return tracks;
+        }
+    
+        function calcCountPlayed(tracks, type){
+            let items = {};
+            let formatMethod = type == 'track' ? formatLastfmTrackKey : formatArtistNameLastfm;
+            tracks.forEach(track => {
+                let key = formatMethod(track);
+                if (typeof items[key] == 'undefined'){
+                    items[key] = {
+                        item: track,
+                        count: 0,
+                    };
+                }
+                items[key].count++;
+            });
+            return Object.values(items);
+        }
+    }
+
     function getPage(queryObj) {
+        let url = createUrl(queryObj);
+        return CustomUrlFetchApp.fetch(url) || [];
+    }
+
+    function createUrl(queryObj){ 
         queryObj.api_key = KeyValue.LASTFM_API_KEY;
         queryObj.format = 'json';
-        let url = LASTFM_API_BASE_URL + CustomUrlFetchApp.parseQuery(queryObj);
-        return CustomUrlFetchApp.fetch(url) || [];
+        return LASTFM_API_BASE_URL + CustomUrlFetchApp.parseQuery(queryObj);
     }
 
     function isNowPlayling(track) {
