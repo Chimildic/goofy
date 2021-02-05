@@ -1808,7 +1808,7 @@ const Lastfm = (function () {
 
     function getSimilarTracks(tracks, match, limit) {
         let requests = createRequests();
-        return Search.multisearchTracks(getAll(), getTrackNameLastfm);
+        return Search.multisearchTracks(getAll(), formatTrackNameLastfm);
 
         function createRequests() {
             return tracks.reduce((requests, track) => {
@@ -1837,36 +1837,33 @@ const Lastfm = (function () {
         }
     }
 
-    function removeRecentTracks(sourceArray, lastfmUser, limit = 600) {
-        let removedArray = getLastfmRecentTracks(lastfmUser, limit);
-        let removedNames = removedArray.map((item) => getLastfmTrackKey(item));
-        let filteredTracks = sourceArray.filter((item) => !removedNames.includes(getSpotifyTrackKey(item)));
+    function removeRecentTracks(sourceArray, user, count = 600) {
+        let removedArray = getLastfmRecentTracks({ user: user }, count);
+        let removedNames = removedArray.map((item) => formatLastfmTrackKey(item));
+        let filteredTracks = sourceArray.filter((item) => !removedNames.includes(formatSpotifyTrackKey(item)));
         Combiner.replace(sourceArray, filteredTracks);
     }
 
-    function removeRecentArtists(sourceArray, lastfmUser, limit = 600) {
-        let removedArray = getRecentTracks(lastfmUser, limit);
+    function removeRecentArtists(sourceArray, user, count = 600) {
+        let removedArray = getLastfmRecentTracks({ user: user }, count);
         let removedNames = removedArray.map((item) => item.artist['#text']);
         let filteredTracks = sourceArray.filter((item) => !removedNames.includes(item.artists[0].name));
         Combiner.replace(sourceArray, filteredTracks);
     }
 
-    function getLastfmRecentTracks(user, limit) {
-        let queryObj = {
-            method: 'user.getrecenttracks',
-            user: user,
-            limit: 200,
-        };
-        let tracks = getAllPagesTracks(queryObj, limit);
+    function getRecentTracks(user, count) {
+        let tracks = getLastfmRecentTracks({ user: user }, count);
+        return Search.multisearchTracks(tracks, formatTrackNameLastfm);
+    }
+
+    function getLastfmRecentTracks(params, count) {
+        params.method = 'user.getrecenttracks';
+        params.limit = 200;
+        let tracks = getTrackPages(queryObj, count);
         if (isNowPlayling(tracks[0])) {
             tracks.splice(0, 1);
         }
         return tracks;
-    }
-
-    function getRecentTracks(user, limit) {
-        let tracks = getLastfmRecentTracks(user, limit);
-        return Search.multisearchTracks(tracks, getTrackNameLastfm);
     }
 
     function findNewPlayed(lastfmTracks, spotifyTracks) {
@@ -1874,7 +1871,7 @@ const Lastfm = (function () {
             let lastPlayedTime = new Date(spotifyTracks[0].played_at).getTime();
             lastfmTracks = sliceOldPlayed(lastfmTracks, lastPlayedTime);
         }
-        return Search.multisearchTracks(lastfmTracks, getTrackNameLastfm);
+        return Search.multisearchTracks(lastfmTracks, formatTrackNameLastfm);
     }
 
     function sliceOldPlayed(lastfmTracks, lastPlayedTime) {
@@ -1894,7 +1891,7 @@ const Lastfm = (function () {
             console.error('Ошибка при получении любимых треков', tracks);
             return [];
         }
-        return Search.multisearchTracks(tracks.lovedtracks.track, getTrackNameLastfm);
+        return Search.multisearchTracks(tracks.lovedtracks.track, formatTrackNameLastfm);
     }
 
     function getTopTracks(params) {
@@ -1904,7 +1901,7 @@ const Lastfm = (function () {
             console.error('Ошибка при получении топа треков', tracks);
             return [];
         }
-        return Search.multisearchTracks(tracks.toptracks.track, getTrackNameLastfm);
+        return Search.multisearchTracks(tracks.toptracks.track, formatTrackNameLastfm);
     }
 
     function getTopArtists(params) {
@@ -1914,7 +1911,7 @@ const Lastfm = (function () {
             console.error('Ошибка при получении топа исполнителей', artists);
             return [];
         }
-        return Search.multisearchArtists(artists.topartists.artist, getArtistNameLastfm);
+        return Search.multisearchArtists(artists.topartists.artist, formatArtistNameLastfm);
     }
 
     function getTopAlbums(params) {
@@ -1924,7 +1921,7 @@ const Lastfm = (function () {
             console.error('Ошибка при получении топа альбомов', albums);
             return [];
         }
-        return Search.multisearchAlbums(albums.topalbums.album, getAlbumNameLastfm);
+        return Search.multisearchAlbums(albums.topalbums.album, formatAlbumNameLastfm);
     }
 
     function getTopPage(params) {
@@ -1955,7 +1952,7 @@ const Lastfm = (function () {
 
     function getStationPlaylist(user, type, countRequest) {
         let stationTracks = getStationTracks(user, type, countRequest);
-        let tracks = Search.multisearchTracks(stationTracks, getTrackNameLastfm);
+        let tracks = Search.multisearchTracks(stationTracks, formatTrackNameLastfm);
         Filter.dedupTracks(tracks);
         return tracks;
     }
@@ -1972,18 +1969,18 @@ const Lastfm = (function () {
         return stationTracks;
     }
 
-    function getAllPagesTracks(queryObj, limit) {
+    function getTrackPages(queryObj, count) {
         if (!queryObj.page) {
             queryObj.page = 1;
         }
         let methodKey = queryObj.method.split('.get')[1];
-        let requestCount = Math.ceil(limit / queryObj.limit);
+        let requestCount = Math.ceil(count / queryObj.limit);
         let response = [];
         for (let i = 0; i < requestCount; i++) {
             Combiner.push(response, getPage(queryObj)[methodKey].track);
             queryObj.page++;
         }
-        return Selector.sliceFirst(response, limit);
+        return Selector.sliceFirst(response, count);
     }
 
     function getPage(queryObj) {
@@ -1997,24 +1994,24 @@ const Lastfm = (function () {
         return track['@attr'] && track['@attr'].nowplaying === 'true';
     }
 
-    function getLastfmTrackKey(item) {
+    function formatLastfmTrackKey(item) {
         let artist = item.artist.name ? item.artist.name : item.artist['#text'];
         return `${item.name} ${artist}`.formatName();
     }
 
-    function getSpotifyTrackKey(item) {
+    function formatSpotifyTrackKey(item) {
         return `${item.name} ${item.artists[0].name}`.formatName();
     }
 
-    function getTrackNameLastfm(item) {
-        return `${getArtistNameLastfm(item)} ${item.name}`.formatName();
+    function formatTrackNameLastfm(item) {
+        return `${formatArtistNameLastfm(item)} ${item.name}`.formatName();
     }
 
-    function getAlbumNameLastfm(item) {
-        return `${item.name} ${getArtistNameLastfm(item)}`.formatName();
+    function formatAlbumNameLastfm(item) {
+        return `${item.name} ${formatArtistNameLastfm(item)}`.formatName();
     }
 
-    function getArtistNameLastfm(item) {
+    function formatArtistNameLastfm(item) {
         let name;
         if (item.artist) {
             name = item.artist.name || item.artist['#text'];
