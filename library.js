@@ -418,6 +418,9 @@ const Source = (function () {
 
         function findAvailablePosition() {
             let value = 5;
+            if (!params.hasOwnProperty('query')){
+                return value;
+            }
             if (params.query.hasOwnProperty('seed_genres')) {
                 value -= params.query.seed_genres.split(',').length;
             }
