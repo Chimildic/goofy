@@ -8,6 +8,10 @@
 
 [Перейти к обновленному коду](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+## Версия 1.4.3
+- Теперь [getCustomTop](/func?id=getcustomtop) может составить топ по альбомам.
+- Багфикс: `getCustomTop` за период в один день возвращал пустой массив.
+
 ## Версия 1.4.2
 - Теперь [craftTracks](/func?id=crafttracks) может принимать статичные `seed_*` отличные от `key`.
 - Новая функция к Lastfm: [getCustomTop](/func?id=getcustomtop).

@@ -1,5 +1,5 @@
 // Документация: chimildic.github.io/goofy/#/func
-const VERSION = '1.4.2';
+const VERSION = '1.4.3';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -16,14 +16,6 @@ function displayAuthResult_(request) {
 function updateRecentTracks_() {
     RecentTracks.update();
 }
-
-String.prototype.formatName = function () {
-    return this.toLowerCase()
-        .replace(/[,!@#$%^&*()+-./\\]/g, ' ')
-        .replace(/\s{2,}/g, ' ')
-        .replace(/ё/g, 'е')
-        .trim();
-};
 
 const CustomUrlFetchApp = (function () {
     let countRequest = 0;
@@ -1061,12 +1053,7 @@ const Filter = (function () {
 
     function getDateRel(days, bound) {
         let date = days ? new Date(Date.now() - days * 24 * 60 * 60 * 1000) : new Date();
-        if (bound == 'startDay') {
-            date.setHours(0, 0, 0, 0);
-        } else if (bound == 'endDay') {
-            date.setHours(23, 59, 59, 999);
-        }
-        return date;
+        return date.setBound(bound);
     }
 
     const Deduplicator = (function () {
@@ -1984,40 +1971,46 @@ const Lastfm = (function () {
         return Selector.sliceFirst(response, count);
     }
 
-    function getCustomTop(params){
-        params.type = params.type || 'track';
+    function getCustomTop(params) {
+        let formatMethod, searchMethod;
+        if (params.type == 'artist') {
+            formatMethod = formatArtistNameLastfm;
+            searchMethod = Search.multisearchArtists;
+        } else if (params.type == 'album') {
+            formatMethod = formatAlbumNameLastfm;
+            searchMethod = Search.multisearchAlbums;
+        } else {
+            formatMethod = formatTrackNameLastfm;
+            searchMethod = Search.multisearchTracks;
+        }
         let tracks = getTracksForPeriod(params);
-        let played = calcCountPlayed(tracks, params.type);
+        let played = calcCountPlayed(tracks, formatMethod);
         played.sort((x, y) => y.count - x.count);
         Selector.keepAllExceptFirst(played, params.offset || 0);
         Selector.keepFirst(played, params.count || 40);
-        let items = played.map(p => p.item);
-        if (params.type == 'track') {
-            return Search.multisearchTracks(items, formatTrackNameLastfm);
-        } else if (params.type == 'artist') {
-            return Search.multisearchArtists(items, formatArtistNameLastfm);
-        }
+        let items = played.map((p) => p.item);
+        return searchMethod(items, formatMethod);
 
-        function getTracksForPeriod(params){
+        function getTracksForPeriod(params) {
             let queryObj = {
                 method: 'user.getrecenttracks',
                 user: params.user,
-                from: new Date(params.from).getTime() / 1000,
-                to: new Date(params.to).getTime() / 1000,
+                from: new Date(params.from).setBound('startDay').getTime() / 1000,
+                to: new Date(params.to).setBound('endDay').getTime() / 1000,
                 limit: 200,
                 page: 1,
             };
             let firstPage = getPage(queryObj);
             let totalPages = parseInt(firstPage.recenttracks['@attr'].totalPages);
-    
+
             let urls = [];
-            for (let i = 2; i <= totalPages; i++){
+            for (let i = 2; i <= totalPages; i++) {
                 queryObj.page = i;
                 urls.push(createUrl(queryObj));
             }
-    
+
             let tracks = [...firstPage.recenttracks.track];
-            CustomUrlFetchApp.fetchAll(urls).forEach(response => {
+            CustomUrlFetchApp.fetchAll(urls).forEach((response) => {
                 if (response.recenttracks) {
                     let items = response.recenttracks.track;
                     if (isNowPlayling(items[0])) {
@@ -2028,13 +2021,12 @@ const Lastfm = (function () {
             });
             return tracks;
         }
-    
-        function calcCountPlayed(tracks, type){
+
+        function calcCountPlayed(tracks, formatMethod) {
             let items = {};
-            let formatMethod = type == 'track' ? formatLastfmTrackKey : formatArtistNameLastfm;
-            tracks.forEach(track => {
+            tracks.forEach((track) => {
                 let key = formatMethod(track);
-                if (typeof items[key] == 'undefined'){
+                if (typeof items[key] == 'undefined') {
                     items[key] = {
                         item: track,
                         count: 0,
@@ -2051,7 +2043,7 @@ const Lastfm = (function () {
         return CustomUrlFetchApp.fetch(url) || [];
     }
 
-    function createUrl(queryObj){ 
+    function createUrl(queryObj) {
         queryObj.api_key = KeyValue.LASTFM_API_KEY;
         queryObj.format = 'json';
         return LASTFM_API_BASE_URL + CustomUrlFetchApp.parseQuery(queryObj);
@@ -2075,17 +2067,19 @@ const Lastfm = (function () {
     }
 
     function formatAlbumNameLastfm(item) {
-        return `${item.name} ${formatArtistNameLastfm(item)}`.formatName();
+        let name = item.name;
+        if (item.hasOwnProperty('album')){
+            name = item.album['#text'];
+        }
+        return `${name} ${formatArtistNameLastfm(item)}`.formatName();
     }
 
     function formatArtistNameLastfm(item) {
-        let name;
+        let name = item.name;
         if (item.artist) {
             name = item.artist.name || item.artist['#text'];
         } else if (item.artists) {
             name = item.artists[0].name;
-        } else if (item.name) {
-            name = item.name;
         }
         return name.formatName();
     }
@@ -2797,3 +2791,20 @@ const Admin = (function () {
         });
     }
 })();
+
+String.prototype.formatName = function () {
+    return this.toLowerCase()
+        .replace(/[,!@#$%^&*()+-./\\]/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .replace(/ё/g, 'е')
+        .trim();
+};
+
+Date.prototype.setBound = function (value) {
+    if (value == 'startDay') {
+        this.setHours(0, 0, 0, 0);
+    } else if (value == 'endDay') {
+        this.setHours(23, 59, 59, 999);
+    }
+    return this;
+};
