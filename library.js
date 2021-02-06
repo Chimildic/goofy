@@ -1847,7 +1847,7 @@ const Lastfm = (function () {
     function getLastfmRecentTracks(params, count) {
         params.method = 'user.getrecenttracks';
         params.limit = 200;
-        let tracks = getTrackPages(queryObj, count);
+        let tracks = getTrackPages(params, count);
         if (isNowPlayling(tracks[0])) {
             tracks.splice(0, 1);
         }
