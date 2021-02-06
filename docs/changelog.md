@@ -11,6 +11,7 @@
 ## Версия 1.4.3
 - Теперь [getCustomTop](/func?id=getcustomtop) может составить топ по альбомам.
 - Багфикс: `getCustomTop` за период в один день возвращал пустой массив.
+- Багфикс: `readValidArray` cannot read property, [подробнее](https://github.com/Chimildic/goofy/discussions/38)
 
 ## Версия 1.4.2
 - Теперь [craftTracks](/func?id=crafttracks) может принимать статичные `seed_*` отличные от `key`.

@@ -655,7 +655,7 @@ const RecentTracks = (function () {
 
     function readValidArray(filename) {
         let items = Cache.read(filename);
-        if (items[0].hasOwnProperty('track')) {
+        if (items.length > 0 && items[0].hasOwnProperty('track')) {
             return updateToValidArray(items, filename);
         }
         return items;
