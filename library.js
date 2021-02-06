@@ -1993,8 +1993,8 @@ const Lastfm = (function () {
             let queryObj = {
                 method: 'user.getrecenttracks',
                 user: params.user,
-                from: new Date(params.from).setBound('startDay').getTime() / 1000,
-                to: new Date(params.to).setBound('endDay').getTime() / 1000,
+                from: new Date(params.from).getTimestampUNIX('startDay'),
+                to: new Date(params.to).getTimestampUNIX('endDay'),
                 limit: 200,
                 page: 1,
             };
@@ -2802,4 +2802,8 @@ Date.prototype.setBound = function (value) {
         this.setHours(23, 59, 59, 999);
     }
     return this;
+};
+
+Date.prototype.getTimestampUNIX = function (bound) {
+    return Math.trunc(this.setBound(bound).getTime() / 1000);
 };
