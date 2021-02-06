@@ -488,7 +488,7 @@ const Source = (function () {
         let items = [];
         if (obj && obj.tracks && obj.tracks.items) {
             items = obj.tracks.total <= 100 ? obj.tracks.items : SpotifyRequest.getItemsByNext(obj.tracks);
-            items.forEach((item) => (item.track.origin = { id: obj.id, name: obj.name, type: obj.type }));
+            items.forEach((item) => (item.origin = { id: obj.id, name: obj.name, type: obj.type }));
         }
         return items;
     }
@@ -499,15 +499,15 @@ const Source = (function () {
     }
 
     function extractTracks(items) {
-        if (!items || items.length == 0) {
-            return [];
-        }
-
+        if (!items || items.length == 0) return [];
         let key = items[0].played_at ? 'played_at' : 'added_at';
         return items.reduce((tracks, item) => {
             if ((!item.hasOwnProperty('is_local') || !item.is_local) && item.track && item.track.artists && item.track.artists.length > 0) {
                 let date = item[key] ? item[key] : DEFAULT_DATE.toISOString();
                 item.track[key] = date;
+                if (item.hasOwnProperty('origin')){
+                    item.track.origin = item.origin;
+                }
                 tracks.push(item.track);
             }
             return tracks;
