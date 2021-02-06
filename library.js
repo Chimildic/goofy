@@ -1826,28 +1826,27 @@ const Lastfm = (function () {
     }
 
     function removeRecentTracks(sourceArray, user, count = 600) {
-        let removedArray = getLastfmRecentTracks({ user: user }, count);
+        let removedArray = getLastfmRecentTracks(user, count);
         let removedNames = removedArray.map((item) => formatLastfmTrackKey(item));
         let filteredTracks = sourceArray.filter((item) => !removedNames.includes(formatSpotifyTrackKey(item)));
         Combiner.replace(sourceArray, filteredTracks);
     }
 
     function removeRecentArtists(sourceArray, user, count = 600) {
-        let removedArray = getLastfmRecentTracks({ user: user }, count);
+        let removedArray = getLastfmRecentTracks(user, count);
         let removedNames = removedArray.map((item) => item.artist['#text']);
         let filteredTracks = sourceArray.filter((item) => !removedNames.includes(item.artists[0].name));
         Combiner.replace(sourceArray, filteredTracks);
     }
 
     function getRecentTracks(user, count) {
-        let tracks = getLastfmRecentTracks({ user: user }, count);
+        let tracks = getLastfmRecentTracks(user, count);
         return Search.multisearchTracks(tracks, formatTrackNameLastfm);
     }
 
-    function getLastfmRecentTracks(params, count) {
-        params.method = 'user.getrecenttracks';
-        params.limit = 200;
-        let tracks = getTrackPages(params, count);
+    function getLastfmRecentTracks(user, count) {
+        let queryObj = { method: 'user.getrecenttracks', user: user, limit: 200 };
+        let tracks = getTrackPages(queryObj, count);
         if (isNowPlayling(tracks[0])) {
             tracks.splice(0, 1);
         }
@@ -1913,13 +1912,9 @@ const Lastfm = (function () {
     }
 
     function getTopPage(params) {
-        let queryObj = {
-            method: params.method,
-            user: params.user,
-            period: params.period || 'overall',
-            limit: params.limit || 50,
-        };
-        return getPage(queryObj);
+        params.period = params.period || 'overall';
+        params.limit = params.limit || 50;
+        return getPage(params);
     }
 
     function getMixStation(user, countRequest) {
@@ -2344,13 +2339,12 @@ const Search = (function () {
     };
 
     function multisearchTracks(items, parseNameMethod) {
-        let tracks = multisearch(items, 'track', parseNameMethod);
-        return tracks.map((item) => {
-            if (item.hasOwnProperty('date')) {
-                item.played_at = items[i].date['#text'];
+        let tracks = multisearch(items, 'track', parseNameMethod, (item, index) => {
+            if (items[index].hasOwnProperty('date')) {
+                item.played_at = items[index].date['#text'];
             }
-            return item;
         });
+        return tracks;
     }
 
     function multisearchArtists(items, parseNameMethod) {
@@ -2361,7 +2355,7 @@ const Search = (function () {
         return multisearch(items, 'album', parseNameMethod);
     }
 
-    function multisearch(items, type, parseNameMethod) {
+    function multisearch(items, type, parseNameMethod, callback) {
         if (!items || items.length == 0) {
             return [];
         }
@@ -2379,6 +2373,9 @@ const Search = (function () {
             for (let i = 0; i < uniqueKeyword.length; i++) {
                 let item = searchResult[i];
                 if (item && item.id) {
+                    if (callback){
+                        callback(item, i);
+                    }
                     item.keyword = uniqueKeyword[i];
                     resultItems.push(item);
                 } else {
