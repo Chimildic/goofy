@@ -418,7 +418,7 @@ const Source = (function () {
 
         function findAvailablePosition() {
             let value = 5;
-            if (!params.hasOwnProperty('query')){
+            if (!params.hasOwnProperty('query')) {
                 return value;
             }
             if (params.query.hasOwnProperty('seed_genres')) {
@@ -2066,7 +2066,7 @@ const Lastfm = (function () {
 
     function formatAlbumNameLastfm(item) {
         let name = item.name;
-        if (item.hasOwnProperty('album')){
+        if (item.hasOwnProperty('album')) {
             name = item.album['#text'];
         }
         return `${name} ${formatArtistNameLastfm(item)}`.formatName();
@@ -2342,12 +2342,7 @@ const Search = (function () {
     };
 
     function multisearchTracks(items, parseNameMethod) {
-        let tracks = multisearch(items, 'track', parseNameMethod, (item, index) => {
-            if (items[index].hasOwnProperty('date')) {
-                item.played_at = items[index].date['#text'];
-            }
-        });
-        return tracks;
+        return multisearch(items, 'track', parseNameMethod);
     }
 
     function multisearchArtists(items, parseNameMethod) {
@@ -2358,16 +2353,13 @@ const Search = (function () {
         return multisearch(items, 'album', parseNameMethod);
     }
 
-    function multisearch(items, type, parseNameMethod, callback) {
+    function multisearch(items, type, parseNameMethod) {
         if (!items || items.length == 0) {
             return [];
         }
         let originKeyword = items.map((item) => parseNameMethod(item));
         let uniqueItems = findUniqueItems(originKeyword);
-        if (uniqueItems.length == originKeyword.length) {
-            return uniqueItems;
-        }
-        return insertDuplicate();
+        return restoreOrigin();
 
         function findUniqueItems() {
             let uniqueKeyword = Array.from(new Set(originKeyword));
@@ -2376,9 +2368,6 @@ const Search = (function () {
             for (let i = 0; i < uniqueKeyword.length; i++) {
                 let item = searchResult[i];
                 if (item && item.id) {
-                    if (callback){
-                        callback(item, i);
-                    }
                     item.keyword = uniqueKeyword[i];
                     resultItems.push(item);
                 } else {
@@ -2388,9 +2377,15 @@ const Search = (function () {
             return resultItems;
         }
 
-        function insertDuplicate() {
+        function restoreOrigin() {
             return originKeyword
-                .map((keyword) => uniqueItems.find((item) => item.keyword == keyword))
+                .map((keyword, i) => {
+                    let item = uniqueItems.find((item) => item.keyword == keyword);
+                    if (item && items[i].hasOwnProperty('date')) {
+                        item.played_at = items[i].date['#text'];
+                    }
+                    return item;
+                })
                 .filter((item) => {
                     if (typeof item != 'undefined') {
                         delete item.keyword;
