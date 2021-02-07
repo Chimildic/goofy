@@ -505,7 +505,7 @@ const Source = (function () {
             if ((!item.hasOwnProperty('is_local') || !item.is_local) && item.track && item.track.artists && item.track.artists.length > 0) {
                 let date = item[key] ? item[key] : DEFAULT_DATE.toISOString();
                 item.track[key] = date;
-                if (item.hasOwnProperty('origin')){
+                if (item.hasOwnProperty('origin')) {
                     item.track.origin = item.origin;
                 }
                 tracks.push(item.track);
@@ -600,7 +600,7 @@ const RecentTracks = (function () {
         let lastfmTracks = readValidArray(LASTFM_FILENAME);
         Combiner.push(spotifyTracks, lastfmTracks);
         Filter.dedupTracks(spotifyTracks);
-        sortByPlayedDate(spotifyTracks);
+        Order.sort(spotifyTracks, 'meta.played_at', 'desc');
         Cache.write(BOTH_SOURCE_FILENAME, spotifyTracks);
     }
 
@@ -648,12 +648,8 @@ const RecentTracks = (function () {
         });
         let fileItems = readValidArray(filename);
         Combiner.push(fileItems, tracks);
-        sortByPlayedDate(fileItems);
+        Order.sort(fileItems, 'meta.played_at', 'desc');
         Cache.write(filename, fileItems);
-    }
-
-    function sortByPlayedDate(items) {
-        items.sort((x, y) => Order.compareDate(y.played_at, x.played_at));
     }
 
     function readValidArray(filename) {
@@ -1337,11 +1333,11 @@ const Order = (function () {
     }
 
     const sort = (function () {
-        let _tracks;
-        let _key;
+        let _tracks, _direction, _key;
 
         return function (tracks, pathKey, direction = 'asc') {
             _tracks = tracks;
+            _direction = direction;
             _key = pathKey.split('.')[1];
             if (pathKey.includes('artist')) {
                 sortArtist();
@@ -1351,10 +1347,6 @@ const Order = (function () {
                 sortAlbum();
             } else if (pathKey.includes('meta')) {
                 sortMeta();
-            }
-
-            if (direction === 'desc') {
-                _tracks.reverse();
             }
         };
 
@@ -1393,7 +1385,7 @@ const Order = (function () {
             if (_key == 'name') {
                 _tracks.sort((x, y) => compareString(items[x.id], items[y.id]));
             } else if (_key == 'added_at' || _key == 'played_at') {
-                _tracks.sort((x, y) => compareDate(items[x.id][_key], items[y.id][_key]));
+                _tracks.sort((x, y) => compareDate(items[x.id], items[y.id]));
             } else {
                 _tracks.sort((x, y) => compareNumber(items[x.id], items[y.id]));
             }
@@ -1412,26 +1404,32 @@ const Order = (function () {
             if (_key == 'name') {
                 _tracks.sort((x, y) => compareString(items[x.album.id], items[y.album.id]));
             } else if (_key == 'release_date') {
-                _tracks.sort((x, y) => compareDate(items[x.album.id][_key], items[y.album.id][_key]));
+                _tracks.sort((x, y) => compareDate(items[x.album.id], items[y.album.id]));
             } else if (_key == 'popularity') {
                 _tracks.sort((x, y) => compareNumber(items[x.album.id], items[y.album.id]));
             }
         }
 
         function compareNumber(x, y) {
-            return x[_key] - y[_key];
+            return _direction == 'asc' ? x[_key] - y[_key] : y[_key] - x[_key];
         }
 
         function compareString(x, y) {
-            return (x[_key] > y[_key]) - (x[_key] < y[_key]);
+            if (_direction == 'asc') {
+                return (x[_key] > y[_key]) - (x[_key] < y[_key]);
+            }
+            return (x[_key] < y[_key]) - (x[_key] > y[_key]);
+        }
+
+        function compareDate(x, y) {
+            let xDate = x[_key] ? new Date(x[_key]) : DEFAULT_DATE;
+            let yDate = y[_key] ? new Date(y[_key]) : DEFAULT_DATE;
+            if (_direction == 'asc') {
+                return xDate.getTime() - yDate.getTime();
+            }
+            return yDate.getTime() - xDate.getTime();
         }
     })();
-
-    function compareDate(x, y) {
-        let xDate = x ? new Date(x) : DEFAULT_DATE;
-        let yDate = y ? new Date(y) : DEFAULT_DATE;
-        return xDate.getTime() - yDate.getTime();
-    }
 
     function separateArtists(items, space, isRandom = false) {
         if (isRandom) {
@@ -1486,7 +1484,6 @@ const Order = (function () {
         sort: sort,
         separateArtists: separateArtists,
         separateYears: separateYears,
-        compareDate: compareDate,
     };
 })();
 

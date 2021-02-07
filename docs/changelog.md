@@ -10,7 +10,8 @@
 
 ## Версия 1.4.3
 - Теперь [getCustomTop](/func?id=getcustomtop) может составить топ по альбомам.
-- Багфикс: `getCustomTop` за период в один день возвращал пустой массив.
+- При сортировке по дате релиза, треки сохраняют оригинальный порядок в рамках своего альбома
+- Багфикс: `getCustomTop` за период в один день возвращался пустой массив.
 - Багфикс: `readValidArray` - cannot read property, [тикет](https://github.com/Chimildic/goofy/discussions/38)
 - Багфикс: `findAvailablePosition` - cannot read property, [тикет](https://github.com/Chimildic/goofy/discussions/40)
 - Багфиск: `getLastfmRecentTracks` - queryObj is not defined, [тикет](https://github.com/Chimildic/goofy/discussions/39)
