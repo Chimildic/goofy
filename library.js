@@ -1377,7 +1377,7 @@ const Order = (function () {
             // name, popularity, duration_ms, explicit, added_at, played_at
             let hasKey = _tracks.every((t) => t[_key] != undefined);
             let items = {};
-            if (hasKey) {
+            if (hasKey || !['added_at', 'played_at'].includes(_key)) {
                 _tracks.forEach((t) => (items[t.id] = t));
             } else {
                 items = getCachedTracks(_tracks, { meta: {} }).meta;
@@ -2451,12 +2451,18 @@ const getCachedTracks = (function () {
         _tracks.forEach((track) => {
             if (_args.meta && !cachedTracks.meta[track.id] && isTrackSimplified(track)) {
                 uncachedTracks.meta.push(track.id);
+            } else {
+                cachedTracks.meta[track.id] = track;
             }
             if (_args.artist && !cachedTracks.artists[track.artists[0].id] && isArtistSimplified(track)) {
                 uncachedTracks.artists.push(track.artists[0].id);
+            } else {
+                cachedTracks.artists[track.artists[0].id] = track.artists[0];
             }
             if (_args.album && !cachedTracks.albums[track.album.id] && isAlbumSimplified(track)) {
                 uncachedTracks.albums.push(track.album.id);
+            } else {
+                cachedTracks.albums[track.album.id] = track.album;
             }
             if (_args.features && !cachedTracks.features[track.id]) {
                 uncachedTracks.features.push(track.id);
