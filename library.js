@@ -1987,11 +1987,13 @@ const Lastfm = (function () {
         return searchMethod(items, formatMethod);
 
         function getTracksForPeriod(params) {
+            let fromDate = params.from instanceof Date ? params.from : new Date(params.from);
+            let toDate = params.to instanceof Date ? params.to : new Date(params.to);
             let queryObj = {
                 method: 'user.getrecenttracks',
                 user: params.user,
-                from: new Date(params.from).getTimestampUNIX('startDay'),
-                to: new Date(params.to).getTimestampUNIX('endDay'),
+                from: fromDate.getTimestampUNIX('startDay'),
+                to: toDate.getTimestampUNIX('endDay'),
                 limit: 200,
                 page: 1,
             };
