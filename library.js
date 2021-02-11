@@ -1002,7 +1002,7 @@ const Filter = (function () {
             if (typeof item == 'undefined') {
                 return false;
             } else if (item.hasOwnProperty('album')) {
-                return invert ^ regex.test(item.name.formatName()) && invert ^ regex.test(item.album.name.formatName());
+                return invert ^ (regex.test(item.name.formatName()) || regex.test(item.album.name.formatName()));
             }
             return invert ^ regex.test(item.name.formatName());
         });
