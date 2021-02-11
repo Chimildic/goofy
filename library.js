@@ -100,7 +100,7 @@ const CustomUrlFetchApp = (function () {
         function onRetryAfter() {
             let value = 1 + (response.getHeaders()['Retry-After'] || 2);
             console.info('Пауза в отправке запросов', value);
-            Utilities.sleep(value);
+            Utilities.sleep(value * 1000);
             return fetch(url, params);
         }
 
