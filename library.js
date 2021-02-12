@@ -2826,7 +2826,7 @@ const Admin = (function () {
 
 String.prototype.formatName = function () {
     return this.toLowerCase()
-        .replace(/[,!@#$%^&*()+-./\\]/g, ' ')
+        .replace(/[',?!@#$%^&*()+-./\\]/g, ' ')
         .replace(/\s{2,}/g, ' ')
         .replace(/ё/g, 'е')
         .trim();
