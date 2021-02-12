@@ -2174,22 +2174,43 @@ const Cache = (function () {
     };
 
     function read(filename) {
-        return tryParseJSON(getFile(filename));
+        let file = getFile(filename);
+        let ext = obtainFileExtension(filename);
+        if (ext == 'json') {
+            return tryParseJSON(file);
+        } else if (ext == 'txt') {
+            return file.getBlob().getDataAsString();
+        }
     }
 
     function append(filename, content, place = 'end', limit = 100000) {
         if (!content || content.length == 0) return;
         let currentContent = read(filename);
-        if (place == 'begin') {
-            appendNewData(content, currentContent);
-        } else if (place == 'end') {
-            appendNewData(currentContent, content);
+        let ext = obtainFileExtension(filename);
+        ext == 'json' ? appendJSON() : appendString();
+
+        function appendJSON() {
+            if (place == 'begin') {
+                appendNewData(content, currentContent);
+            } else if (place == 'end') {
+                appendNewData(currentContent, content);
+            }
+
+            function appendNewData(xData, yData) {
+                Combiner.push(xData, yData);
+                Selector.keepFirst(xData, limit);
+                write(filename, xData);
+            }
         }
 
-        function appendNewData(xData, yData) {
-            Combiner.push(xData, yData);
-            Selector.keepFirst(xData, limit);
-            write(filename, xData);
+        function appendString() {
+            let raw;
+            if (place == 'begin') {
+                raw = content + currentContent;
+            } else if (place == 'end') {
+                raw = currentContent + content;
+            }
+            write(filename, raw);
         }
     }
 
@@ -2202,13 +2223,15 @@ const Cache = (function () {
         if (!file) {
             file = createFile(filename);
         }
-        file.setContent(JSON.stringify(content));
+        let ext = obtainFileExtension(filename);
+        let raw = ext == 'json' ? JSON.stringify(content) : content;
+        file.setContent(raw);
     }
 
     function copy(filename) {
         let file = getFile(filename);
         if (file) {
-            filename = 'Copy' + formatExtension(filename.split('.')[0]);
+            filename = `Copy ${filename}`;
             file.makeCopy().setName(filename);
             return filename;
         }
@@ -2224,7 +2247,7 @@ const Cache = (function () {
     function rename(oldFilename, newFilename) {
         let file = getFile(oldFilename);
         if (file) {
-            file.setName(formatExtension(newFilename));
+            file.setName(formatFileExtension(newFilename));
         }
     }
 
@@ -2236,11 +2259,11 @@ const Cache = (function () {
     }
 
     function createFile(filename) {
-        return rootFolder.createFile(formatExtension(filename), '');
+        return rootFolder.createFile(formatFileExtension(filename), '');
     }
 
     function getFileIterator(filename) {
-        return rootFolder.getFilesByName(formatExtension(filename));
+        return rootFolder.getFilesByName(formatFileExtension(filename));
     }
 
     function tryParseJSON(file) {
@@ -2263,11 +2286,20 @@ const Cache = (function () {
         return DriveApp.createFolder(FOLDER_NAME);
     }
 
-    function formatExtension(filename) {
+    function formatFileExtension(filename) {
+        let ext = obtainFileExtension(filename);
         if (!filename.includes('.')) {
-            filename += '.json';
+            filename += `.${ext}`;
         }
         return filename;
+    }
+
+    function obtainFileExtension(filename) {
+        let ext = filename.split('.');
+        if (ext.length == 2) {
+            return ext[1];
+        }
+        return 'json';
     }
 
     function compressTracks(tracks) {
