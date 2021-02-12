@@ -2493,17 +2493,17 @@ const getCachedTracks = (function () {
         _tracks.forEach((track) => {
             if (_args.meta && !cachedTracks.meta[track.id] && isTrackSimplified(track)) {
                 uncachedTracks.meta.push(track.id);
-            } else {
+            } else if (!isTrackSimplified(track)) {
                 cachedTracks.meta[track.id] = track;
             }
             if (_args.artist && !cachedTracks.artists[track.artists[0].id] && isArtistSimplified(track)) {
                 uncachedTracks.artists.push(track.artists[0].id);
-            } else {
+            } else if (!isArtistSimplified(track)){
                 cachedTracks.artists[track.artists[0].id] = track.artists[0];
             }
             if (_args.album && !cachedTracks.albums[track.album.id] && isAlbumSimplified(track)) {
                 uncachedTracks.albums.push(track.album.id);
-            } else {
+            } else if (!isAlbumSimplified(track)){
                 cachedTracks.albums[track.album.id] = track.album;
             }
             if (_args.features && !cachedTracks.features[track.id]) {
