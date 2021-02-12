@@ -228,7 +228,7 @@ const Source = (function () {
     }
 
     function getArtistsTopTracks(artists, isFlat = true) {
-        return getArtistsByPath(artists, '/artists/%s/top-tracks?country=from_token', isFlat);
+        return getArtistsByPath(artists, '/artists/%s/top-tracks?market=from_token', isFlat);
     }
 
     function getArtistsByPath(artists, path, isFlat) {
@@ -295,7 +295,7 @@ const Source = (function () {
         let groups = paramsAlbum.groups || 'album,single';
         let albums = artists
             .reduce((albums, artist) => {
-                let path = `artists/${artist.id}/albums?country=from_token&include_groups=${groups}&limit=50`;
+                let path = `artists/${artist.id}/albums?market=from_token&include_groups=${groups}&limit=50`;
                 return Combiner.push(albums, SpotifyRequest.getItemsByPath(path));
             }, [])
             .filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, paramsAlbum.release_date));
@@ -309,7 +309,7 @@ const Source = (function () {
     }
 
     function getAlbumTracks(album, limit) {
-        let items = SpotifyRequest.getItemsByPath(`albums/${album.id}/tracks`);
+        let items = SpotifyRequest.getItemsByPath(`albums/${album.id}/tracks?market=from_token`);
         Selector.keepRandom(items, limit);
         return items.map((item) => {
             item.album = album;
@@ -328,7 +328,7 @@ const Source = (function () {
     }
 
     function getSavedAlbumItems() {
-        return SpotifyRequest.getItemsByPath('me/albums?limit=50', 400).map((item) => {
+        return SpotifyRequest.getItemsByPath('me/albums?limit=50&market=from_token', 400).map((item) => {
             let album = item.album;
             album.added_at = item.added_at;
             return album;
@@ -375,7 +375,7 @@ const Source = (function () {
         function getFullPlaylistObject(array) {
             let urls = [];
             array.forEach((playlist) => {
-                urls.push(`https://api.spotify.com/v1/playlists/${playlist.id}`);
+                urls.push(`https://api.spotify.com/v1/playlists/${playlist.id}?market=from_token`);
             });
             return SpotifyRequest.getAll(urls);
         }
@@ -494,7 +494,7 @@ const Source = (function () {
     }
 
     function getSavedTracks() {
-        let items = SpotifyRequest.getItemsByPath('me/tracks?limit=50', 400);
+        let items = SpotifyRequest.getItemsByPath('me/tracks?limit=50&market=from_token', 400);
         return extractTracks(items);
     }
 
@@ -951,6 +951,11 @@ const RangeTracks = (function () {
 })();
 
 const Filter = (function () {
+    function removeUnavailable(tracks) {
+        let availableTracks = tracks.filter((t) => !t.hasOwnProperty('is_playable') || t.is_playable);
+        Combiner.replace(tracks, availableTracks);
+    }
+
     function removeTracks(sourceArray, removedArray, invert = false) {
         let removedIds = removedArray.map((item) => item.id);
         let removedNames = removedArray.map((item) => getTrackKey(item));
@@ -1177,6 +1182,7 @@ const Filter = (function () {
     return {
         removeTracks: removeTracks,
         removeArtists: removeArtists,
+        removeUnavailable: removeUnavailable,
         dedupTracks: Deduplicator.dedupTracks,
         dedupArtists: Deduplicator.dedupArtists,
         getDateRel: getDateRel,
@@ -1493,7 +1499,7 @@ const Playlist = (function () {
     const SIZE = ['500', '600', '700', '800', '900', '1000'];
 
     function getById(playlistId) {
-        let url = `${API_BASE_URL}/playlists/${playlistId}`;
+        let url = `${API_BASE_URL}/playlists/${playlistId}?market=from_token`;
         return SpotifyRequest.get(url);
     }
 
@@ -2364,7 +2370,7 @@ const Cache = (function () {
 })();
 
 const Search = (function () {
-    const TEMPLATE = API_BASE_URL + '/search/?%s';
+    const TEMPLATE = API_BASE_URL + '/search/?%s&market=from_token';
     return {
         multisearchTracks: multisearchTracks,
         multisearchArtists: multisearchArtists,
