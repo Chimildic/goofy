@@ -1118,7 +1118,7 @@ let removedArray = Source.getSavedTracks();
 Filter.removeTracks(sourceArray, removedArray);
 ```
 
-## removeUnavailable
+### removeUnavailable
 
 Удаляет треки, недоступные для воспроизведения. Изменяет содержание оригинального массива.
 
