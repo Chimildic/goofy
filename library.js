@@ -1,5 +1,7 @@
-// Документация: chimildic.github.io/goofy/#/func
-const VERSION = '1.4.3';
+// Обязательно обновите права доступа: https://chimildic.github.io/goofy/#/install?id=Обновить-права-доступа
+// Подробности в списке изменений: https://chimildic.github.io/goofy/#/changelog
+
+const VERSION = '1.4.4';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -2370,7 +2372,7 @@ const Cache = (function () {
 })();
 
 const Search = (function () {
-    const TEMPLATE = API_BASE_URL + '/search/?%s&market=from_token';
+    const TEMPLATE = API_BASE_URL + '/search?market=from_token&%s';
     return {
         multisearchTracks: multisearchTracks,
         multisearchArtists: multisearchArtists,
@@ -2551,6 +2553,7 @@ const getCachedTracks = (function () {
 
 const Auth = (function () {
     const SCOPE = [
+        'user-read-private',
         'user-library-read',
         'user-library-modify',
         'user-read-recently-played',

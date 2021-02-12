@@ -1126,7 +1126,7 @@ Filter.removeTracks(sourceArray, removedArray);
 - (массив) `tracks` - треки для фильтрации.
 
 Пример 1 - Удалить недоступные треки плейлиста
-```
+```js
 let tracks = Source.getPlaylistTracks('', 'id');
 Filter.removeUnavailable(tracks);
 ```
