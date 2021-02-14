@@ -951,7 +951,7 @@ const RangeTracks = (function () {
 })();
 
 const Filter = (function () {
-    function removeUnavailable(tracks) {
+    function removeUnavailable(tracks, market = 'RU') {
         let availableState = [];
         let unavailableState = [];
         let unclearState = [];
@@ -962,7 +962,7 @@ const Filter = (function () {
 
         function identifyState() {
             tracks.forEach((t) => {
-                if (t.hasOwnProperty('available_markets') && t.available_markets.includes('RU')) {
+                if (t.hasOwnProperty('available_markets') && t.available_markets.includes(market)) {
                     availableState.push(t.id);
                 } else {
                     unclearState.push(t.id);
@@ -972,7 +972,7 @@ const Filter = (function () {
 
         function defineUnavailableState() {
             if (unclearState.length == 0) return;
-            SpotifyRequest.getFullObjByIds('tracks', unclearState, 50, 'RU').forEach((t, i) => {
+            SpotifyRequest.getFullObjByIds('tracks', unclearState, 50, market).forEach((t, i) => {
                 if (t.hasOwnProperty('is_playable') && t.is_playable) {
                     let id = t.linked_from ? t.linked_from.id : t.id;
                     availableState.push(id);

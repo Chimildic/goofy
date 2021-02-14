@@ -1127,8 +1127,9 @@ Filter.removeTracks(sourceArray, removedArray);
 
 Аргументы
 - (массив) `tracks` - треки, которые нужно фильтровать.
+- (строка) `market` - страна, в которой проверяется доступность треков. По умолчанию `RU`.
 
-Пример 1 - Удалить недоступные треки плейлиста
+Пример 1 - Удалить недоступные в России треки плейлиста
 ```js
 let tracks = Source.getPlaylistTracks('', 'id');
 Filter.removeUnavailable(tracks);
