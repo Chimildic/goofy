@@ -1,6 +1,4 @@
-// Обязательно обновите права доступа: https://chimildic.github.io/goofy/#/install?id=Обновить-права-доступа
-// Подробности в списке изменений: https://chimildic.github.io/goofy/#/changelog
-
+// Документация: https://chimildic.github.io/goofy/
 const VERSION = '1.4.4';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
@@ -230,7 +228,7 @@ const Source = (function () {
     }
 
     function getArtistsTopTracks(artists, isFlat = true) {
-        return getArtistsByPath(artists, '/artists/%s/top-tracks', isFlat);
+        return getArtistsByPath(artists, '/artists/%s/top-tracks?market=from_token', isFlat);
     }
 
     function getArtistsByPath(artists, path, isFlat) {
@@ -297,7 +295,7 @@ const Source = (function () {
         let groups = paramsAlbum.groups || 'album,single';
         let albums = artists
             .reduce((albums, artist) => {
-                let path = `artists/${artist.id}/albums?include_groups=${groups}&limit=50`;
+                let path = `artists/${artist.id}/albums?include_groups=${groups}&limit=50&market=from_token`;
                 return Combiner.push(albums, SpotifyRequest.getItemsByPath(path));
             }, [])
             .filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, paramsAlbum.release_date));
@@ -955,30 +953,41 @@ const RangeTracks = (function () {
 const Filter = (function () {
     function removeUnavailable(tracks) {
         let availableState = [];
+        let unavailableState = [];
         let unclearState = [];
-        tracks.forEach((t) => {
-            if (!t.hasOwnProperty('available_markets') || t.available_markets.length == 0 || !t.available_markets.includes('RU')) {
-                unclearState.push(t.id);
-            } else {
-                availableState.push(t.id);
-            }
-        });
 
-        if (unclearState.length > 0) {
-            let unclearTracks = SpotifyRequest.getFullObjByIds('tracks', unclearState, 50, 'RU');
-            unclearTracks.forEach((t) => {
-                if (t.hasOwnProperty('is_playable') && t.is_playable) {
-                    availableState.push(t.linked_from.id);
+        identifyState();
+        defineUnavailableState();
+        removeUnavailableTracks();
+
+        function identifyState() {
+            tracks.forEach((t) => {
+                if (t.hasOwnProperty('available_markets') && t.available_markets.includes('RU')) {
+                    availableState.push(t.id);
                 } else {
-                    console.log('Трек нельзя послушать:', t.id);
+                    unclearState.push(t.id);
                 }
             });
         }
 
-        Combiner.replace(
-            tracks,
-            tracks.filter((t) => availableState.includes(t.id))
-        );
+        function defineUnavailableState() {
+            if (unclearState.length == 0) return;
+            SpotifyRequest.getFullObjByIds('tracks', unclearState, 50, 'RU').forEach((t, i) => {
+                if (t.hasOwnProperty('is_playable') && t.is_playable) {
+                    let id = t.linked_from ? t.linked_from.id : t.id;
+                    availableState.push(id);
+                } else {
+                    unavailableState.push(t.id);
+                    console.log('Трек нельзя послушать:', t.id, '-', getTrackKey(t));
+                }
+            });
+        }
+
+        function removeUnavailableTracks() {
+            if (availableState.length == tracks.length) return;
+            let availableTracks = tracks.filter((t) => !unavailableState.includes(t.id));
+            Combiner.replace(tracks, availableTracks);
+        }
     }
 
     function removeTracks(sourceArray, removedArray, invert = false) {
@@ -2738,10 +2747,12 @@ const SpotifyRequest = (function () {
     function getFullObjByIds(objType, ids, limit, market) {
         market = market ? `&market=${market}` : '';
         let requestCount = Math.ceil(ids.length / limit);
+        let offset = limit;
         let urls = [];
         for (let i = 0; i < requestCount; i++) {
-            let strIds = ids.splice(0, limit).join(',');
+            let strIds = ids.slice(i * limit, offset).join(',');
             urls.push(`${API_BASE_URL}/${objType}/?ids=${strIds}${market}`);
+            offset += limit;
         }
 
         let fullObj = [];

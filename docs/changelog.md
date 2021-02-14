@@ -9,7 +9,7 @@
 [Перейти к обновленному коду](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
 ## Версия 1.4.4
-- Обязательно [обновите права доступа](https://chimildic.github.io/goofy/#/install?id=Обновить-права-доступа). Добавлен запрос на `user-read-private`. Чтобы получать данные о стране аккаунта [при поиске](https://developer.spotify.com/documentation/web-api/reference/#category-search). Продиктовано появлением нового фильтра [removeUnavailable](/func?id=removeunavailable).
+- Новый фильтр [removeUnavailable](/func?id=removeunavailable).
 - `Cache` может читать/писать файлы с расширением `.txt` при явном указании в имени файла.
 - `getCustomTop` поддерживает тип `Date`, [подробнее](https://github.com/Chimildic/goofy/discussions/46#discussioncomment-351974).
 - Исправление логической ошибки в `match` при отборе.
