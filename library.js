@@ -408,7 +408,7 @@ const Source = (function () {
         function mapToIds() {
             let ids;
             if (params.key == 'seed_artists') {
-                ids = tracks.map((t) => t.artists[0].id);
+                ids = tracks.map((t) => t.artists ? t.artists[0].id : t.id);
             } else {
                 ids = tracks.map((t) => t.id);
                 params.key = 'seed_tracks';
