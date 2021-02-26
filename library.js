@@ -351,7 +351,7 @@ const Source = (function () {
     }
 
     function mineTracks(params) {
-        let result = Search.multisearchPlaylists(params.keyword, params.requestCount);
+        let result = Search.findPlaylists(params.keyword, params.requestCount);
         if (params.hasOwnProperty('followers') && typeof params.followers == 'object') {
             filterByFollowers();
         }
@@ -2409,7 +2409,8 @@ const Search = (function () {
         multisearchTracks: multisearchTracks,
         multisearchArtists: multisearchArtists,
         multisearchAlbums: multisearchAlbums,
-        multisearchPlaylists: multisearchPlaylists,
+        findPlaylists: findPlaylists,
+        findAlbums: findAlbums,
     };
 
     function multisearchTracks(items, parseNameMethod) {
@@ -2434,7 +2435,7 @@ const Search = (function () {
 
         function findUniqueItems() {
             let uniqueKeyword = Array.from(new Set(originKeyword));
-            let searchResult = multiBestSearch(uniqueKeyword, type);
+            let searchResult = findBest(uniqueKeyword, type);
             let resultItems = [];
             for (let i = 0; i < uniqueKeyword.length; i++) {
                 let item = searchResult[i];
@@ -2466,7 +2467,7 @@ const Search = (function () {
         }
     }
 
-    function multiBestSearch(textArray, type) {
+    function findBest(textArray, type) {
         let urls = textArray.map((text) => {
             let queryObj = { q: text, type: type, limit: '1' };
             return Utilities.formatString(TEMPLATE, CustomUrlFetchApp.parseQuery(queryObj));
@@ -2476,11 +2477,15 @@ const Search = (function () {
         });
     }
 
-    function multisearchPlaylists(items, requestCount) {
-        return search(items, 'playlist', requestCount);
+    function findPlaylists(keywords, requestCount) {
+        return find(keywords, 'playlist', requestCount);
     }
 
-    function search(keywords, type, requestCount = 1) {
+    function findAlbums(keywords, requestCount){
+        return find(keywords, 'album', requestCount);
+    }
+
+    function find(keywords, type, requestCount = 1) {
         const limit = 50;
         let resultForKeyword = [];
         keywords.forEach((text) => {
