@@ -1,5 +1,5 @@
 // Документация: https://chimildic.github.io/goofy/
-const VERSION = '1.4.4';
+const VERSION = '1.4.5';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -351,18 +351,31 @@ const Source = (function () {
     }
 
     function mineTracks(params) {
-        let result = Search.findPlaylists(params.keyword, params.requestCount);
-        if (params.hasOwnProperty('followers') && typeof params.followers == 'object') {
+        let findMethod, getTracksMethod;
+        let selectMethod = params.hasOwnProperty('inRow') && params.inRow ? Selector.keepFirst : Selector.keepRandom;
+        if (params.type == 'album') {
+            findMethod = Search.findAlbums;
+            getTracksMethod = getAlbumsTracks;
+        } else {
+            findMethod = Search.findPlaylists;
+            getTracksMethod = getTracks;
+        }
+
+        let result = findMethod(params.keyword, params.requestCount);
+        if (params.type == 'playlist' && params.hasOwnProperty('followers') && typeof params.followers == 'object') {
             filterByFollowers();
         }
-        let selectMethod = params.hasOwnProperty('inRow') && params.inRow ? Selector.keepFirst : Selector.keepRandom;
-        let tracks = result.reduce((tracks, array) => {
-            selectMethod(array, params.playlistCount || 3);
-            let playlistTracks = getTracks(array).filter((t) => t.popularity >= (params.popularity || 0));
-            return Combiner.push(tracks, playlistTracks);
-        }, []);
+        let tracks = reduceResult();
         Filter.dedupTracks(tracks);
         return tracks;
+
+        function reduceResult() {
+            return result.reduce((tracks, array) => {
+                selectMethod(array, params.itemCount || 3);
+                let playlistTracks = filterPopularity(getTracksMethod(array));
+                return Combiner.push(tracks, playlistTracks);
+            }, []);
+        }
 
         function filterByFollowers() {
             for (let i = 0; i < result.length; i++) {
@@ -370,6 +383,17 @@ const Source = (function () {
                     return isBelongRangeFollowers(p.followers.total);
                 });
             }
+        }
+
+        function filterPopularity(array) {
+            if (!params.hasOwnProperty('popularity')) {
+                return array;
+            }
+            if (array[0] && !array[0].hasOwnProperty('popularity')) {
+                let ids = array.map((t) => t.id);
+                array = SpotifyRequest.getFullObjByIds('tracks', ids, 50);
+            }
+            return array.filter((t) => t.popularity >= (params.popularity || 0));
         }
 
         function getFullPlaylistObject(array) {
@@ -408,7 +432,7 @@ const Source = (function () {
         function mapToIds() {
             let ids;
             if (params.key == 'seed_artists') {
-                ids = tracks.map((t) => t.artists ? t.artists[0].id : t.id);
+                ids = tracks.map((t) => (t.artists ? t.artists[0].id : t.id));
             } else {
                 ids = tracks.map((t) => t.id);
                 params.key = 'seed_tracks';
@@ -2481,7 +2505,7 @@ const Search = (function () {
         return find(keywords, 'playlist', requestCount);
     }
 
-    function findAlbums(keywords, requestCount){
+    function findAlbums(keywords, requestCount) {
         return find(keywords, 'album', requestCount);
     }
 
