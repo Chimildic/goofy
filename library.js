@@ -185,6 +185,7 @@ const Source = (function () {
         mineTracks: mineTracks,
         craftTracks: craftTracks,
         extractTracks: extractTracks,
+        createUrlForRecomTracks: createUrlForRecomTracks,
     };
 
     function getTopTracks(timeRange) {
@@ -1043,25 +1044,33 @@ const Filter = (function () {
         let copyTracks = Selector.sliceCopy(originTracks);
         Filter.removeTracks(copyTracks, replacementTracks, true);
         let features = getCachedTracks(copyTracks, { features: {} }).features;
-        let similarTracks = {};
+        
+        let urls = [];
         copyTracks.forEach((t) => {
             if (!features[t.id] || !features[t.id].danceability) {
                 console.log(`У трека ${t.artists[0].name} ${t.name} нет features`);
                 return;
             }
-            similarTracks[t.id] = Source.getRecomTracks({
+            urls.push(Source.createUrlForRecomTracks({
                 seed_tracks: t.id,
                 seed_artists: t.artists[0].id,
                 target_danceability: features[t.id].danceability,
                 target_energy: features[t.id].energy,
                 target_acousticness: features[t.id].acousticness,
                 target_valence: features[t.id].valence,
-            });
-            Filter.removeTracks(similarTracks[t.id], replacementTracks);
+            }));
         });
+
+        let similarTracks = {};
+        SpotifyRequest.getAll(urls).forEach(r => {
+            let item = r.seeds.find((s) => s.type.toLowerCase() == 'track');
+            similarTracks[item.id] = r.tracks;
+        });
+
         let keys = Object.keys(similarTracks);
         let resultTracks = originTracks.map((t) => {
             if (keys.includes(t.id) && similarTracks[t.id].length > 0) {
+                Filter.removeTracks(similarTracks[t.id], replacementTracks);
                 return Selector.sliceRandom(similarTracks[t.id], 1)[0];
             }
             return t;
