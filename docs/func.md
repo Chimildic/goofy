@@ -1093,6 +1093,26 @@ Filter.rangeDateRel(tracks);
 // аналогично Filter.rangeDateRel(tracks, 0, 0);
 ```
 
+### replaceWithSimilar
+
+Заменяет треки на похожие. На одну замену один случайный трек из результатов [getRecomTracks](/func?id=getrecomtracks).
+
+Аргументы
+- (массив) `originTracks` - где заменять
+- (массив) `replacementTracks` - что заменять
+
+Пример 1 - Заменить недавно игравшие треки плейлиста на близкие аналоги
+```js
+let tracks = Source.getPlaylistTracks('', 'id');
+Selector.replaceWithSimilar(tracks, RecentTracks.get(2000));
+```
+
+Пример 2 - Заменить любимые треки из плейлиста на близкие аналоги
+```js
+let tracks = Source.getPlaylistTracks('', 'id');
+Selector.replaceWithSimilar(tracks, Source.getSavedTracks());
+```
+
 ### removeArtists
 
 Удаляет из `sourceArray` исполнителей, которые есть в `removedArray`. Совпадение определяется по `id` основного исполнителя трека.

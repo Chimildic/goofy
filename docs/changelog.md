@@ -11,6 +11,7 @@
 ## Версия 1.4.5
 - Теперь [mineTracks](/func?id=minetracks) может искать ключевые слова в названиях альбомов.
 - В `mineTracks` аргумент `playlistCount` переименован в `itemCount`.
+- Новая функция у Filter: [replaceWithSimilar](/func?id=replacewithsimilar).
 
 ## Версия 1.4.4
 - Новый фильтр [removeUnavailable](/func?id=removeunavailable).

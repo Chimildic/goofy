@@ -1039,6 +1039,36 @@ const Filter = (function () {
         return item.artists ? item.artists[0].id : item.id;
     }
 
+    function replaceWithSimilar(originTracks, replacementTracks) {
+        let copyTracks = Selector.sliceCopy(originTracks);
+        Filter.removeTracks(copyTracks, replacementTracks, true);
+        let features = getCachedTracks(copyTracks, { features: {} }).features;
+        let similarTracks = {};
+        copyTracks.forEach((t) => {
+            if (!features[t.id] || !features[t.id].danceability) {
+                console.log(`У трека ${t.artists[0].name} ${t.name} нет features`);
+                return;
+            }
+            similarTracks[t.id] = Source.getRecomTracks({
+                seed_tracks: t.id,
+                seed_artists: t.artists[0].id,
+                target_danceability: features[t.id].danceability,
+                target_energy: features[t.id].energy,
+                target_acousticness: features[t.id].acousticness,
+                target_valence: features[t.id].valence,
+            });
+            Filter.removeTracks(similarTracks[t.id], replacementTracks);
+        });
+        let keys = Object.keys(similarTracks);
+        let resultTracks = originTracks.map((t) => {
+            if (keys.includes(t.id) && similarTracks[t.id].length > 0) {
+                return Selector.sliceRandom(similarTracks[t.id], 1)[0];
+            }
+            return t;
+        });
+        Combiner.replace(originTracks, resultTracks);
+    }
+
     function matchExceptMix(items) {
         matchExcept(items, 'mix|club');
     }
@@ -1248,6 +1278,7 @@ const Filter = (function () {
         rangeDateAbs: rangeDateAbs,
         rangeTracks: RangeTracks.rangeTracks,
         getLastOutRange: RangeTracks.getLastOutRange,
+        replaceWithSimilar: replaceWithSimilar,
         match: match,
         matchExcept: matchExcept,
         matchExceptRu: matchExceptRu,
