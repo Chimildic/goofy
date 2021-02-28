@@ -541,13 +541,13 @@ let tracks = Source.getAlbumsTracks(albums);
 
 ### mineTracks
 
-Возвращает массив треков, найденных при поиске плейлистов или альбомов по ключевым словам. Из результата удаляются дубликаты треков.
+Возвращает массив треков, найденных при поиске плейлистов, альбомов или треков по ключевым словам. Из результата удаляются дубликаты.
 
 Аргументы
 - (объект) `params` - параметры поиска.
 
 Описание `params`
-- (строка) `type` - тип поиска. Допустимо: `playlist`, `album`. По умолчанию `playlist`.
+- (строка) `type` - тип поиска. Допустимо: `playlist`, `album`, `track`. По умолчанию `playlist`. При `track` можно использовать [расширенный поиск](https://support.spotify.com/by-ru/article/search/).
 - (массив) `keyword` - перечень ключевых слов для поиска элементов.
 - (число) `requestCount` - количество запросов на одно ключевое слово. С одного запроса 50 элементов, если они есть. Максимум 40 запросов. По умолчанию один.
 - (число) `itemCount` - количество выбираемых элементов из всех найденных на одно ключевое слово. По умолчанию три.
@@ -575,7 +575,7 @@ let tracks = Source.mineTracks({
 ```js
 let tracks = Source.mineTracks({
     keyword: ['indie'],
-    playlistCount: 10,
+    itemCount: 10,
     inRow: true,
 });
 ```
@@ -585,6 +585,14 @@ let tracks = Source.mineTracks({
 let tracks = Source.mineTracks({
     type: 'album',
     keyword: ['winter', 'night'],
+});
+```
+
+Пример 4 - Выбор треков в жанре инди за 2020 год
+```js
+let tracks = Source.mineTracks({
+    type: 'track',
+    keyword: ['genre:indie + year:2020'],
 });
 ```
 

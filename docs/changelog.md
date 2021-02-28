@@ -9,7 +9,7 @@
 [Перейти к обновленному коду](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
 ## Версия 1.4.5
-- Теперь [mineTracks](/func?id=minetracks) может искать ключевые слова в названиях альбомов.
+- Теперь [mineTracks](/func?id=minetracks) может искать ключевые слова в названиях альбомов и самих треках. 
 - В `mineTracks` аргумент `playlistCount` переименован в `itemCount`.
 - Новая функция у Filter: [replaceWithSimilar](/func?id=replacewithsimilar).
 

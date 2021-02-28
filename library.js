@@ -357,13 +357,17 @@ const Source = (function () {
         if (params.type == 'album') {
             findMethod = Search.findAlbums;
             getTracksMethod = getAlbumsTracks;
+        } else if (params.type == 'track') {
+            findMethod = Search.findTracks;
+            // getTracksMethod - не нужно, треки уже в результате поиска
         } else {
+            params.type = 'playlist';
             findMethod = Search.findPlaylists;
             getTracksMethod = getTracks;
         }
 
         let result = findMethod(params.keyword, params.requestCount);
-        if (params.type == 'playlist' && params.hasOwnProperty('followers') && typeof params.followers == 'object') {
+        if (params.type == 'playlist' && params.hasOwnProperty('followers')) {
             filterByFollowers();
         }
         let tracks = reduceResult();
@@ -373,8 +377,8 @@ const Source = (function () {
         function reduceResult() {
             return result.reduce((tracks, array) => {
                 selectMethod(array, params.itemCount || 3);
-                let playlistTracks = filterPopularity(getTracksMethod(array));
-                return Combiner.push(tracks, playlistTracks);
+                let trackItems = getTracksMethod ? getTracksMethod(array) : array;
+                return Combiner.push(tracks, filterPopularity(trackItems));
             }, []);
         }
 
@@ -1044,25 +1048,27 @@ const Filter = (function () {
         let copyTracks = Selector.sliceCopy(originTracks);
         Filter.removeTracks(copyTracks, replacementTracks, true);
         let features = getCachedTracks(copyTracks, { features: {} }).features;
-        
+
         let urls = [];
         copyTracks.forEach((t) => {
             if (!features[t.id] || !features[t.id].danceability) {
                 console.log(`У трека ${t.artists[0].name} ${t.name} нет features`);
                 return;
             }
-            urls.push(Source.createUrlForRecomTracks({
-                seed_tracks: t.id,
-                seed_artists: t.artists[0].id,
-                target_danceability: features[t.id].danceability,
-                target_energy: features[t.id].energy,
-                target_acousticness: features[t.id].acousticness,
-                target_valence: features[t.id].valence,
-            }));
+            urls.push(
+                Source.createUrlForRecomTracks({
+                    seed_tracks: t.id,
+                    seed_artists: t.artists[0].id,
+                    target_danceability: features[t.id].danceability,
+                    target_energy: features[t.id].energy,
+                    target_acousticness: features[t.id].acousticness,
+                    target_valence: features[t.id].valence,
+                })
+            );
         });
 
         let similarTracks = {};
-        SpotifyRequest.getAll(urls).forEach(r => {
+        SpotifyRequest.getAll(urls).forEach((r) => {
             let item = r.seeds.find((s) => s.type.toLowerCase() == 'track');
             similarTracks[item.id] = r.tracks;
         });
@@ -2475,6 +2481,7 @@ const Search = (function () {
         multisearchAlbums: multisearchAlbums,
         findPlaylists: findPlaylists,
         findAlbums: findAlbums,
+        findTracks: findTracks,
     };
 
     function multisearchTracks(items, parseNameMethod) {
@@ -2547,6 +2554,10 @@ const Search = (function () {
 
     function findAlbums(keywords, requestCount) {
         return find(keywords, 'album', requestCount);
+    }
+
+    function findTracks(keywords, requestCount) {
+        return find(keywords, 'track', requestCount);
     }
 
     function find(keywords, type, requestCount = 1) {
