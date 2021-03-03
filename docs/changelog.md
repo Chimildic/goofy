@@ -12,6 +12,7 @@
 - Теперь [mineTracks](/func?id=minetracks) может искать ключевые слова в названиях альбомов и самих треках. 
 - В `mineTracks` аргумент `playlistCount` переименован в `itemCount`.
 - Новая функция у Filter: [replaceWithSimilar](/func?id=replacewithsimilar).
+- Новая функция у Lastfm: [getSimilarArtists](/func?id=getsimilarartists-1)
 
 ## Версия 1.4.4
 - Новый фильтр [removeUnavailable](/func?id=removeunavailable).

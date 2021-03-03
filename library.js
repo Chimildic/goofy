@@ -1901,36 +1901,74 @@ const Lastfm = (function () {
         getRecomStation: getRecomStation,
         getNeighboursStation: getNeighboursStation,
         getSimilarTracks: getSimilarTracks,
+        getSimilarArtists: getSimilarArtists,
         getCustomTop: getCustomTop,
     };
 
-    function getSimilarTracks(tracks, match, limit) {
+    function getSimilarTracks(tracks, match, limit, isFlat = true) {
+        return getSimilar({
+            searchMethod: Search.multisearchTracks,
+            formatMethod: formatTrackNameLastfm,
+            apiMethodStr: 'track.getsimilar',
+            items: tracks,
+            limit: limit,
+            match: match,
+            parentKey: 'similartracks',
+            childKey: 'track',
+            isFlat: isFlat,
+        });
+    }
+
+    function getSimilarArtists(items, match, limit, isFlat = true) {
+        return getSimilar({
+            searchMethod: Search.multisearchArtists,
+            formatMethod: formatArtistNameLastfm,
+            apiMethodStr: 'artist.getsimilar',
+            items: items,
+            limit: limit,
+            match: match,
+            parentKey: 'similarartists',
+            childKey: 'artist',
+            isFlat: isFlat,
+        });
+    }
+
+    function getSimilar(params) {
         let requests = createRequests();
-        return Search.multisearchTracks(getAll(), formatTrackNameLastfm);
+        let items = getAll();
+        if (params.isFlat) {
+            return params.searchMethod(items, params.formatMethod);
+        }
+        return items.reduce((result, array) => {
+            result.push(params.searchMethod(array, params.formatMethod));
+            return result;
+        }, []);
 
         function createRequests() {
-            return tracks.reduce((requests, track) => {
-                let queryStr = CustomUrlFetchApp.parseQuery({
-                    method: 'track.getsimilar',
+            return params.items.reduce((requests, item) => {
+                let queryStr = {
+                    method: params.apiMethodStr,
                     autocorrect: '1',
-                    artist: track.artists[0].name,
-                    track: track.name,
-                    limit: limit || 50,
+                    artist: item.artists ? item.artists[0].name : item.name,
+                    limit: params.limit || 50,
                     format: 'json',
                     api_key: KeyValue.LASTFM_API_KEY,
-                });
-                requests.push({ url: LASTFM_API_BASE_URL + queryStr });
+                };
+                if (params.apiMethodStr.includes('track')) {
+                    queryStr.track = item.name;
+                }
+                requests.push({ url: LASTFM_API_BASE_URL + CustomUrlFetchApp.parseQuery(queryStr) });
                 return requests;
             }, []);
         }
 
         function getAll() {
-            return CustomUrlFetchApp.fetchAll(requests).reduce((similarTracks, response) => {
-                if (response.similartracks) {
-                    let filteredTracks = response.similartracks.track.filter((track) => track.match >= match);
-                    return Combiner.push(similarTracks, filteredTracks);
+            return CustomUrlFetchApp.fetchAll(requests).reduce((similarItems, response) => {
+                if (response[params.parentKey]) {
+                    let filteredItems = response[params.parentKey][params.childKey].filter((item) => item.match >= params.match);
+                    _ = params.isFlat ? Combiner.push(similarItems, filteredItems) : similarItems.push(filteredItems);
                 }
-                return similarTracks;
+                return similarItems;
             }, []);
         }
     }
