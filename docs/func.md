@@ -1112,13 +1112,13 @@ Filter.rangeDateRel(tracks);
 Пример 1 - Заменить недавно игравшие треки плейлиста на близкие аналоги
 ```js
 let tracks = Source.getPlaylistTracks('', 'id');
-Selector.replaceWithSimilar(tracks, RecentTracks.get(2000));
+Filter.replaceWithSimilar(tracks, RecentTracks.get(2000));
 ```
 
 Пример 2 - Заменить любимые треки из плейлиста на близкие аналоги
 ```js
 let tracks = Source.getPlaylistTracks('', 'id');
-Selector.replaceWithSimilar(tracks, Source.getSavedTracks());
+Filter.replaceWithSimilar(tracks, Source.getSavedTracks());
 ```
 
 ### removeArtists
