@@ -2974,6 +2974,10 @@ const Admin = (function () {
         sendVersion(VERSION);
     }
 
+    return {
+        reset: reset,
+    };
+
     function sendVersion(value) {
         let id = '1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw';
         CustomUrlFetchApp.fetch(`https://docs.google.com/forms/u/0/d/e/${id}/formResponse`, {
@@ -2983,6 +2987,11 @@ const Admin = (function () {
                 'entry.1594601658': ScriptApp.getScriptId(),
             },
         });
+    }
+
+    function reset(){
+        Auth.reset();
+        UserProperties.deleteAllProperties();
     }
 })();
 
