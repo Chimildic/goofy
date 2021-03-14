@@ -1650,9 +1650,11 @@ const Playlist = (function () {
         let payload = createPayload(data);
         let playlist = createPlaylist(payload);
         addTracks({ id: playlist.id, tracks: data.tracks });
-        if (data.hasOwnProperty('randomCover')) {
-            setRandomCover(playlist.id);
-        }
+        if (data.hasOwnProperty('sourceCover')) {
+            setCover(playlist.id, getCoverContent(data.sourceCover));
+        } else if (data.hasOwnProperty('randomCover')) {
+            setCover(playlist.id, getRandomCoverContent());
+        } 
     }
 
     function createPlaylist(payload) {
@@ -1680,7 +1682,7 @@ const Playlist = (function () {
         if (data.id) {
             modifyMethod(data);
             changeDetails(data);
-            changeCover(data.id, data.randomCover);
+            changeCover(data);
             return;
         }
 
@@ -1778,10 +1780,14 @@ const Playlist = (function () {
         SpotifyRequest.put(url, payload);
     }
 
-    function changeCover(playlistId, randomCover) {
-        if (randomCover == 'update' || (randomCover == 'once' && hasMosaicCover(playlistId))) {
-            setRandomCover(playlistId);
+    function changeCover(data) {
+        let imageContent;
+        if (data.hasOwnProperty('sourceCover')) {
+            imageContent = getCoverContent(data.sourceCover);
+        } else if (data.randomCover == 'update' || (data.randomCover == 'once' && hasMosaicCover(data.id))) {
+            imageContent = getRandomCoverContent();
         }
+        setCover(data.id, imageContent);
     }
 
     function hasMosaicCover(playlistId) {
@@ -1794,17 +1800,23 @@ const Playlist = (function () {
         return SIZE[index];
     }
 
-    function getRandomCover() {
+    function getRandomCoverContent() {
         let img = CustomUrlFetchApp.fetch('https://picsum.photos/' + getRandomSize());
         if (img.getAllHeaders()['content-length'] > 250000) {
-            return getRandomCover();
+            return getRandomCoverContent();
         }
-        return img.getContent();
+        return img ? img.getContent() : undefined;
     }
 
-    function setRandomCover(playlistId) {
+    function getCoverContent(url) {
+        let img = CustomUrlFetchApp.fetch(url);
+        return img ? img.getContent() : undefined;
+    }
+
+    function setCover(playlistId, imageContent) {
+        if (typeof imageContent == 'undefined') return;
         let url = `${API_BASE_URL}/playlists/${playlistId}/images`;
-        SpotifyRequest.putImage(url, getRandomCover());
+        SpotifyRequest.putImage(url, imageContent);
     }
 
     function createPayload(data) {
@@ -2989,7 +3001,7 @@ const Admin = (function () {
         });
     }
 
-    function reset(){
+    function reset() {
         Auth.reset();
         UserProperties.deleteAllProperties();
     }

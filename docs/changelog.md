@@ -13,6 +13,7 @@
 - В `mineTracks` аргумент `playlistCount` **переименован** в `itemCount`.
 - Новая функция у Filter: [replaceWithSimilar](/func?id=replacewithsimilar).
 - Новая функция у Lastfm: [getSimilarArtists](/func?id=getsimilarartists).
+- [14.03.21] При создании плейлиста можно указать статичную обложку через прямую ссылку на нее.
 
 ## Версия 1.4.4
 - Новый фильтр [removeUnavailable](/func?id=removeunavailable).
