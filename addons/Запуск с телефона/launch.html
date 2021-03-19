@@ -27,19 +27,29 @@
                 {
                     name: 'removeRecentTracks',
                     text: 'Удалить недавние треки',
-                    args: [{ name: 'Ссылка на плейлист' }],
+                    args: [{ key: 'playlistUrl', name: 'Ссылка на плейлист', }],
                 },
                 {
                     name: 'updateRadio',
                     text: 'Радио',
                     args: [
                         {
+                            key: 'station',
                             select: [
                                 { value: 'evropa-plyus-light', name: 'Европа Плюс Лайт' },
                                 { value: 'energy', name: 'Радио ENERGY' },
                             ],
                         },
-                        { name: 'Кастомная станция' },
+                        { 
+                            key: 'customStation', 
+                            name: 'Кастомная станция' 
+                        },
+                        {
+                            checkbox: [
+                                { value: 'isRemoveHistory', name: 'Удалить историю прослушиваний' },
+                                { value: 'isDedup', name: 'Удалить дубликаты' },
+                            ],
+                        },
                     ],
                 },
             ];
@@ -73,6 +83,8 @@
                 obj.args.forEach((form, index) => {
                     if (form.hasOwnProperty('select')) {
                         html += createSelectForm(obj, form, index);
+                    } else if (form.hasOwnProperty('checkbox')) {
+                        html += createCheckboxForm(obj, form, index);
                     } else {
                         html += createTextForm(form.name, obj.name, index);
                     }
@@ -84,6 +96,21 @@
             function createTextForm(placeholder, dataName, index) {
                 let html = `<input class="form-control" placeholder="${placeholder}" data-${dataName}="${index}"></input>`;
                 return createInputGroup(html);
+            }
+
+            function createCheckboxForm(obj, formData, index) {
+                let root = document.createElement('div');
+                for (let i = 0; i < formData.checkbox.length; i++) {
+                    let item = formData.checkbox[i];
+                    let id = item.value + i;
+                    let input = `<input data-${obj.name}=${index + i} class="form-check-input" type="checkbox" value="${item.value}" id="${id}">`;
+                    let label = `<label class="form-check-label" for="${id}">${item.name}</label>`;
+                    let checkbox = document.createElement('div');
+                    checkbox.setAttribute('class', 'form-check');
+                    checkbox.insertAdjacentHTML('beforeend', input + label);
+                    root.insertAdjacentElement('beforeend', checkbox);
+                }
+                return createInputGroup(root.outerHTML);
             }
 
             function createSelectForm(obj, formData, index) {
@@ -123,17 +150,31 @@
             }
 
             function call(name, hasArgs) {
-                let values = [];
-                if (hasArgs) {
-                    document.querySelectorAll(`[data-${name}]`).forEach((el) => values.push(el.value));
-                }
-                google.script.run
-                    .withSuccessHandler(onSuccess)
-                    .withFailureHandler(onError)
-                    .withUserObject(name)
-                    [name](...values);
-
+                let values = collectArgs(name, hasArgs);
+                google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onError).withUserObject(name)[name](values);
                 console.log(getTime(), 'Запущено', name);
+            }
+
+            function collectArgs(name, hasArgs) {
+                let values = {};
+                if (!hasArgs) return [];
+                let indexFormData = func.findIndex((obj) => obj.name == name);
+                let formData = func[indexFormData];
+                document.querySelectorAll(`[data-${name}]`).forEach((el) => {
+                    let index = el.getAttribute(`data-${name}`);
+                    let data = formData.args[index];
+                    if (el.classList.contains('form-check-input')) {
+                        values.check = values.check || {};
+                        values.check[el.value] = el.checked;
+                    } else if (el.classList.contains('form-select')) {
+                        values.select = values.select || {};
+                        values.select[data.key] = el.value;
+                    } else {
+                        values.text = values.text || {};
+                        values.text[data.key] = el.value;
+                    }
+                });
+                return values;
             }
 
             function onSuccess(response, name) {
@@ -148,9 +189,7 @@
                 return new Date().toLocaleTimeString() + ' |';
             }
         </script>
-        <script>
-            !(function (o) { (console.old = console.log), (console.log = function () { var n, e, l = '<div class="p-2">'; for (e = 0; e < arguments.length; e++) (l += '<span class="log-' + typeof (n = arguments[e]) + '">'), 'object' == typeof n && 'object' == typeof JSON && 'function' == typeof JSON.stringify ? (l += JSON.stringify(n)) : (l += n), (l += '</span> '); (o.innerHTML += l + '</div>'), console.old.apply(void 0, arguments); }); })(document.getElementById('logger'));
-        </script>
+        <script>!(function (o) { (console.old = console.log), (console.log = function () { var n, e, l = '<div class="p-2">'; for (e = 0; e < arguments.length; e++) (l += '<span class="log-' + typeof (n = arguments[e]) + '">'), 'object' == typeof n && 'object' == typeof JSON && 'function' == typeof JSON.stringify ? (l += JSON.stringify(n)) : (l += n), (l += '</span> '); (o.innerHTML += l + '</div>'), console.old.apply(void 0, arguments); }); })(document.getElementById('logger'));</script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>
