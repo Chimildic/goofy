@@ -46,7 +46,7 @@
                         },
                         {
                             checkbox: [
-                                { value: 'isRemoveHistory', name: 'Удалить историю прослушиваний' },
+                                { value: 'isRemoveHistory', name: 'Удалить историю прослушиваний', default: true, },
                                 { value: 'isDedup', name: 'Удалить дубликаты' },
                             ],
                         },
@@ -103,7 +103,7 @@
                 for (let i = 0; i < formData.checkbox.length; i++) {
                     let item = formData.checkbox[i];
                     let id = item.value + i;
-                    let input = `<input data-${obj.name}=${index + i} class="form-check-input" type="checkbox" value="${item.value}" id="${id}">`;
+                    let input = `<input data-${obj.name}=${index + i} value="${item.value}" id="${id}" ${item.default ? 'checked' : ''} class="form-check-input" type="checkbox">`;
                     let label = `<label class="form-check-label" for="${id}">${item.name}</label>`;
                     let checkbox = document.createElement('div');
                     checkbox.setAttribute('class', 'form-check');
@@ -157,7 +157,7 @@
 
             function collectArgs(name, hasArgs) {
                 let values = {};
-                if (!hasArgs) return [];
+                if (!hasArgs) return {};
                 let indexFormData = func.findIndex((obj) => obj.name == name);
                 let formData = func[indexFormData];
                 document.querySelectorAll(`[data-${name}]`).forEach((el) => {
