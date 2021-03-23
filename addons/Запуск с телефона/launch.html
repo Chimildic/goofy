@@ -1,18 +1,14 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <base target="_top" />
+        <base target="_self" />
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link href="https://bootswatch.com/4/darkly/bootstrap.min.css" rel="stylesheet" />
         <style>
-            ::selection {
-                background-color: rgb(206, 206, 206);
-                color: #fff;
-            }     
             input {
-                outline:none;
-            }      
+                outline: none;
+            }
             body {
                 background-color: #121212;
             }
@@ -29,7 +25,8 @@
                 background-color: #1db954;
                 border-color: #1db954;
             }
-            .btn-success:focus, .btn-success.focus {
+            .btn-success:focus,
+            .btn-success.focus {
                 color: #fff;
                 background-color: #1db954;
                 border-color: #1db954;
@@ -202,7 +199,9 @@
                 for (let i = 0; i < formData.checkbox.length; i++) {
                     let item = formData.checkbox[i];
                     let id = item.value + i;
-                    let input = `<input data-${obj.name}=${index + i} value="${item.value}" id="${id}" ${item.default ? 'checked' : ''} class="form-check-input" type="checkbox">`;
+                    let input = `<input data-${obj.name}=${index + i} value="${item.value}" id="${id}" ${
+                        item.default ? 'checked' : ''
+                    } class="form-check-input" type="checkbox">`;
                     let label = `<label class="form-check-label" for="${id}">${item.name}</label>`;
                     let checkbox = document.createElement('div');
                     checkbox.setAttribute('class', 'form-check form-switch');
@@ -288,7 +287,7 @@
                 return new Date().toLocaleTimeString() + ' |';
             }
         </script>
-<script>!(function (o) { (console.old = console.log), (console.log = function () { var n, e, l = '<div class="p-2">'; for (e = 0; e < arguments.length; e++) (l += '<span class="log-' + typeof (n = arguments[e]) + '">'), 'object' == typeof n && 'object' == typeof JSON && 'function' == typeof JSON.stringify ? (l += JSON.stringify(n)) : (l += n), (l += '</span> '); (o.innerHTML += l + '</div>'), console.old.apply(void 0, arguments); }); })(document.getElementById('logger'));</script>
+        <script>!(function (o) { (console.old = console.log), (console.log = function () { var n, e, l = '<div class="p-2">'; for (e = 0; e < arguments.length; e++) (l += '<span class="log-' + typeof (n = arguments[e]) + '">'), 'object' == typeof n && 'object' == typeof JSON && 'function' == typeof JSON.stringify ? (l += JSON.stringify(n)) : (l += n), (l += '</span> '); (o.innerHTML += l + '</div>'), console.old.apply(void 0, arguments); }); })(document.getElementById('logger'));</script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>
