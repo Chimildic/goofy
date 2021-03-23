@@ -198,7 +198,7 @@
                 let root = document.createElement('div');
                 for (let i = 0; i < formData.checkbox.length; i++) {
                     let item = formData.checkbox[i];
-                    let id = item.value + i;
+                    let id = Math.random().toString(36).substr(2, 9);
                     let input = `<input data-${obj.name}=${index + i} value="${item.value}" id="${id}" ${
                         item.default ? 'checked' : ''
                     } class="form-check-input" type="checkbox">`;
