@@ -8,12 +8,15 @@
 
 [Перейти к обновленному коду](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+## Версия 1.4.6
+- Новая функция [getPlayingTrack](/func?id=getplayingtrack). Требуется [обновить права доступа](/install?id=Обновить-права-доступа).
+- При создании плейлиста можно указать статичную обложку через прямую ссылку на нее.
+
 ## Версия 1.4.5
 - Теперь [mineTracks](/func?id=minetracks) может искать ключевые слова в названиях альбомов и самих треках. 
 - В `mineTracks` аргумент `playlistCount` **переименован** в `itemCount`.
 - Новая функция у Filter: [replaceWithSimilar](/func?id=replacewithsimilar).
 - Новая функция у Lastfm: [getSimilarArtists](/func?id=getsimilarartists).
-- [14.03.21] При создании плейлиста можно указать статичную обложку через прямую ссылку на нее.
 
 ## Версия 1.4.4
 - Новый фильтр [removeUnavailable](/func?id=removeunavailable).

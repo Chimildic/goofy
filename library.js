@@ -1,5 +1,5 @@
 // Документация: https://chimildic.github.io/goofy/
-const VERSION = '1.4.5';
+const VERSION = '1.4.6';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -566,7 +566,8 @@ const RecentTracks = (function () {
     }
 
     return {
-        get: get,
+        getPlayingTrack: getPlayingTrack,
+        get: getRecentTracks,
         update: update,
         compress: compress,
         appendTracks: appendTracks,
@@ -592,7 +593,12 @@ const RecentTracks = (function () {
         }
     }
 
-    function get(limit) {
+    function getPlayingTrack(){
+        let url = `${API_BASE_URL}/me/player/currently-playing`;
+        return SpotifyRequest.get(url).item || {};
+    }
+
+    function getRecentTracks(limit) {
         let tracks = [];
         if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
             tracks = readValidArray(BOTH_SOURCE_FILENAME);
@@ -2719,6 +2725,7 @@ const Auth = (function () {
         'user-library-read',
         'user-library-modify',
         'user-read-recently-played',
+        'user-read-currently-playing',
         'user-top-read',
         'user-follow-read',
         'user-follow-modify',
@@ -2991,12 +2998,13 @@ const Admin = (function () {
     };
 
     function sendVersion(value) {
-        let id = '1FAIpQLSfvxL6pMLbdUbefFSvEMfXkRPm_maKVbHX2H2jhDUpLHi8Lfw';
+        let id = '1FAIpQLSeSe9Jgw5Ml1XxTlz1HHnyHGoFcA65CabbAAJcvk5elXL2gZw';
         CustomUrlFetchApp.fetch(`https://docs.google.com/forms/u/0/d/e/${id}/formResponse`, {
             method: 'post',
             payload: {
                 'entry.1598003363': value,
                 'entry.1594601658': ScriptApp.getScriptId(),
+                'entry.1666409024': User.getId(),
             },
         });
     }

@@ -703,6 +703,17 @@ let tracks = RecentTracks.get();
 let tracks = RecentTracks.get(100);
 ```
 
+### getPlayingTrack
+
+Возвращает активный трек (играющий или на паузе). Если данных нет, пустой объект.
+
+Аргументов нет.
+
+Пример
+```js
+let track = RecentTracks.getPlayingTrack();
+```
+
 ## Combiner
 
 Объединение треков разных источников 

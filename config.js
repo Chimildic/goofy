@@ -15,4 +15,3 @@ function setProperties(){
 
 // Чтобы сбросить авторизацию и параметры
 // Admin.reset();
-// setProperties();
