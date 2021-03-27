@@ -2,7 +2,7 @@
     function create() {
         return (hook) => {
             const TARGET_QUERY = 'id';
-            const SCROLL_DELAY = 500;
+            const SCROLL_DELAY = 650;
 
             hook.ready(function () {
                 if (!location.hash.includes('?')) return;
