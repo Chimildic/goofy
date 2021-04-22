@@ -1,5 +1,5 @@
 // Документация: https://chimildic.github.io/goofy/
-const VERSION = '1.4.6';
+const VERSION = '1.4.7';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -593,7 +593,7 @@ const RecentTracks = (function () {
         }
     }
 
-    function getPlayingTrack(){
+    function getPlayingTrack() {
         let url = `${API_BASE_URL}/me/player/currently-playing`;
         return SpotifyRequest.get(url).item || {};
     }
@@ -1660,7 +1660,7 @@ const Playlist = (function () {
             setCover(playlist.id, getCoverContent(data.sourceCover));
         } else if (data.hasOwnProperty('randomCover')) {
             setCover(playlist.id, getRandomCoverContent());
-        } 
+        }
     }
 
     function createPlaylist(payload) {
@@ -2342,11 +2342,11 @@ const Cache = (function () {
     function read(filename) {
         let file = getFile(filename);
         let ext = obtainFileExtension(filename);
+        let content = file.getBlob().getDataAsString();
         if (ext == 'json') {
-            return tryParseJSON(file);
-        } else if (ext == 'txt') {
-            return file.getBlob().getDataAsString();
+            return tryParseJSON(content);
         }
+        return content;
     }
 
     function append(filename, content, place = 'end', limit = 100000) {
@@ -2391,7 +2391,20 @@ const Cache = (function () {
         }
         let ext = obtainFileExtension(filename);
         let raw = ext == 'json' ? JSON.stringify(content) : content;
-        file.setContent(raw);
+
+        let count = 3;
+        do {
+            setContent();
+            if (content.length == 0 || file.getBlob().getDataAsString().length > 0) {
+                break;
+            }
+            console.error(`Неизвестная ошибка при записи файла`);
+            Utilities.sleep(5000);
+        } while (--count != 0);
+
+        function setContent() {
+            file = file.setContent(raw);
+        }
     }
 
     function copy(filename) {
@@ -2432,9 +2445,7 @@ const Cache = (function () {
         return rootFolder.getFilesByName(formatFileExtension(filename));
     }
 
-    function tryParseJSON(file) {
-        if (!file) return [];
-        let content = file.getBlob().getDataAsString();
+    function tryParseJSON(content) {
         try {
             return JSON.parse(content);
         } catch (e) {
