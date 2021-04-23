@@ -2395,7 +2395,7 @@ const Cache = (function () {
         let count = 3;
         do {
             setContent();
-            if (content.length == 0 || file.getBlob().getDataAsString().length > 0) {
+            if (content.length == 0 || file.getSize() > 0) {
                 break;
             }
             console.error(`Неизвестная ошибка при записи файла`);
