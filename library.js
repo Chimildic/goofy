@@ -688,7 +688,7 @@ const RecentTracks = (function () {
     }
 
     function readValidArray(filename) {
-        let items = Cache.read(filename);
+        let items = Cache.read(filename) || [];
         if (items.length > 0 && items[0].hasOwnProperty('track')) {
             return updateToValidArray(items, filename);
         }
@@ -2342,16 +2342,17 @@ const Cache = (function () {
     function read(filename) {
         let file = getFile(filename);
         let ext = obtainFileExtension(filename);
-        let content = file.getBlob().getDataAsString();
         if (ext == 'json') {
-            return tryParseJSON(content);
+            return tryParseJSON(file);
+        } else if (ext == 'txt' && file) { 
+            return file.getBlob().getDataAsString();
         }
-        return content;
+        return '';
     }
 
     function append(filename, content, place = 'end', limit = 100000) {
         if (!content || content.length == 0) return;
-        let currentContent = read(filename);
+        let currentContent = read(filename) || [];
         let ext = obtainFileExtension(filename);
         ext == 'json' ? appendJSON() : appendString();
 
@@ -2445,7 +2446,9 @@ const Cache = (function () {
         return rootFolder.getFilesByName(formatFileExtension(filename));
     }
 
-    function tryParseJSON(content) {
+    function tryParseJSON(file) {
+        if (!file) return [];
+        let content = file.getBlob().getDataAsString();
         try {
             return JSON.parse(content);
         } catch (e) {
