@@ -1493,7 +1493,7 @@ const Order = (function () {
             // name, popularity, duration_ms, explicit, added_at, played_at
             let hasKey = _tracks.every((t) => t[_key] != undefined);
             let items = {};
-            if (hasKey || !['added_at', 'played_at'].includes(_key)) {
+            if (hasKey) {
                 _tracks.forEach((t) => (items[t.id] = t));
             } else {
                 items = getCachedTracks(_tracks, { meta: {} }).meta;
