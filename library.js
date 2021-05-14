@@ -1208,9 +1208,7 @@ const Filter = (function () {
             return _items.reduce((duplicates, track, index) => {
                 if (track === null || track.id === null) {
                     return duplicates;
-                }
-
-                if (isDuplicateByTrackId(track.id) || isDuplicateByName(track)) {
+                } else if (isDuplicateByTrackId(track.id) || isDuplicateByName(track)) {
                     duplicates.push({
                         index: index,
                         track: track,
@@ -1222,6 +1220,7 @@ const Filter = (function () {
                     seenTrackKeys[trackKey] = seenTrackKeys[trackKey] || [];
                     seenTrackKeys[trackKey].push(track.duration_ms);
                 }
+                return duplicates;
 
                 function isDuplicateByTrackId(id) {
                     return id in seenTrackKeys;
@@ -1234,20 +1233,16 @@ const Filter = (function () {
                         0 != seenTrackKeys[trackKey].filter((duration) => Math.abs(duration - track.duration_ms) < 2000).length
                     );
                 }
-
-                return duplicates;
             }, []);
         }
 
         function findArtistsDuplicated() {
             const seenArtists = {};
             return _items.reduce((duplicates, item, index) => {
-                if (!isValidArtist(item)) {
-                    return duplicates;
-                }
-
                 const artistId = getArtistId(item);
-                if (isDuplicateByArtistId(artistId)) {
+                if (artistId == undefined) {
+                    return duplicates;
+                } else if (isDuplicateByArtistId(artistId)) {
                     duplicates.push({
                         index: index,
                         item: item,
@@ -1256,19 +1251,18 @@ const Filter = (function () {
                 } else {
                     seenArtists[artistId] = true;
                 }
-
                 return duplicates;
 
                 function getArtistId(item) {
-                    return item.followers ? item.id : item.artists[0].id;
+                    if (item && item.hasOwnProperty('artists') && item.artists.length > 0) {
+                        return item.artists[0].id;
+                    } else if (item) {
+                        return item.id;
+                    }
                 }
 
                 function isDuplicateByArtistId(artistId) {
                     return artistId in seenArtists;
-                }
-
-                function isValidArtist(item) {
-                    return item && item.id && (item.followers || (item.artists && item.artists.length > 0 && item.artists[0].id));
                 }
             }, []);
         }
@@ -2344,7 +2338,7 @@ const Cache = (function () {
         let ext = obtainFileExtension(filename);
         if (ext == 'json') {
             return tryParseJSON(file);
-        } else if (ext == 'txt' && file) { 
+        } else if (ext == 'txt' && file) {
             return file.getBlob().getDataAsString();
         }
         return '';
