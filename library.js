@@ -1731,7 +1731,6 @@ const Playlist = (function () {
     }
 
     function updateTracks(data) {
-        let url = `${API_BASE_URL}/playlists/${data.id}/tracks`;
         let currentTracks = Source.getPlaylistTracks('', data.id);
 
         addNewTracks();
@@ -2611,11 +2610,19 @@ const Search = (function () {
 
     function findBest(textArray, type) {
         let urls = textArray.map((text) => {
-            let queryObj = { q: text, type: type, limit: '1' };
+            let queryObj = { q: text, type: type, limit: '20' };
             return Utilities.formatString(TEMPLATE, CustomUrlFetchApp.parseQuery(queryObj));
         });
-        return SpotifyRequest.getAll(urls).map((response) => {
-            return response && response.items ? response.items[0] : {};
+        return SpotifyRequest.getAll(urls).map((response, index) => {
+            if (!response || !response.items) {
+                return {};
+            }
+            let foundItem = response.items.find(item => {
+                let foundName = item.name.formatName();
+                let keyword = textArray[index].formatName();
+                return foundName == keyword;
+            });
+            return foundItem || response.items[0];
         });
     }
 
