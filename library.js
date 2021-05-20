@@ -477,8 +477,8 @@ const Source = (function () {
         return getTracks(Selector.sliceRandom(playlistArray, countPlaylist));
     }
 
-    function getPlaylistTracks(name, id, userId) {
-        return getTracks([{ id: id, name: name, userId: userId }]);
+    function getPlaylistTracks(name, id, userId, count, inRow) {
+        return getTracks([{ id: id, name: name, userId: userId, count: count, inRow: inRow }]);
     }
 
     function getTracks(playlistArray) {
@@ -495,6 +495,11 @@ const Source = (function () {
                 playlistItems = getItemsByPlaylistId(playlist.id);
             } else if (playlist.name) {
                 playlistItems = getItemsByPlaylistName(playlist.name, playlist.userId);
+            }
+            if (!playlist.hasOwnProperty('inRow') || playlist.inRow) {
+                Selector.keepFirst(playlistItems, playlist.count);
+            } else {
+                Selector.keepRandom(playlistItems, playlist.count);
             }
             return Combiner.push(items, playlistItems);
         }, []);
