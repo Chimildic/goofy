@@ -1448,10 +1448,10 @@ const Order = (function () {
     }
 
     const sort = (function () {
-        let _tracks, _direction, _key;
+        let _source, _direction, _key;
 
         return function (tracks, pathKey, direction = 'asc') {
-            _tracks = tracks;
+            _source = tracks;
             _direction = direction;
             _key = pathKey.split('.')[1];
             if (pathKey.includes('artist')) {
@@ -1467,61 +1467,69 @@ const Order = (function () {
 
         function sortArtist() {
             // popularity, followers, name
-            let items = getCachedTracks(_tracks, { artist: {} }).artists;
+            let items = getCachedTracks(_source, { artist: {} }).artists;
 
             if (_key == 'followers') {
-                for (let trackArtist in items) {
-                    if (trackArtist.followers && typeof trackArtist.followers === 'object') {
-                        trackArtist.followers = trackArtist.followers.total;
+                for (let id in items) {
+                    if (items[id].followers && typeof items[id].followers == 'object') {
+                        items[id].followers = items[id].followers.total;
                     }
                 }
             }
 
             let compareMethod = _key == 'name' ? compareString : compareNumber;
-            _tracks.sort((x, y) => compareMethod(items[x.artists[0].id], items[y.artists[0].id]));
+            _source.sort((x, y) => {
+                let keyX = x.artists ? x.artists[0].id : x.id;
+                let keyY = y.artists ? y.artists[0].id : y.id;
+                return compareMethod(items[keyX], items[keyY])
+            });
         }
 
         function sortFeatures() {
             // acousticness, danceability, energy, instrumentalness, liveness,
             // loudness, speechiness, valence, tempo, key, mode, time_signature, duration_ms
-            let items = getCachedTracks(_tracks, { features: {} }).features;
-            _tracks.sort((x, y) => compareNumber(items[x.id], items[y.id]));
+            let items = getCachedTracks(_source, { features: {} }).features;
+            _source.sort((x, y) => compareNumber(items[x.id], items[y.id]));
         }
 
         function sortMeta() {
             // name, popularity, duration_ms, explicit, added_at, played_at
-            let hasKey = _tracks.every((t) => t[_key] != undefined);
+            let hasKey = _source.every((t) => t[_key] != undefined);
             let items = {};
             if (hasKey) {
-                _tracks.forEach((t) => (items[t.id] = t));
+                _source.forEach((t) => (items[t.id] = t));
             } else {
-                items = getCachedTracks(_tracks, { meta: {} }).meta;
+                items = getCachedTracks(_source, { meta: {} }).meta;
             }
             if (_key == 'name') {
-                _tracks.sort((x, y) => compareString(items[x.id], items[y.id]));
+                _source.sort((x, y) => compareString(items[x.id], items[y.id]));
             } else if (_key == 'added_at' || _key == 'played_at') {
-                _tracks.sort((x, y) => compareDate(items[x.id], items[y.id]));
+                _source.sort((x, y) => compareDate(items[x.id], items[y.id]));
             } else {
-                _tracks.sort((x, y) => compareNumber(items[x.id], items[y.id]));
+                _source.sort((x, y) => compareNumber(items[x.id], items[y.id]));
             }
         }
 
         function sortAlbum() {
             // popularity, name, release_date
-            let hasKey = _tracks.every((t) => t.album[_key] != undefined);
+            let hasKey = _source.every((t) => extract(t)[_key] != undefined);
             let items = {};
             if (hasKey) {
-                _tracks.forEach((t) => (items[t.album.id] = t.album));
+                _source.forEach((t) => (items[extract(t).id] = extract(t)));
             } else {
-                _tracks = getCachedTracks(_tracks, { album: {} }).albums;
+                items = getCachedTracks(_source, { album: {} }).albums;
             }
 
             if (_key == 'name') {
-                _tracks.sort((x, y) => compareString(items[x.album.id], items[y.album.id]));
+                _source.sort((x, y) => compareString(items[extract(x).id], items[extract(y).id]));
             } else if (_key == 'release_date') {
-                _tracks.sort((x, y) => compareDate(items[x.album.id], items[y.album.id]));
+                _source.sort((x, y) => compareDate(items[extract(x).id], items[extract(y).id]));
             } else if (_key == 'popularity') {
-                _tracks.sort((x, y) => compareNumber(items[x.album.id], items[y.album.id]));
+                _source.sort((x, y) => compareNumber(items[extract(x).id], items[extract(y).id]));
+            }
+
+            function extract(item) {
+                return item.album || item;
             }
         }
 
@@ -2680,24 +2688,29 @@ const getCachedTracks = (function () {
     }
 
     function findIdsOfUncachedObj() {
-        _tracks.forEach((track) => {
-            if (_args.meta && !cachedTracks.meta[track.id] && isTrackSimplified(track)) {
-                uncachedTracks.meta.push(track.id);
-            } else if (!isTrackSimplified(track)) {
-                cachedTracks.meta[track.id] = track;
+        _tracks.forEach((sourceItem) => {
+            if (_args.features && !cachedTracks.features[sourceItem.id]) {
+                uncachedTracks.features.push(sourceItem.id);
             }
-            if (_args.artist && !cachedTracks.artists[track.artists[0].id] && isArtistSimplified(track)) {
-                uncachedTracks.artists.push(track.artists[0].id);
-            } else if (!isArtistSimplified(track)) {
-                cachedTracks.artists[track.artists[0].id] = track.artists[0];
+            if (_args.meta && !cachedTracks.meta[sourceItem.id] && isSimplified(sourceItem)) {
+                uncachedTracks.meta.push(sourceItem.id);
+            } else if (_args.meta && !isSimplified(sourceItem)) {
+                cachedTracks.meta[sourceItem.id] = sourceItem;
             }
-            if (_args.album && !cachedTracks.albums[track.album.id] && isAlbumSimplified(track)) {
-                uncachedTracks.albums.push(track.album.id);
-            } else if (!isAlbumSimplified(track)) {
-                cachedTracks.albums[track.album.id] = track.album;
+
+            let targetItem;
+            targetItem = sourceItem.artists ? sourceItem.artists[0] : sourceItem;
+            if (_args.artist && !cachedTracks.artists[targetItem.id] && isSimplified(targetItem)) {
+                uncachedTracks.artists.push(targetItem.id);
+            } else if (_args.artist && !isSimplified(targetItem)) {
+                cachedTracks.artists[targetItem.id] = targetItem;
             }
-            if (_args.features && !cachedTracks.features[track.id]) {
-                uncachedTracks.features.push(track.id);
+
+            targetItem = sourceItem.album ? sourceItem.album : sourceItem;
+            if (_args.album && !cachedTracks.albums[targetItem.id] && isSimplified(targetItem)) {
+                uncachedTracks.albums.push(targetItem.id);
+            } else if (_args.album && !isSimplified(targetItem)) {
+                cachedTracks.albums[targetItem.id] = targetItem;
             }
         });
     }
@@ -2728,16 +2741,8 @@ const getCachedTracks = (function () {
     }
 
     // В объектах Track, Album, Artist Simplified нет ключа popularity
-    function isTrackSimplified(track) {
-        return !track.popularity;
-    }
-
-    function isArtistSimplified(track) {
-        return !track.artists[0].popularity;
-    }
-
-    function isAlbumSimplified(track) {
-        return !track.album.popularity;
+    function isSimplified(item) {
+        return !item.popularity;
     }
 })();
 
