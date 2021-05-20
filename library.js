@@ -478,7 +478,7 @@ const Source = (function () {
     }
 
     function getPlaylistTracks(name, id, userId, count, inRow) {
-        return getTracks([{ id: id, name: name, userId: userId, count: count, inRow: inRow }]);
+        return getTracks([{ id: id, name: name, userId: userId, count: count, inRow: inRow == undefined ? true : inRow }]);
     }
 
     function getTracks(playlistArray) {
