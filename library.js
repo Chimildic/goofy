@@ -1606,6 +1606,31 @@ const Playlist = (function () {
     const LIMIT_TRACKS = 11000;
     const LIMIT_DESCRIPTION = 300;
     const SIZE = ['500', '600', '700', '800', '900', '1000'];
+    const getPlaylistArray = (function () {
+        let playlistsOfUsers = {};
+        return get;
+
+        function get(userId) {
+            let key = userId == null ? 'me' : userId;
+            if (playlistsOfUsers[key] == null) {
+                let path = userId == null ? 'me/playlists?limit=50' : `users/${userId}/playlists?limit=50`;
+                playlistsOfUsers[key] = SpotifyRequest.getItemsByPath(path);
+            }
+            return playlistsOfUsers[key];
+        }
+    })();
+
+    return {
+        getById: getById,
+        getByName: getByName,
+        getDescription: getDescription,
+        getPlaylistArray: getPlaylistArray,
+        saveAsNew: saveAsNew,
+        saveWithReplace: saveWithReplace,
+        saveWithAppend: saveWithAppend,
+        saveWithUpdate: saveWithUpdate,
+        removeTracks: removeTracks,
+    };
 
     function getById(playlistId) {
         let url = `${API_BASE_URL}/playlists/${playlistId}`;
@@ -1637,19 +1662,16 @@ const Playlist = (function () {
         return `${strArtists} и не только`;
     }
 
-    const getPlaylistArray = (function () {
-        let playlistsOfUsers = {};
-        return get;
-
-        function get(userId) {
-            let key = userId == null ? 'me' : userId;
-            if (playlistsOfUsers[key] == null) {
-                let path = userId == null ? 'me/playlists?limit=50' : `users/${userId}/playlists?limit=50`;
-                playlistsOfUsers[key] = SpotifyRequest.getItemsByPath(path);
-            }
-            return playlistsOfUsers[key];
+    function removeTracks(id, tracks) {
+        if (tracks.length > 0) {
+            SpotifyRequest.deleteItems({
+                url: `${API_BASE_URL}/playlists/${id}/tracks`,
+                key: 'tracks',
+                limit: 100,
+                items: getTrackUris(tracks, 'object'),
+            });
         }
-    })();
+    }
 
     function saveAsNew(data) {
         let payload = createPayload(data);
@@ -1726,17 +1748,7 @@ const Playlist = (function () {
         function removeOldTracks() {
             let newIds = data.tracks.map((t) => t.id);
             let tracksToDelete = currentTracks.filter((t) => !newIds.includes(t.id));
-            if (tracksToDelete.length == 0) {
-                return;
-            }
-            SpotifyRequest.deleteItems({
-                url: url,
-                key: 'tracks',
-                limit: 100,
-                items: getTrackUris(tracksToDelete).map((uri) => {
-                    return { uri: uri };
-                }),
-            });
+            Playlist.removeTracks(data.id, tracksToDelete);
         }
     }
 
@@ -1772,9 +1784,10 @@ const Playlist = (function () {
         }
     }
 
-    function getTrackUris(tracks) {
+    function getTrackUris(tracks, type) {
         return tracks.reduce((uris, track) => {
-            uris.push(track.uri || `spotify:track:${track.id}`);
+            let item = track.uri || `spotify:track:${track.id}`;
+            uris.push(type == 'object' ? { uri: item } : item);
             return uris;
         }, []);
     }
@@ -1834,17 +1847,6 @@ const Playlist = (function () {
         }
         return payload;
     }
-
-    return {
-        getById: getById,
-        getByName: getByName,
-        getDescription: getDescription,
-        getPlaylistArray: getPlaylistArray,
-        saveAsNew: saveAsNew,
-        saveWithReplace: saveWithReplace,
-        saveWithAppend: saveWithAppend,
-        saveWithUpdate: saveWithUpdate,
-    };
 })();
 
 const Library = (function () {

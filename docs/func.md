@@ -1657,6 +1657,20 @@ Playlist.saveWithReplace({
 Дополнительный режим для `data`
 - (булево) `toEnd` - если `true`, добавляет треки в конец списка. Если `false`, в начало. По умолчанию `false`.
 
+### removeTracks
+
+Удаляет треки из плейлиста.
+
+Аргументы
+- (строка) `id` - id плейлиста.
+- (массив) `tracks` - массив треков.
+
+Пример 1 - Удалить лайки из плейлиста
+```js
+let savedTracks = Source.getSavedTracks();
+Playlist.removeTracks('id', savedTracks);
+```
+
 ### getDescription
 
 Возвращает строку вида: `Исполнитель 1, Исполнитель 2... и не только`.
