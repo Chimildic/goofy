@@ -37,16 +37,25 @@
                 darklightTheme: {
                     defaultTheme: 'dark',
                 },
+                share: {
+                    reddit: true,
+                    facebook: true,
+                    twitter: true,
+                    whatsapp: true,
+                    telegram: true,
+                    options: {
+                        color: '#0bda95a1',
+                    },
+                },
                 plugins: [
                     function (hook) {
                         var footer = [
                             '<footer>',
                             '<hr>',
                             '<div style="display: flex; justify-content: space-between;">',
-                            '<span>Создано с помощью <a href="https://github.com/QingWei-Li/docsify" target="_blank">docsify</a></span>',
+                            '<span>Сайт создан с помощью <a href="https://github.com/QingWei-Li/docsify" target="_blank">docsify</a></span>',
                             '<div style="display: flex; flex-direction: column; align-items: flex-end;">',
-                            '<span><a href="https://github.com/Chimildic/goofy">Chimildic</a>, 2020</span>',
-                            '<span><img class="emoji" src="https://github.githubassets.com/images/icons/emoji/coffee.png"> <a href="https://yoomoney.ru/to/410014208620686">Поддержать проект</a></span>',
+                            '<span><a href="https://github.com/Chimildic/goofy">Chimildic</a>, 2021</span>',
                             '</div>',
                             '</div>',
                             '</footer>',
@@ -66,6 +75,10 @@
         <script src="//unpkg.com/docsify-copy-code"></script>
         <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
         <script src="./script/docsify-sidebar-collapse.js"></script>
-        <script src="./script/docsify-fix-pageload-scroll.js"></script>
+        <script src="./script/docsify-fix-pageload-scroll.js"></script>      
+
+        // share buttons
+        <script>var a2a_config = a2a_config || {};a2a_config.num_services = 6;</script>
+        <script async src="https://static.addtoany.com/menu/page.js"></script>
     </body>
 </html>
