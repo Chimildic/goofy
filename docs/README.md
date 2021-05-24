@@ -1,7 +1,8 @@
-# Goofy
+# Goofy  
+
 Библиотека для взаимодействия [Spotify Web API](https://developer.spotify.com/documentation/web-api/) и [Google Apps Script](https://developers.google.com/apps-script). За основу положена идея сервиса [Smarter Playlists](http://smarterplaylists.playlistmachinery.com/about.html). Библиотека стремится устранить недостатки сервиса, добавить новые возможности и увеличить допустимые лимиты. Помимо Spotify, источником треков может быть [Last.fm](https://chimildic.github.io/goofy/#/func?id=lastfm), [Яндекс.Музыка](https://chimildic.github.io/goofy/#/func?id=yandex), [треклисты FM-радиостанций](https://github.com/Chimildic/goofy/discussions/35).
 
-## Что делает
+
 По сути, это конструктор плейлистов. Собираете треки из различных источников, пропускаете через множество фильтров и создаете или обновляете плейлист по расписанию.
 
 К примеру, несколько коротких алгоритмов:
@@ -13,24 +14,24 @@
 - Получать рекомендации Last.fm любого пользователя
 - Переносить треки с Яндекс.Музыки в Spotify, в том числе любимых (лайков)
 
-Подробное описание
-- [Отличия от Smarter Playlists](https://chimildic.github.io/goofy/#/desc?id=Отличия-от-smarter-playlists)
-- [Преимущества](https://chimildic.github.io/goofy/#/desc?id=Преимущества-goofy)
-- [Ограничения](https://chimildic.github.io/goofy/#/desc?id=Ограничения)
+## Содержание
 
-## Быстрый старт
-- [Установка и настройка](https://chimildic.github.io/goofy/#/install)
-- [Первый плейлист](https://chimildic.github.io/goofy/#/first-playlist)
+- Быстрый старт
+  - [Установка и настройка](https://chimildic.github.io/goofy/#/install)
+  - [Первый плейлист](https://chimildic.github.io/goofy/#/first-playlist)
+  
+- Подробное описание
+  - [Отличия от Smarter Playlists](https://chimildic.github.io/goofy/#/desc?id=Отличия-от-smarter-playlists)
+  - [Преимущества](https://chimildic.github.io/goofy/#/desc?id=Преимущества-goofy)
+  - [Ограничения](https://chimildic.github.io/goofy/#/desc?id=Ограничения)
+  - [История прослушиваний](https://chimildic.github.io/goofy/#/desc?id=История-прослушиваний)
 
-## Справочник
-- [Шаблоны плейлистов](https://chimildic.github.io/goofy/#/template)
-- [Список функций](https://chimildic.github.io/goofy/#/func)
-- [Аддоны](https://github.com/Chimildic/goofy/tree/main/addons)
-- [Дополнительное описание](https://chimildic.github.io/goofy/#/guide)
+- Использование
+  - [Шаблоны плейлистов](https://chimildic.github.io/goofy/#/template)
+  - [Список функций](https://chimildic.github.io/goofy/#/func)
+  - [Аддоны](https://github.com/Chimildic/goofy/tree/main/addons)
 
 ## Помощь
 
 Для помощи с алгоритмом или ошибкой, создайте новую тему [здесь](https://github.com/Chimildic/goofy/discussions).
 Подробная документация доступна [здесь](https://chimildic.github.io/goofy/). Перед тем, как задать вопрос, пожалуйста, ознакомьтесь с ней.
-
-[☕ Поддержать проект](https://yoomoney.ru/to/410014208620686)
