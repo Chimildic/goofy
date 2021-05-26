@@ -1055,7 +1055,8 @@ const Filter = (function () {
         return item.artists ? item.artists[0].id : item.id;
     }
 
-    function replaceWithSimilar(originTracks, replacementTracks) {
+    function replaceWithSimilar(originTracks, ...replacementArrayTracks) {
+        let replacementTracks = Combiner.push([], ...replacementArrayTracks);
         let copyTracks = Selector.sliceCopy(originTracks);
         Filter.removeTracks(copyTracks, replacementTracks, true);
         let features = getCachedTracks(copyTracks, { features: {} }).features;

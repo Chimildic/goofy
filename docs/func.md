@@ -1128,18 +1128,12 @@ Filter.rangeDateRel(tracks);
 
 Аргументы
 - (массив) `originTracks` - где заменять
-- (массив) `replacementTracks` - что заменять
+- (массив) `replacementTracks` - что заменять (можно несколько)
 
-Пример 1 - Заменить недавно игравшие треки плейлиста на близкие аналоги
+Пример 1 - Заменить недавно игравшие треки и лайки плейлиста на близкие аналоги
 ```js
 let tracks = Source.getPlaylistTracks('', 'id');
-Filter.replaceWithSimilar(tracks, RecentTracks.get(2000));
-```
-
-Пример 2 - Заменить любимые треки из плейлиста на близкие аналоги
-```js
-let tracks = Source.getPlaylistTracks('', 'id');
-Filter.replaceWithSimilar(tracks, Source.getSavedTracks());
+Filter.replaceWithSimilar(tracks, RecentTracks.get(2000), Source.getSavedTracks());
 ```
 
 ### removeArtists
