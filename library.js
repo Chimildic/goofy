@@ -1638,7 +1638,7 @@ const Playlist = (function () {
         saveWithReplace: saveWithReplace,
         saveWithAppend: saveWithAppend,
         saveWithUpdate: saveWithUpdate,
-        removeTracks: removeTracks,
+        removeTracks: removeNonExistingTracks,
     };
 
     function getById(playlistId) {
@@ -1671,15 +1671,10 @@ const Playlist = (function () {
         return `${strArtists} и не только`;
     }
 
-    function removeTracks(id, tracks) {
-        if (tracks.length > 0) {
-            SpotifyRequest.deleteItems({
-                url: `${API_BASE_URL}/playlists/${id}/tracks`,
-                key: 'tracks',
-                limit: 100,
-                items: getTrackUris(tracks, 'object'),
-            });
-        }
+    function removeNonExistingTracks(id, localTracks) {
+        let remoteTrackIds = Source.getPlaylistTracks('', id).map(t => t.id);
+        localTracks = localTracks.filter(t => remoteTrackIds.includes(t.id));
+        removeTracksRequest(id, localTracks);
     }
 
     function saveAsNew(data) {
@@ -1756,7 +1751,18 @@ const Playlist = (function () {
         function removeOldTracks() {
             let newIds = data.tracks.map((t) => t.id);
             let tracksToDelete = currentTracks.filter((t) => !newIds.includes(t.id));
-            Playlist.removeTracks(data.id, tracksToDelete);
+            removeTracksRequest(data.id, tracksToDelete);
+        }
+    }
+
+    function removeTracksRequest(id, tracks) {
+        if (tracks.length > 0) {
+            SpotifyRequest.deleteItems({
+                url: `${API_BASE_URL}/playlists/${id}/tracks`,
+                key: 'tracks',
+                limit: 100,
+                items: getTrackUris(tracks, 'object'),
+            });
         }
     }
 
