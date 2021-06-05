@@ -639,8 +639,8 @@ const RecentTracks = (function () {
         let spotifyTracks = readValidArray(SPOTIFY_FILENAME);
         let lastfmTracks = readValidArray(LASTFM_FILENAME);
         Combiner.push(spotifyTracks, lastfmTracks);
-        Filter.dedupTracks(spotifyTracks);
         Order.sort(spotifyTracks, 'meta.played_at', 'desc');
+        Filter.dedupTracks(spotifyTracks);
         Cache.write(BOTH_SOURCE_FILENAME, spotifyTracks);
     }
 
