@@ -1071,10 +1071,15 @@ const Filter = (function () {
                 Source.createUrlForRecomTracks({
                     seed_tracks: t.id,
                     seed_artists: t.artists[0].id,
+                    target_acousticness: features[t.id].acousticness,
                     target_danceability: features[t.id].danceability,
                     target_energy: features[t.id].energy,
-                    target_acousticness: features[t.id].acousticness,
+                    target_instrumentalness: features[t.id].instrumentalness,
+                    target_liveness: features[t.id].liveness,
+                    target_loudness: features[t.id].loudness,
+                    target_speechiness: features[t.id].speechiness,
                     target_valence: features[t.id].valence,
+                    target_tempo: features[t.id].tempo,
                 })
             );
         });
@@ -1091,9 +1096,9 @@ const Filter = (function () {
                 Filter.removeTracks(similarTracks[t.id], replacementTracks);
                 return Selector.sliceRandom(similarTracks[t.id], 1)[0];
             }
-            return t;
+            return null;
         });
-        Combiner.replace(originTracks, resultTracks);
+        Combiner.replace(originTracks, resultTracks.filter(t => t != null));
     }
 
     function matchExceptMix(items) {

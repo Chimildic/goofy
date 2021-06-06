@@ -1124,7 +1124,7 @@ Filter.rangeDateRel(tracks);
 
 ### replaceWithSimilar
 
-Заменяет треки на похожие. На одну замену один случайный трек из результатов [getRecomTracks](/func?id=getrecomtracks).
+Заменяет треки на похожие. На одну замену один случайный трек из результатов [getRecomTracks](/func?id=getrecomtracks). Если замены нет трек удаляется.
 
 Аргументы
 - (массив) `originTracks` - где заменять
