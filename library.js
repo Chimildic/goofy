@@ -1092,11 +1092,15 @@ const Filter = (function () {
 
         let keys = Object.keys(similarTracks);
         let resultTracks = originTracks.map((t) => {
-            if (keys.includes(t.id) && similarTracks[t.id].length > 0) {
-                Filter.removeTracks(similarTracks[t.id], replacementTracks);
-                return Selector.sliceRandom(similarTracks[t.id], 1)[0];
+            if (keys.includes(t.id)) {
+                if (similarTracks[t.id].length > 0) {
+                    Filter.removeTracks(similarTracks[t.id], replacementTracks);
+                    t = Selector.sliceRandom(similarTracks[t.id], 1)[0];
+                } else {
+                    t = null;
+                }
             }
-            return null;
+            return t;
         });
         Combiner.replace(originTracks, resultTracks.filter(t => t != null));
     }
