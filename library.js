@@ -1130,8 +1130,12 @@ const Filter = (function () {
         let filteredTracks = items.filter((item) => {
             if (typeof item == 'undefined') {
                 return false;
-            } else if (item.hasOwnProperty('album')) {
-                return invert ^ (regex.test(item.name.formatName()) || regex.test(item.album.name.formatName()));
+            } else if (item.hasOwnProperty('album') && item.hasOwnProperty('artists')) {
+                return invert ^ (
+                    regex.test(item.name.formatName()) || 
+                    regex.test(item.album.name.formatName()) || 
+                    regex.test(item.artists[0].name.formatName())
+                );
             }
             return invert ^ regex.test(item.name.formatName());
         });

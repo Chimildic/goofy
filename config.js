@@ -11,7 +11,7 @@ function setProperties(){
     UserProperties.setProperty('LASTFM_RANGE_RECENT_TRACKS', '30');
     UserProperties.setProperty('LASTFM_LOGIN', 'вашЛогин');
 
-    UserProperties.setProperties('LOCALE', 'RU');
+    UserProperties.setProperty('LOCALE', 'RU');
     UserProperties.setProperty('REQUESTS_IN_ROW', '40');
 }
 
