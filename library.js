@@ -557,7 +557,7 @@ const RecentTracks = (function () {
     const BOTH_SOURCE_FILENAME = 'BothRecentTracks.json';
     const TRIGGER_FUCTION_NAME = 'updateRecentTracks_';
     const MINUTES = 15;
-    const ITEMS_LIMIT = 20000;
+    const ITEMS_LIMIT = parseInt(KeyValue.COUNT_RECENT_TRACKS) || 20000;
 
     if (getTrigger('updateRecentTracks')) {
         // Удаляет триггер предыдущих версий библиотеки
@@ -1624,6 +1624,8 @@ const Playlist = (function () {
     const LIMIT_TRACKS = 11000;
     const LIMIT_DESCRIPTION = 300;
     const SIZE = ['500', '600', '700', '800', '900', '1000'];
+    const ARGS = `?limit=50&locale=${KeyValue.LOCALE || "RU"}`;
+
     const getPlaylistArray = (function () {
         let playlistsOfUsers = {};
         return get;
@@ -1631,7 +1633,8 @@ const Playlist = (function () {
         function get(userId) {
             let key = userId == null ? 'me' : userId;
             if (playlistsOfUsers[key] == null) {
-                let path = userId == null ? 'me/playlists?limit=50' : `users/${userId}/playlists?limit=50`;
+                let path = userId == null ? 'me/playlists' : `users/${userId}/playlists`;
+                path += ARGS;
                 playlistsOfUsers[key] = SpotifyRequest.getItemsByPath(path);
             }
             return playlistsOfUsers[key];
@@ -1651,13 +1654,13 @@ const Playlist = (function () {
     };
 
     function getById(playlistId) {
-        let url = `${API_BASE_URL}/playlists/${playlistId}`;
+        let url = `${API_BASE_URL}/playlists/${playlistId}` + ARGS;
         return SpotifyRequest.get(url);
     }
 
     function getByName(playlistName, userId) {
-        let path = userId == null ? 'me/playlists?limit=50' : `users/${userId}/playlists?limit=50`;
-        let url = `${API_BASE_URL}/${path}`;
+        let path = userId == null ? 'me/playlists' : `users/${userId}/playlists`;
+        let url = `${API_BASE_URL}/${path + ARGS}`;
         let response = SpotifyRequest.get(url);
         while (true) {
             const name = playlistName;
