@@ -992,6 +992,11 @@ let args = {
         mode: 0,
         time_signature: 1,
 
+        // вычисляемые https://github.com/Chimildic/goofy/discussions/87
+        energy: { min: 0.0, max: 1.0 },
+        happiness: { min: 0.0, max: 1.0 },
+        sadness: { min: 0.0, max: 1.0 }, 
+        
         // дублирует args.meta.duration_ms, достаточно одного (выбор зависит от категории)
         duration_ms: { min: 0, max: 10000 },
     },

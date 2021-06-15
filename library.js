@@ -1,5 +1,5 @@
 // Документация: https://chimildic.github.io/goofy/
-const VERSION = '1.4.7';
+const VERSION = '1.4.8';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -2750,6 +2750,9 @@ const getCachedTracks = (function () {
             let features = SpotifyRequest.getFullObjByIds('audio-features', uncachedTracks.features, 85);
             features.forEach((item) => {
                 if (item != null) {
+                    item.anger = item.energy * (1 - item.valence);
+                    item.happiness = item.energy * item.valence;
+                    item.sadness = (1 - item.energy) * (1 - item.valence);
                     cachedTracks.features[item.id] = item;
                 }
             });

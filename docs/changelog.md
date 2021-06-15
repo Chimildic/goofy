@@ -8,6 +8,9 @@
 
 [Перейти к обновленному коду](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+## Версия 1.4.8
+- В [rangeTracks] появились [вычисляемые значения](https://github.com/Chimildic/goofy/discussions/87): `anger`, `happiness` и `sadness`. Их нет со стороны Spotify, поэтому нельзя использовать при запросе рекомендаций. 
+
 ## Версия 1.4.7
 - Эксперимент. При неизвестной ошибке со стороны Google во время записи через `Cache.write` происходит повторная попытка записи после паузы. 
 - [06.06.21]
