@@ -9,8 +9,9 @@
 [Перейти к обновленному коду](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
 ## Версия 1.4.8
-- В [rangeTracks] появились [вычисляемые значения](https://github.com/Chimildic/goofy/discussions/87): `anger`, `happiness` и `sadness`. Их нет со стороны Spotify, поэтому нельзя использовать при запросе рекомендаций. 
+- В [rangeTracks](/func?id=rangetracks) появились [вычисляемые значения](https://github.com/Chimildic/goofy/discussions/87): `anger`, `happiness` и `sadness`. Их нет со стороны Spotify, поэтому нельзя использовать при запросе рекомендаций. 
 - Все функции match теперь проверяют и основного исполнителя трека, помимо альбома и названия.
+- У [getCustomTop](/func?id=getcustomtop) появились параметры минимального и максимального количества прослушиваний.
 - Нужно обновить файл config:
   - Добавлен параметр локали при запросе плейлистов. В связи с [постом](https://github.com/Chimildic/goofy/discussions/79#discussioncomment-814744): кириллическое название возвращалось на латинице.
   - Предел сохраняемой истории в 20 тысяч треков вынесен в конфиг, чтобы изменить и не терять при обновлении. Есть пример стабильной работы и с 40 тысячами.

@@ -2177,6 +2177,11 @@ const Lastfm = (function () {
         }
         let tracks = getTracksForPeriod(params);
         let played = calcCountPlayed(tracks, formatMethod);
+
+        params.minPlayed = params.minPlayed || 0;
+        params.maxPlayed = params.maxPlayed || 100000;
+        played = played.filter(p => p.count >= params.minPlayed && p.count <= params.maxPlayed);
+
         played.sort((x, y) => y.count - x.count);
         Selector.keepAllExceptFirst(played, params.offset || 0);
         Selector.keepFirst(played, params.count || 40);
