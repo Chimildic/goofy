@@ -2584,6 +2584,9 @@ const Cache = (function () {
 
 const Search = (function () {
     const TEMPLATE = API_BASE_URL + '/search?%s';
+
+    let noFound = [];
+
     return {
         multisearchTracks: multisearchTracks,
         multisearchArtists: multisearchArtists,
@@ -2591,6 +2594,7 @@ const Search = (function () {
         findPlaylists: findPlaylists,
         findAlbums: findAlbums,
         findTracks: findTracks,
+        getNoFound: () => noFound,
     };
 
     function multisearchTracks(items, parseNameMethod) {
@@ -2623,6 +2627,7 @@ const Search = (function () {
                     item.keyword = uniqueKeyword[i];
                     resultItems.push(item);
                 } else {
+                    noFound.push({ type: type, keyword: uniqueKeyword[i] });
                     console.info('Spotify по типу', type, 'не нашел:', uniqueKeyword[i]);
                 }
             }
