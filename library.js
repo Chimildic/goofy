@@ -2185,7 +2185,10 @@ const Lastfm = (function () {
         played.sort((x, y) => y.count - x.count);
         Selector.keepAllExceptFirst(played, params.offset || 0);
         Selector.keepFirst(played, params.count || 40);
-        let items = played.map((p) => p.item);
+        let items = played.map((p) => {
+            p.item.countPlayed = p.count;
+            return p.item;
+        });
         return searchMethod(items, formatMethod);
 
         function getTracksForPeriod(params) {
@@ -2632,6 +2635,9 @@ const Search = (function () {
                     let item = uniqueItems.find((item) => item.keyword == keyword);
                     if (item && items[i].hasOwnProperty('date')) {
                         item.played_at = items[i].date['#text'];
+                    }
+                    if (item && items[i].hasOwnProperty('countPlayed')) {
+                        item.countPlayed = items[i].countPlayed;
                     }
                     return item;
                 })
