@@ -2594,6 +2594,7 @@ const Search = (function () {
         findPlaylists: findPlaylists,
         findAlbums: findAlbums,
         findTracks: findTracks,
+        findArtists: findArtists,
         getNoFound: () => noFound,
     };
 
@@ -2683,6 +2684,10 @@ const Search = (function () {
 
     function findTracks(keywords, requestCount) {
         return find(keywords, 'track', requestCount);
+    }
+
+    function findArtists(keywords, requestCount) {
+        return find(keywords, 'artist', requestCount);
     }
 
     function find(keywords, type, requestCount = 1) {
