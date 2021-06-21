@@ -27,6 +27,8 @@ function templateUnknownSet() {
     let recentTracks = RecentTracks.get(1000);
     Combiner.push(banTracks, savedTracks, recentTracks);
 
+    // Вставьте свои id плейлистов, которые берутся из ссылки или URI
+    // https://chimildic.github.io/goofy/#/guide?id=Идентификатор
     let onlyForYouTracks = Source.getTracks([
         { name: 'Микс дня 1', id: 'вашеId' },
         { name: 'Микс дня 2', id: 'вашеId' },
@@ -44,8 +46,8 @@ function templateUnknownSet() {
     Filter.matchOriginalOnly(onlyForYouTracks);
     Filter.matchExceptRu(onlyForYouTracks);
 
-    // Раскомментируйте, если есть плейлист с исполнителями, которых нужно блокировать
-    // let banArtists = Source.getPlaylistTracks('Название', 'вашеId');
+    // Способ удаления дизлаков, если собираете такой плейлист
+    // let banArtists = Source.getPlaylistTracks('', 'вашеId');
     // Filter.removeArtists(onlyForYouTracks, banArtists);
     
     Filter.rangeTracks(onlyForYouTracks, {
@@ -57,7 +59,7 @@ function templateUnknownSet() {
     Selector.keepRandom(onlyForYouTracks, 60);
     
     Playlist.saveWithReplace({
-        // id: 'вашеId', // после первого создания плейлиста
+        // id: 'вашеId', // подставьте id созданного плейлиста, после первого запуска кода
         name: 'Незнакомый сет',
         tracks: onlyForYouTracks,
         description: Playlist.getDescription(onlyForYouTracks),
