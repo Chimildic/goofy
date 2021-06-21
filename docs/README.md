@@ -2,8 +2,8 @@
 
 Библиотека для взаимодействия [Spotify Web API](https://developer.spotify.com/documentation/web-api/) и [Google Apps Script](https://developers.google.com/apps-script). За основу положена идея сервиса [Smarter Playlists](http://smarterplaylists.playlistmachinery.com/about.html). Библиотека стремится устранить недостатки сервиса, добавить новые возможности и увеличить допустимые лимиты. Помимо Spotify, источником треков может быть [Last.fm](https://chimildic.github.io/goofy/#/func?id=lastfm), [Яндекс.Музыка](https://chimildic.github.io/goofy/#/func?id=yandex), [треклисты FM-радиостанций](https://github.com/Chimildic/goofy/discussions/35).
 
-
 По сути, это конструктор плейлистов. Собираете треки из различных источников, пропускаете через множество фильтров и создаете или обновляете плейлист по расписанию.
+При этом не нужны навыки программирования. Процесс установки и настройки сводится к выполнению простых шагов.
 
 К примеру, несколько коротких алгоритмов:
 - Объединить личные миксы с удалением ранее прослушанных треков
@@ -33,5 +33,5 @@
 
 ## Помощь
 
-Для помощи с алгоритмом или ошибкой, создайте новую тему [здесь](https://github.com/Chimildic/goofy/discussions).
-Подробная документация доступна [здесь](https://chimildic.github.io/goofy/). Перед тем, как задать вопрос, пожалуйста, ознакомьтесь с ней.
+Для помощи с алгоритмом или ошибкой, создайте новую тему [на форуме](https://github.com/Chimildic/goofy/discussions).
+Подробная документация о функциях доступна [здесь](https://chimildic.github.io/goofy/#/func). Перед тем как задать вопрос, пожалуйста, ознакомьтесь с ней.
