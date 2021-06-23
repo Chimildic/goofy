@@ -2918,21 +2918,21 @@ const SpotifyRequest = (function () {
     }
 
     function getItemsByNext(response, limitRequestCount = 220) {
-        let count = Math.ceil(response.total / response.limit);
+        let itemsLength = response.items ? response.items.length : 0;
+        let count = Math.ceil((response.total - itemsLength) / response.limit);
         if (count > limitRequestCount) {
             count = limitRequestCount;
         }
 
-        let href = (response.next || response.href).split('?');
-        let baseurl = href[0];
-        let query = urlStringToObj(href[1]);
+        let [baseurl, query] = (response.next || response.href).split('?');
+        query = urlStringToObj(query);
         query.limit = query.limit || 50;
-        query.offset = query.offset || 0;
+        query.offset = itemsLength || 0;
 
         let urls = [];
-        for (let i = 1; i < count; i++) {
-            query.offset = parseInt(query.offset) + parseInt(query.limit);
+        for (let i = 0; i < count; i++) {
             urls.push(`${baseurl}?${CustomUrlFetchApp.parseQuery(query)}`);
+            query.offset = parseInt(query.offset) + parseInt(query.limit);
         }
 
         let items = response.items;
