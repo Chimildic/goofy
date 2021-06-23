@@ -2923,7 +2923,7 @@ const SpotifyRequest = (function () {
             count = limitRequestCount;
         }
 
-        let href = response.href.split('?');
+        let href = (response.next || response.href).split('?');
         let baseurl = href[0];
         let query = urlStringToObj(href[1]);
         query.limit = query.limit || 50;
