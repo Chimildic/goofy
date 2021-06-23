@@ -2871,13 +2871,21 @@ const User = (function () {
     }
 
     function setId() {
-        KeyValue[USER_ID] = getUser().id;
-        UserProperties.setProperty(USER_ID, KeyValue[USER_ID]);
-        return KeyValue[USER_ID];
+        let user = getUser();
+        if (user.hasOwnProperty('id')) {
+            KeyValue[USER_ID] = user.id;
+            UserProperties.setProperty(USER_ID, KeyValue[USER_ID]);
+            return KeyValue[USER_ID];
+        }
+        return user;
     }
 
     function getUser() {
-        return SpotifyRequest.get(API_BASE_URL + '/me');
+        try {
+            return SpotifyRequest.get(API_BASE_URL + '/me');
+        } catch (error) {
+            return 'first install';
+        }
     }
 })();
 
