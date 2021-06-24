@@ -14,22 +14,7 @@
 - Получать рекомендации Last.fm любого пользователя
 - Переносить треки с Яндекс.Музыки в Spotify, в том числе любимых (лайков)
 
-## Содержание
-
-- Быстрый старт
-  - [Установка и настройка](https://chimildic.github.io/goofy/#/install)
-  - [Первый плейлист](https://chimildic.github.io/goofy/#/first-playlist)
-  
-- Подробное описание
-  - [Отличия от Smarter Playlists](https://chimildic.github.io/goofy/#/desc?id=Отличия-от-smarter-playlists)
-  - [Преимущества](https://chimildic.github.io/goofy/#/desc?id=Преимущества-goofy)
-  - [Ограничения](https://chimildic.github.io/goofy/#/desc?id=Ограничения)
-  - [История прослушиваний](https://chimildic.github.io/goofy/#/desc?id=История-прослушиваний)
-
-- Использование
-  - [Шаблоны плейлистов](https://chimildic.github.io/goofy/#/template)
-  - [Список функций](https://chimildic.github.io/goofy/#/func)
-  - [Аддоны](https://github.com/Chimildic/goofy/tree/main/addons)
+Другие подробности читайте в разделе [обзор](/overview.md).
 
 ## Помощь
 

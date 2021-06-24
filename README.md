@@ -14,9 +14,9 @@
 - Переносить треки с Яндекс.Музыки в Spotify, в том числе любимых (лайков)
 
 Подробное описание
-- [Отличия от Smarter Playlists](https://chimildic.github.io/goofy/#/desc?id=Отличия-от-smarter-playlists)
-- [Преимущества](https://chimildic.github.io/goofy/#/desc?id=Преимущества-goofy)
-- [Ограничения](https://chimildic.github.io/goofy/#/desc?id=Ограничения)
+- [Отличия от Smarter Playlists](https://chimildic.github.io/goofy/#/overview?id=Отличия-от-smarter-playlists)
+- [Преимущества](https://chimildic.github.io/goofy/#/overview?id=Преимущества-goofy)
+- [Ограничения](https://chimildic.github.io/goofy/#/overview?id=Ограничения)
 
 ## Быстрый старт
 - [Установка и настройка](https://chimildic.github.io/goofy/#/install)
