@@ -2261,4 +2261,3 @@ Library.followArtists(artists);
      randomCover: 'update',
  });
 ```
-
