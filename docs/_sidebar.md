@@ -1,9 +1,10 @@
 - **Начало работы**
-- [Обзор](/overview.md)
+- [Обзор](/)
 - [Установка](/install.md)
 - [Первый плейлист](/first-playlist.md)
-- **Справочник**
+- **Обучение**
 - [Шаблоны](/template.md)
+- **Документация**
 - [Список функций](/func.md)
-- [Дополнительное описание](/guide.md) 
+- [Дополнительно](/guide.md) 
 - <div style="display: flex; flex-direction: column;"><div style="display: flex; justify-content: space-between; align-items: center; margin: 2em 0em; padding-left: 0.2em"><iframe src="https://yoomoney.ru/quickpay/button-widget?targets=%D0%9F%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%B0%D1%82%D1%8C%20%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%20Goofy&default-sum=500&button-text=11&any-card-payment-type=on&button-size=s&button-color=orange&successURL=&quickpay=small&account=410014208620686&" width="127" height="25" frameborder="0" allowtransparency="true" scrolling="no"></iframe><iframe src="https://ghbtns.com/github-btn.html?user=chimildic&repo=goofy&type=star&count=true" frameborder="0" scrolling="0" width="78" height="20" title="GitHub"></iframe> </div>
