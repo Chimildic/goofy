@@ -22,8 +22,8 @@
 
 | id или playlistId | URI | Ссылка |
 |-|-|-|
-| 5ErHcGR1VdYQmsrd6vVeSV | spotify : playlist : **5ErHcGR1VdYQmsrd6vVeSV** | [open.spotify.com/playlist/**5ErHcGR1VdYQmsrd6vVeSV**](open.spotify.com/playlist/5ErHcGR1VdYQmsrd6vVeSV) |
-| 4vTwFTW4DytSY1N62itnwz | spotify : playlist : **4vTwFTW4DytSY1N62itnwz** | [open.spotify.com/playlist/**4vTwFTW4DytSY1N62itnwz**](open.spotify.com/playlist/4vTwFTW4DytSY1N62itnwz) |
+| 5ErHcGR1VdYQmsrd6vVeSV | spotify : playlist : **5ErHcGR1VdYQmsrd6vVeSV** | [open.spotify.com/playlist/**5ErHcGR1VdYQmsrd6vVeSV**?si=123](open.spotify.com/playlist/5ErHcGR1VdYQmsrd6vVeSV) |
+| 4vTwFTW4DytSY1N62itnwz | spotify : playlist : **4vTwFTW4DytSY1N62itnwz** | [open.spotify.com/playlist/**4vTwFTW4DytSY1N62itnwz**?si=123](open.spotify.com/playlist/4vTwFTW4DytSY1N62itnwz) |
 
 ## Пользователь {docsify-ignore}
 
