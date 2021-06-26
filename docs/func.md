@@ -517,7 +517,7 @@ let args = {
         time_signature: 1,
 
         // вычисляемые https://github.com/Chimildic/goofy/discussions/87
-        energy: { min: 0.0, max: 1.0 },
+        anger: { min: 0.0, max: 1.0 },
         happiness: { min: 0.0, max: 1.0 },
         sadness: { min: 0.0, max: 1.0 }, 
         
