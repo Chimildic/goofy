@@ -1,8 +1,12 @@
-# goofy
-Библиотека для взаимодействия [Spotify Web API](https://developer.spotify.com/documentation/web-api/) и [Google Apps Script](https://developers.google.com/apps-script). За основу положена идея сервиса [Smarter Playlists](http://smarterplaylists.playlistmachinery.com/about.html). Библиотека стремится устранить недостатки сервиса, добавить новые возможности и увеличить допустимые лимиты. Помимо Spotify, источником треков может быть [Last.fm](https://chimildic.github.io/goofy/#/func?id=lastfm), [Яндекс.Музыка](https://chimildic.github.io/goofy/#/func?id=yandex), [треклисты FM-радиостанций](https://github.com/Chimildic/goofy/discussions/35).
+# goofy 
 
-## Что делает
-По сути, это конструктор плейлистов. Собираете треки из различных источников, пропускаете через множество фильтров и создаете или обновляете плейлист по расписанию.
+Конструктор плейлистов. Позволяет агрегировать треки, применять фильтры и обновлять плейлисты по расписанию.
+
+Представляет собой библиотеку JavaScript для взаимодействия [Spotify Web API](https://developer.spotify.com/documentation/web-api/) и [Google Apps Script](https://developers.google.com/apps-script). 
+
+Обладает широкой функциональностью. Отслеживает историю прослушиваний, взаимодействует с Last.fm, позволяет импортировать треки FM-радио. Реализует все возможности сервисов [Smarter Playlists](http://smarterplaylists.playlistmachinery.com/about.html), [Playlist Miner](http://playlistminer.playlistmachinery.com/).
+
+> Базовое использование не требует навыков программирования. Процесс сводится к выполнению простых шагов.
 
 К примеру, несколько коротких алгоритмов:
 - Объединить личные миксы с удалением ранее прослушанных треков
@@ -11,26 +15,25 @@
 - Выявлять давно непрослушиваемых треков
 - Собирать новинки отслеживаемых исполнителей
 - Получать рекомендации Last.fm любого пользователя
-- Переносить треки с Яндекс.Музыки в Spotify, в том числе любимых (лайков)
+- Переносить треки с Яндекс.Музыки, в том числе любимых (лайков)
 
-Подробное описание
-- [Отличия от Smarter Playlists](https://chimildic.github.io/goofy/#/overview?id=Отличия-от-smarter-playlists)
-- [Преимущества](https://chimildic.github.io/goofy/#/overview?id=Преимущества-goofy)
-- [Ограничения](https://chimildic.github.io/goofy/#/overview?id=Ограничения)
-
-## Быстрый старт
-- [Установка и настройка](https://chimildic.github.io/goofy/#/install)
+## Начало работы
+- [Обзор](https://chimildic.github.io/goofy/#/overview)
+- [Установка](https://chimildic.github.io/goofy/#/install)
 - [Первый плейлист](https://chimildic.github.io/goofy/#/first-playlist)
 
-## Справочник
-- [Шаблоны плейлистов](https://chimildic.github.io/goofy/#/template)
+## Обучение
+- [Шаблоны](https://chimildic.github.io/goofy/#/template)
+
+## Документация
 - [Список функций](https://chimildic.github.io/goofy/#/func)
+- [Решение ошибок](https://chimildic.github.io/goofy/#/errors)
 - [Аддоны](https://github.com/Chimildic/goofy/tree/main/addons)
-- [Дополнительное описание](https://chimildic.github.io/goofy/#/guide)
+- [Дополнительно](https://chimildic.github.io/goofy/#/guide)
 
 ## Помощь
 
-Для помощи с алгоритмом или ошибкой, создайте новую тему [здесь](https://github.com/Chimildic/goofy/discussions).
-Подробная документация доступна [здесь](https://chimildic.github.io/goofy/). Перед тем, как задать вопрос, пожалуйста, ознакомьтесь с ней.
+При возникновении ошибки, поищите решение [здесь](https://chimildic.github.io/goofy/#/errors). Если не удается решить проблему или нужна помощь с алгоритмом создайте новую тему [на форуме](https://github.com/Chimildic/goofy/discussions).
+Подробная документация о функциях доступна [здесь](https://chimildic.github.io/goofy/#/func). Перед тем как задать вопрос, пожалуйста, ознакомьтесь с ней.
 
 [☕ Поддержать проект](https://yoomoney.ru/to/410014208620686)
