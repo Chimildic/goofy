@@ -4,7 +4,7 @@
             const TARGET_QUERY = 'id';
             const SCROLL_DELAY = 650;
 
-            hook.ready(function () {
+            hook.doneEach(function () {
                 if (!location.hash.includes('?')) return;
                 let searchParams = new URLSearchParams(location.hash.split('?')[1]);
                 let header = document.querySelector('#' + searchParams.get(TARGET_QUERY));
