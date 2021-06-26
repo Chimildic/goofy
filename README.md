@@ -18,7 +18,7 @@
 - Переносить треки с Яндекс.Музыки, в том числе любимых (лайков)
 
 ## Начало работы
-- [Обзор](https://chimildic.github.io/goofy/#/overview?id=Преимущества)
+- [Обзор](https://chimildic.github.io/goofy/#/overview?id=Принцип-работы)
 - [Установка](https://chimildic.github.io/goofy/#/install)
 - [Первый плейлист](https://chimildic.github.io/goofy/#/first-playlist)
 
