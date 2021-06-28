@@ -2,3 +2,12 @@
     --content-max-width: 65rem;
     --notice-tip-border-color: #0bda95b3;
 }
+
+p, ul {
+    text-align: justify;
+}
+
+.app-nav {
+    display: flex;
+    justify-content: flex-end;
+}

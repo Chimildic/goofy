@@ -22,18 +22,16 @@
 - [Установка](https://chimildic.github.io/goofy/#/install)
 - [Первый плейлист](https://chimildic.github.io/goofy/#/first-playlist)
 
-## Обучение
+## Использование
 - [Шаблоны](https://chimildic.github.io/goofy/#/template)
+- [Аддоны](https://chimildic.github.io/goofy/#/addon)
 
 ## Документация
 - [Список функций](https://chimildic.github.io/goofy/#/func)
 - [Решение ошибок](https://chimildic.github.io/goofy/#/errors)
-- [Аддоны](https://github.com/Chimildic/goofy/tree/main/addons)
 - [Дополнительно](https://chimildic.github.io/goofy/#/guide)
 
 ## Помощь
 
 При возникновении ошибки, поищите решение [здесь](https://chimildic.github.io/goofy/#/errors). Если не удается решить проблему или нужна помощь с алгоритмом создайте новую тему [на форуме](https://github.com/Chimildic/goofy/discussions).
 Подробная документация о функциях доступна [здесь](https://chimildic.github.io/goofy/#/func). Перед тем как задать вопрос, пожалуйста, ознакомьтесь с ней.
-
-[☕ Поддержать проект](https://yoomoney.ru/to/410014208620686)

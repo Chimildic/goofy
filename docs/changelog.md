@@ -1,12 +1,10 @@
 # Список изменений 
 
-Текущая версия библиотеки отражена в константе `VERSION` файла `Library`
-
-Подробности о работе функций смотреть в [справочнике](/func)
+Текущая версия библиотеки отражена в константе `VERSION` файла `library`
 
 Для добавления своих функций или переопределения существующих, используйте [инструкцию](https://github.com/Chimildic/goofy/discussions/18).
 
-[Перейти к обновленному коду](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
+[Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
 ## Версия 1.4.8
 - В [rangeTracks](/func?id=rangetracks) появились [вычисляемые значения](https://github.com/Chimildic/goofy/discussions/87): `anger`, `happiness` и `sadness`. Их нет со стороны Spotify, поэтому нельзя использовать при запросе рекомендаций. 
