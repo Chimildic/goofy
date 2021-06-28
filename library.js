@@ -1142,21 +1142,21 @@ const Filter = (function () {
         Combiner.replace(items, filteredTracks);
     }
 
-    function rangeDateRel(tracks, sinceDays, beforeDays) {
-        extractTracksRel(tracks, sinceDays, beforeDays);
+    function rangeDateRel(items, sinceDays, beforeDays) {
+        extractItemsRel(items, sinceDays, beforeDays);
     }
 
-    function rangeDateAbs(tracks, startDate, endDate) {
-        extractTracksAbs(tracks, startDate, endDate);
+    function rangeDateAbs(items, startDate, endDate) {
+        extractItemsAbs(items, startDate, endDate);
     }
 
-    function extractTracksRel(items, sinceDays, beforeDays) {
+    function extractItemsRel(items, sinceDays, beforeDays) {
         let startDate = getDateRel(sinceDays, 'startDay');
         let endDate = getDateRel(beforeDays, 'endDay');
-        extractTracksAbs(items, startDate, endDate);
+        extractItemsAbs(items, startDate, endDate);
     }
 
-    function extractTracksAbs(items, startDate, endDate) {
+    function extractItemsAbs(items, startDate, endDate) {
         if (!items) {
             console.error('Filter.extractTracksAbs: items is null');
             return;
@@ -1170,17 +1170,17 @@ const Filter = (function () {
             return;
         }
 
-        let filteredTracks = items.reduce((tracks, track) => {
-            let key = track.played_at ? 'played_at' : 'added_at';
-            let date = track[key] ? new Date(track[key]) : DEFAULT_DATE;
+        let filteredItems = items.reduce((_items, item) => {
+            let key = item.played_at ? 'played_at' : 'added_at';
+            let date = item[key] ? new Date(item[key]) : DEFAULT_DATE;
             let time = date.getTime();
             if (time >= startTime && time <= endTime) {
-                tracks.push(track);
+                _items.push(item);
             }
-            return tracks;
+            return _items;
         }, []);
 
-        Combiner.replace(items, filteredTracks);
+        Combiner.replace(items, filteredItems);
     }
 
     function getDateRel(days, bound) {
