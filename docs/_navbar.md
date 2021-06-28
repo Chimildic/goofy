@@ -1,3 +1,4 @@
+* English
+  * [Use an **extension** to translate](https://chrome.google.com/webstore/detail/aapbdbdomjkkjkaonfhkkikfgjllcleb)
 * [Форум](https://github.com/Chimildic/goofy/discussions)
-* [Аддоны](https://github.com/Chimildic/goofy/tree/main/addons)
 * [Список изменений](/changelog.md)

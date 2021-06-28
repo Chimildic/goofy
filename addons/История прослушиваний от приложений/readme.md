@@ -13,6 +13,8 @@ HistoryManager.removeTracks(tracks);
 
 ## Установка
 
+> Более подробно [в теме](https://github.com/Chimildic/goofy/discussions/53)
+
 1. Создайте новый скрипт и скопируйте в него содержимое `history-manager.js`.
 2. Добавьте в папку `Goofy Data` на Google Диске файлы истории прослушиваний от приложений Spotify
    

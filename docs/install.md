@@ -11,17 +11,17 @@
 
 1. Перейдите в [Spotify Dashboard](https://developer.spotify.com/dashboard/). Нажмите `Log in` и авторизуйтесь в Spotify. Примите условия использования.
 
-   ![Условия использования](/img/install-step-dashboard-term.png)
+   ![Условия использования](/img/install-step-dashboard-term.png ':size=40%')
 
 2. Нажмите кнопку `Create an app`. Введите произвольное имя и описание. Поставьте галочки. Нажмите кнопку `Create`.
 
-   ![Создание приложения](/img/install-step-create-app.png)
+   ![Создание приложения](/img/install-step-create-app.png ':size=40%')
 
 3. Перейдите к [библиотеке в Apps Script](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing). Войдите в Google аккаунт, если потребуется.
 
 4. Выберите слева в раскрывающемся меню `Общие сведения`. 
 
-   ![Открыть меню](/img/general-property.gif)
+   ![Открыть меню](/img/general-property.gif ':size=60%')
 
    На открывшейся странице, справа `Создать копию`. Откроется копия, созданная на вашем аккаунте. Переименуйте, если нужно (нажать на имя вверху страницы).
    
@@ -39,7 +39,7 @@
 
    Увидите всплывающее сообщение с необходимость предоставить права доступа. Согласитесь на выдачу.
 
-   ![запрос прав](/img/install-permission-request.png)
+   ![запрос прав](/img/install-permission-request.png ':size=50%')
 
    Выберите Google аккаунт, на котором создали копию библиотеки.
 
@@ -47,7 +47,7 @@
 
    Нажмите `Дополнительные настройки`, затем `Перейти на страницу "Копия Goofy (Ver. 1)"`
 
-   ![Выбор аккаунта](/img/install-step-warning.png)
+   ![Выбор аккаунта](/img/install-step-warning.png ':size=50%')
 
    Нажмите кнопку `Разрешить` внизу окна.
 
@@ -55,7 +55,7 @@
 
 7. Окно закроется. Выберите `Начать развертывание` - `Пробные развертывания`
 
-   ![Развернуть веб-приложение](/img/install-step-webapp.png)
+   ![Развернуть веб-приложение](/img/install-step-webapp.png ':size=40%')
 
    В появившимся окне скопируйте ссылку. Должно заканчиваться на `dev`.
 
@@ -69,7 +69,7 @@
     
     Вставьте в поле `Redirect URIs` скопированную ссылку из шага 8. Нажмите кнопку `ADD`. Затем внизу кнопку `Save`.
     
-    ![Добавить callback](/img/install-step-dashboard-redirect.png)
+    ![Добавить callback](/img/install-step-dashboard-redirect.png ':size=50%')
 
 10. Перейдите на вкладку из шага 8 и обновите эту страницу (`F5`).
 
@@ -101,8 +101,7 @@
 
 ## Обновить библиотеку
 
-1. Замените все содержимое файла `library.gs` на новое (Ctrl + A, Ctrl + V), которое берется [здесь](https://github.com/Chimildic/goofy/blob/main/library.js) или [здесь](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing) (Ctrl + A, Ctrl + C)
-2. Сохраните файл
+Замените все содержимое файла `library.gs` на новое (Ctrl + A, Ctrl + V), которое берется [здесь](https://github.com/Chimildic/goofy/blob/main/library.js) или [здесь](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing) (Ctrl + A, Ctrl + C) и сохраните файл.
 
 ## Обновить параметры
 
