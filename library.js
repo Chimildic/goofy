@@ -105,6 +105,7 @@ const CustomUrlFetchApp = (function () {
         }
 
         function tryFetchOnce() {
+            console.log('Попытка повторить запрос');
             Utilities.sleep(3500);
             countRequest++;
             response = UrlFetchApp.fetch(url, params);
@@ -294,12 +295,12 @@ const Source = (function () {
 
     function getArtistsAlbums(artists, paramsAlbum = {}) {
         let groups = paramsAlbum.groups || 'album,single';
-        let albums = artists
-            .reduce((albums, artist) => {
-                let path = `artists/${artist.id}/albums?include_groups=${groups}&limit=50&market=from_token`;
-                return Combiner.push(albums, SpotifyRequest.getItemsByPath(path));
-            }, [])
-            .filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, paramsAlbum.release_date));
+        let albums = artists.reduce((albums, artist) => {
+            let path = `artists/${artist.id}/albums?include_groups=${groups}&limit=50&market=from_token`;
+            return Combiner.push(albums, SpotifyRequest.getItemsByPath(path));
+        }, []);
+        Filter.dedupAlbums(albums);
+        albums = albums.filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, paramsAlbum.release_date));
         return Selector.sliceRandom(albums, paramsAlbum.album_limit);
     }
 
@@ -1132,8 +1133,8 @@ const Filter = (function () {
                 return false;
             } else if (item.hasOwnProperty('album') && item.hasOwnProperty('artists')) {
                 return invert ^ (
-                    regex.test(item.name.formatName()) || 
-                    regex.test(item.album.name.formatName()) || 
+                    regex.test(item.name.formatName()) ||
+                    regex.test(item.album.name.formatName()) ||
                     regex.test(item.artists[0].name.formatName())
                 );
             }
@@ -1189,22 +1190,29 @@ const Filter = (function () {
     }
 
     const Deduplicator = (function () {
-        const TYPE_TRACKS = 'tracks';
-        const TYPE_ARTISTS = 'artists';
-
         let _items;
         let _duplicates;
 
         function dedupTracks(tracks) {
-            dedup(tracks, TYPE_TRACKS);
-        }
-
-        function dedupArtists(tracks) {
-            dedup(tracks, TYPE_ARTISTS);
-        }
-
-        function separateArtistsDuplicated(tracks) {
             _items = tracks;
+            findTracksDuplicated();
+            removeDuplicated();
+        }
+
+        function dedupArtists(items) {
+            _items = items;
+            findArtistsDuplicated();
+            removeDuplicated();
+        }
+
+        function dedupAlbums(items) {
+            _items = items;
+            findAlbumsDuplicated();
+            removeDuplicated();
+        }
+
+        function separateArtistsDuplicated(items) {
+            _items = items;
             _duplicates = findArtistsDuplicated();
             let indexArray = _duplicates.map((item) => item.index);
             let result = { original: [], duplicate: [] };
@@ -1215,16 +1223,10 @@ const Filter = (function () {
             return result;
         }
 
-        function dedup(items, type) {
-            _items = items;
-            _duplicates = type == TYPE_ARTISTS ? findArtistsDuplicated() : findTracksDuplicated();
-            removeTracksDuplicated();
-        }
-
         function findTracksDuplicated() {
             const seenIds = {};
             const seenTrackKeys = {};
-            return _items.reduce((duplicates, track, index) => {
+            _duplicates = _items.reduce((duplicates, track, index) => {
                 if (track === null || track.id === null) {
                     return duplicates;
                 } else if (isDuplicateByTrackId(track.id) || isDuplicateByName(track)) {
@@ -1240,24 +1242,24 @@ const Filter = (function () {
                     seenTrackKeys[trackKey].push(track.duration_ms);
                 }
                 return duplicates;
-
-                function isDuplicateByTrackId(id) {
-                    return id in seenTrackKeys;
-                }
-
-                function isDuplicateByName(track) {
-                    const trackKey = getTrackKey(track);
-                    return (
-                        trackKey in seenTrackKeys &&
-                        0 != seenTrackKeys[trackKey].filter((duration) => Math.abs(duration - track.duration_ms) < 2000).length
-                    );
-                }
             }, []);
+
+            function isDuplicateByTrackId(id) {
+                return id in seenTrackKeys;
+            }
+
+            function isDuplicateByName(track) {
+                const trackKey = getTrackKey(track);
+                return (
+                    trackKey in seenTrackKeys &&
+                    0 != seenTrackKeys[trackKey].filter((duration) => Math.abs(duration - track.duration_ms) < 2000).length
+                );
+            }
         }
 
         function findArtistsDuplicated() {
             const seenArtists = {};
-            return _items.reduce((duplicates, item, index) => {
+            _duplicates = _items.reduce((duplicates, item, index) => {
                 const artistId = getArtistId(item);
                 if (artistId == undefined) {
                     return duplicates;
@@ -1271,22 +1273,50 @@ const Filter = (function () {
                     seenArtists[artistId] = true;
                 }
                 return duplicates;
-
-                function getArtistId(item) {
-                    if (item && item.hasOwnProperty('artists') && item.artists.length > 0) {
-                        return item.artists[0].id;
-                    } else if (item) {
-                        return item.id;
-                    }
-                }
-
-                function isDuplicateByArtistId(artistId) {
-                    return artistId in seenArtists;
-                }
             }, []);
+
+            function getArtistId(item) {
+                if (item && item.hasOwnProperty('artists') && item.artists.length > 0) {
+                    return item.artists[0].id;
+                } else if (item) {
+                    return item.id;
+                }
+            }
+
+            function isDuplicateByArtistId(artistId) {
+                return artistId in seenArtists;
+            }
         }
 
-        function removeTracksDuplicated() {
+        function findAlbumsDuplicated() {
+            const seenAlbums = {};
+            _duplicates = _items.reduce((duplicates, item, index) => {
+                const albumId = getAlbumId(item);
+                if (albumId == undefined) {
+                    return duplicates;
+                } else if (isDuplicateByAlbumId(albumId)) {
+                    duplicates.push({
+                        index: index,
+                        item: item,
+                    });
+                } else {
+                    seenAlbums[albumId] = true;
+                }
+                return duplicates;
+            }, []);
+
+            function getAlbumId(item) {
+                return item.album
+                    ? `${item.artists[0].name} ${item.album.name}`.formatName() + ` ${item.album.release_date} ${item.album.total_tracks}`
+                    : `${item.artists[0].name} ${item.name}`.formatName() + ` ${item.release_date} ${item.total_tracks}`;
+            }
+
+            function isDuplicateByAlbumId(albumId) {
+                return albumId in seenAlbums;
+            }
+        }
+
+        function removeDuplicated() {
             let offset = 0;
             _duplicates.forEach((item) => {
                 _items.splice(item.index - offset, 1);
@@ -1297,6 +1327,7 @@ const Filter = (function () {
         return {
             dedupTracks: dedupTracks,
             dedupArtists: dedupArtists,
+            dedupAlbums: dedupAlbums,
             separateArtistsDuplicated: separateArtistsDuplicated,
         };
     })();
@@ -1307,6 +1338,7 @@ const Filter = (function () {
         removeUnavailable: removeUnavailable,
         dedupTracks: Deduplicator.dedupTracks,
         dedupArtists: Deduplicator.dedupArtists,
+        dedupAlbums: Deduplicator.dedupAlbums,
         getDateRel: getDateRel,
         rangeDateRel: rangeDateRel,
         rangeDateAbs: rangeDateAbs,
