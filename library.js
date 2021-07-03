@@ -1049,7 +1049,7 @@ const Filter = (function () {
     }
 
     function getTrackKey(track) {
-        return `${track.name} ${track.artists[0].name}`.formatName();
+        return `${track.artists[0].name} ${track.name}`.formatName();
     }
 
     function getArtistId(item) {
@@ -2289,11 +2289,11 @@ const Lastfm = (function () {
 
     function formatLastfmTrackKey(item) {
         let artist = item.artist.name ? item.artist.name : item.artist['#text'];
-        return `${item.name} ${artist}`.formatName();
+        return `${artist} ${item.name}`.formatName();
     }
 
     function formatSpotifyTrackKey(item) {
-        return `${item.name} ${item.artists[0].name}`.formatName();
+        return `${item.artists[0].name} ${item.name}`.formatName();
     }
 
     function formatTrackNameLastfm(item) {
