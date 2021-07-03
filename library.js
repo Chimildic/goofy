@@ -1032,10 +1032,14 @@ const Filter = (function () {
     }
 
     function removeTracks(sourceArray, removedArray, invert = false) {
-        let removedIds = removedArray.map((item) => item.id);
-        let removedNames = removedArray.map((item) => getTrackKey(item));
+        let strIds = '';
+        let strNames = '';
+        removedArray.forEach(item => {
+          strIds += item.id + ' ';
+          strNames += getTrackKey(item) + ' ';
+        });
         let filteredTracks = sourceArray.filter((item) => {
-            return invert ^ (!removedIds.includes(item.id) && !removedNames.includes(getTrackKey(item)));
+            return invert ^ (!strIds.includes(item.id) && !strNames.includes(getTrackKey(item)));
         });
         Combiner.replace(sourceArray, filteredTracks);
     }
@@ -1049,7 +1053,7 @@ const Filter = (function () {
     }
 
     function getTrackKey(track) {
-        return `${track.name} ${track.artists[0].name}`.formatName();
+        return `${track.artists[0].name} ${track.name}`.formatName();
     }
 
     function getArtistId(item) {
@@ -2289,11 +2293,11 @@ const Lastfm = (function () {
 
     function formatLastfmTrackKey(item) {
         let artist = item.artist.name ? item.artist.name : item.artist['#text'];
-        return `${item.name} ${artist}`.formatName();
+        return `${artist} ${item.name}`.formatName();
     }
 
     function formatSpotifyTrackKey(item) {
-        return `${item.name} ${item.artists[0].name}`.formatName();
+        return `${item.artists[0].name} ${item.name}`.formatName();
     }
 
     function formatTrackNameLastfm(item) {
