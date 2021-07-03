@@ -1032,10 +1032,14 @@ const Filter = (function () {
     }
 
     function removeTracks(sourceArray, removedArray, invert = false) {
-        let removedIds = removedArray.map((item) => item.id);
-        let removedNames = removedArray.map((item) => getTrackKey(item));
+        let strIds = '';
+        let strNames = '';
+        removedArray.forEach(item => {
+          strIds += item.id + ' ';
+          strNames += getTrackKey(item) + ' ';
+        });
         let filteredTracks = sourceArray.filter((item) => {
-            return invert ^ (!removedIds.includes(item.id) && !removedNames.includes(getTrackKey(item)));
+            return invert ^ (!strIds.includes(item.id) && !strNames.includes(getTrackKey(item)));
         });
         Combiner.replace(sourceArray, filteredTracks);
     }
