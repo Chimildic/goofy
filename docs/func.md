@@ -593,6 +593,8 @@ Filter.removeArtists(sourceArray, removedArray);
 - (массив) `removedArray` - массив треков, которые требуется удалить.
 - (бул) `invert` - инверсия результата. Если `true`, удалять все треки, кроме тех, что в `removedArray`. По умолчанию `false`.
 
+?> Возможно будет полезным не удалить, а заменить треки на новые с помощью [replaceWithSimilar](/func?id=replacewithsimilar)
+
 Пример 1 - Получить треки плейлистов и исключить любимые треки.
 ```js
 let sourceArray = Source.getTracks(playlistArray);
@@ -638,9 +640,7 @@ Filter.replaceWithSimilar(tracks, RecentTracks.get(2000), Source.getSavedTracks(
 
 ### getCustomTop
 
-Возвращает массив элементов по `type`, отсортированных по количеству прослушиваний за указанный период. 
-
-?> К объектам результата добавится ключ `countPlayed` со значением числа прослушиваний
+Возвращает массив элементов по `type`, отсортированных по количеству прослушиваний за указанный период. К объектам результата добавится ключ `countPlayed` со значением числа прослушиваний
 
 Аргумент
 - (объект) `params` - перечень параметров для отбора 
@@ -679,7 +679,7 @@ let topArtists = Lastfm.getCustomTop({
 
 ### getLibraryStation
 
-Возвращает массив треков из радио last fm `Библиотека`. Содержит только заскроббленные ранее треки. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1).
+Возвращает массив треков из радио last fm `Библиотека`. Содержит только заскроббленные ранее треки. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks).
 
 Аргументы
 - (строка) `user` - логин пользователя, чье радио является источником.
@@ -692,7 +692,7 @@ let tracks = Lastfm.getLibraryStation('login', 2);
 
 ### getLovedTracks
 
-Возвращает массив любимых треков пользователя `user`, ограниченного количеством `limit`. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1). Включает дату добавления, можно использовать фильтр по дате.
+Возвращает массив любимых треков пользователя `user`, ограниченного количеством `limit`. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks). Включает дату добавления, можно использовать фильтр по дате.
 
 Аргументы
 - (строка) `user` - логин пользователя Last.fm, чьи любимые треки нужно искать.
@@ -705,7 +705,7 @@ let tracks = Lastfm.getLovedTracks('login', 200);
 
 ### getMixStation
 
-Возвращает массив треков из радио last fm `Микс`. Содержит ранее заскроббленные треки и рекомендации last fm. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1).
+Возвращает массив треков из радио last fm `Микс`. Содержит ранее заскроббленные треки и рекомендации last fm. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks).
 
 Аргументы
 - (строка) `user` - логин пользователя, чье радио является источником.
@@ -718,7 +718,7 @@ let tracks = Lastfm.getMixStation('login', 2);
 
 ### getNeighboursStation
 
-Возвращает массив треков из радио last fm `Соседи`. Содержит треки, которые слушают пользователи last fm со схожими вам музыкальными вкусами. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1).
+Возвращает массив треков из радио last fm `Соседи`. Содержит треки, которые слушают пользователи last fm со схожими вам музыкальными вкусами. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks).
 
 Аргументы
 - (строка) `user` - логин пользователя, чье радио является источником.
@@ -746,7 +746,7 @@ let tracks = Lastfm.getRecentTracks('login', 200);
 
 ### getRecomStation
 
-Возвращает массив треков из радио last fm `Рекомендации`. Содержит только рекомендации last fm. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1).
+Возвращает массив треков из радио last fm `Рекомендации`. Содержит только рекомендации last fm. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks).
 
 Аргументы
 - (строка) `user` - логин пользователя, чье радио является источником.
@@ -823,7 +823,7 @@ let artists = Lastfm.getTopArtists({
 
 ### getTopTracks
 
-Возвращает массив с топом треков по заданному периоду. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks-1).
+Возвращает массив с топом треков по заданному периоду. Внимание на предупреждение из [getRecentTracks](/func?id=getrecenttracks).
 
 Аргументы
 - (объект) `params` - параметры для выбора топа треков.
@@ -1544,9 +1544,7 @@ let tracksCopy = Selector.sliceCopy(tracks);
 
 ### craftTracks
 
-Возвращает массив треков, полученный от [getRecomTracks](/func?id=getrecomtracks) для каждой пятерки элементов исходных треков. Дубликаты исходных треков игнорируются, в рекомендованных удаляются. Ограничение в пять элементов продиктовано Spotify API для функции рекомендаций. 
-
-?> Можно частично повлиять на формируемые пятерки элементов. До вызова функции применив одну из сортировок `Order`.
+Возвращает массив треков, полученный от [getRecomTracks](/func?id=getrecomtracks) для каждой пятерки элементов исходных треков. Дубликаты исходных треков игнорируются, в рекомендованных удаляются. Ограничение в пять элементов продиктовано Spotify API для функции рекомендаций. Можно частично повлиять на формируемые пятерки элементов. До вызова функции применив одну из сортировок `Order`.
 
 Аргументы
 - (массив) `tracks` - треки для которых получать рекомендации. При `key` равному `seed_artists` допустим массив исполнителей.
@@ -1557,8 +1555,6 @@ let tracksCopy = Selector.sliceCopy(tracks);
 - (объект) `query` - необязательный параметр, доступны все ключи [getRecomTracks](/func?id=getrecomtracks), кроме указанного в `key`.
 
 ?> В `query` можно указать два из: `seed_tracks`, `seed_artists`, `seed_genres`. Третий выбирается исходя из `key`. Таким образом, можно задать статичные трек/исполнителя/жанр (до 4 значений на все). Оставшиеся свободные места будут подставляться исходя из `key`.
-
-!> Указание конкретного жанра в `seed_genres` необязательно вернет треки данного жанра. Это отправная точка для рекомендаций.
 
 Пример 1 - Получить рекомендации по всем любимым трекам по их исполнителям
 ```js
@@ -1915,9 +1911,7 @@ let tracks = Source.getPlaylistTracks('', 'id', '', 10, false);
 
 ### getRecomTracks
 
-Возвращает массив рекомендованных треков по заданным параметрам. До 100 треков.
-
-?> Примечание Spotify: для новых или малоизвестных исполнителей, треков - может быть недостаточно накопленных данных для генерации рекомендаций. 
+Возвращает массив рекомендованных треков по заданным параметрам (до 100 треков). Для новых или малоизвестных исполнителей/треков возможно будет недостаточно накопленных данных для генерации рекомендаций. 
 
 Аргументы
 - (объект) `queryObj` - параметры для отбора рекомендаций.
@@ -1934,25 +1928,25 @@ let tracks = Source.getPlaylistTracks('', 'id', '', 10, false);
 
 ?> Кроме того, в `features` доступен ключ `populatiry`. Например, `target_popularity`. В документации к API Spotify это скрыто.
 
-!> Указание конкретного жанра в `seed_genres` необязательно вернет треки данного жанра.
+!> При указании конкретного жанра в `seed_genres` необязательно придут треки данного жанра. Такой сид является отправной точкой для рекомендаций.
 
 Пример объекта с параметрами
 ```js
 let queryObj = {
-      seed_artists: '',
-      seed_genres: '',
-      seed_tracks: '',
-      max_*: 0,
-      min_*: 0,
-      target_*: 0,
+    seed_artists: '',
+    seed_genres: '',
+    seed_tracks: '',
+    max_*: 0,
+    min_*: 0,
+    target_*: 0,
 };
 ```
 
 Пример 1 - Получить рекомендации по жанру инди и альтернативы с позитивным настроением:
 ```js
 let tracks = Source.getRecomTracks({
-      seed_genres: 'indie,alternative',
-      min_valence: 0.65,
+    seed_genres: 'indie,alternative',
+    min_valence: 0.65,
 });
 ```
 
@@ -1964,8 +1958,23 @@ Selector.keepRandom(savedTracks, 3);
 let artistIds = savedTracks.map(track => track.artists[0].id);
 
 let tracks = Source.getRecomTracks({
-      seed_artists: artistIds.join(','),
-      seed_genres: 'rock,electronic'
+    seed_artists: artistIds.join(','),
+    seed_genres: 'rock,electronic'
+});
+```
+
+Пример 3 - Подстановка жанров исполнителей. Во всех запросах `craftTracks` будут один раз случайно отобранные жанры. При следующем запуске уже другие.
+```js
+let artists = Source.getArtists({ followed_include: false });
+let genres = Array.from(new Set(artists.reduce((genres, artist) => {
+  return Combiner.push(genres, artist.genres);
+}, [])));
+let recomTracks = Source.craftTracks(artists, {
+  key: 'seed_artists',
+  query: {
+    seed_genres: Selector.sliceRandom(genres, 3).join(','),
+    min_popularity: 20,
+  }
 });
 ```
 
