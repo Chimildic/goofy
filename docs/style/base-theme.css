@@ -1742,10 +1742,7 @@ body .sidebar {
     --mono-tint1: hsl(var(--mono-hue), var(--mono-saturation), 70%);
     --mono-tint2: hsl(var(--mono-hue), var(--mono-saturation), 89%);
     --mono-tint3: hsl(var(--mono-hue), var(--mono-saturation), 97%);
-    --theme-hue: 160;
-    --theme-saturation: 90%;
-    --theme-lightness: 35%;
-    --theme-color: hsl(var(--theme-hue), var(--theme-saturation), var(--theme-lightness));
+    --theme-color: hsl(var(--theme-hue), var(--theme-saturation), var(--theme-lightness), var(--theme-alpha));
     --modular-scale: 1.333;
     --modular-scale--2: calc(var(--modular-scale--1) / var(--modular-scale));
     --modular-scale--1: calc(var(--modular-scale-1) / var(--modular-scale));

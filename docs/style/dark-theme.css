@@ -11,8 +11,12 @@
     --code-theme-variable: #ffcb6b;
 }
 :root {
+    --color-accent: rgba(12, 209, 144, 0.8);
     --theme-lightness: 45%;
-    --mono-hue: 201;
+    --theme-hue: 160;
+    --theme-saturation: 90%;
+    --theme-alpha: 0.95;
+    --mono-hue: 200;
     --mono-saturation: 18%;
     --mono-shade3: hsl(var(--mono-hue), var(--mono-saturation), 13%);
     --mono-shade2: hsl(var(--mono-hue), var(--mono-saturation), 15%);

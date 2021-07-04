@@ -1,3 +1,7 @@
 :root{
-    --theme-lightness: 35%;
+    --color-accent: rgba(10, 194, 133, 1);
+    --theme-hue: 160;
+    --theme-saturation: 90%;
+    --theme-lightness: 40%;
+    --theme-alpha: 1;
 }
