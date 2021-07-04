@@ -29,7 +29,7 @@
 
 5. Перейдите в файл `config.gs`. Вставьте `CLIENT_ID` и `CLIENT_SECRET` вместо слов `вашеЗначение`. Значения брать в созданном приложении Spotify на шаге 2.
 
-   Сохраните изменение `Ctrl + S` или иконка дискеты на панели действий
+   Сохраните изменение <kbd>Ctrl</kbd><kbd>S</kbd> или иконка дискеты на панели действий
 
    ![Client ID и Client Secret](/img/install-step-client-id2.png)
 
@@ -101,7 +101,7 @@
 
 ## Обновить библиотеку
 
-Замените все содержимое файла `library.gs` на новое (Ctrl + A, Ctrl + V), которое берется [здесь](https://github.com/Chimildic/goofy/blob/main/library.js) или [здесь](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing) (Ctrl + A, Ctrl + C) и сохраните файл.
+Замените все содержимое файла `library.gs` на новое <kbd>Ctrl</kbd><kbd>A</kbd> и <kbd>Ctrl</kbd><kbd>V</kbd>, которое берется [здесь](https://github.com/Chimildic/goofy/blob/main/library.js) или [здесь](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing) <kbd>Ctrl</kbd><kbd>A</kbd> и <kbd>Ctrl</kbd><kbd>C</kbd> и сохраните файл.
 
 ## Обновить параметры
 
