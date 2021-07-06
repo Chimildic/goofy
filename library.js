@@ -1,12 +1,12 @@
 // Документация: https://chimildic.github.io/goofy/
-const VERSION = '1.4.8';
+const VERSION = '1.4.9';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
 const DEFAULT_DATE = new Date('2000-01-01');
 
 function doGet() {
-    return Auth.hasAccess() ? HtmlService.createHtmlOutput('Успешно') : Auth.displayAuthPage();
+    return Auth.hasAccess() ? displayLaunchPage_() : Auth.displayAuthPage();
 }
 
 function displayAuthResult_(request) {
@@ -15,6 +15,16 @@ function displayAuthResult_(request) {
 
 function updateRecentTracks_() {
     RecentTracks.update();
+}
+
+function displayLaunchPage_() {
+    try {
+        return HtmlService.createHtmlOutputFromFile('launch.html')
+            .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+            .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    } catch {
+        return HtmlService.createHtmlOutput('Авторизация прошла успешно');
+    }
 }
 
 const CustomUrlFetchApp = (function () {
