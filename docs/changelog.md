@@ -8,6 +8,7 @@
 
 ## Версия 1.4.9
 - `doGet` адаптирован под открытие `launch.html`, больше не нужно заменять функцию для [управления с телефона](https://github.com/Chimildic/goofy/discussions/9)
+- Модифицирована функция `replaceWithSimilar`. Не должна создать дубликатов, запрашивает рекомендации с большим количеством данных от исходного трека.
 
 ## Версия 1.4.8
 - В [rangeTracks](/func?id=rangetracks) появились [вычисляемые значения](https://github.com/Chimildic/goofy/discussions/87): `anger`, `happiness` и `sadness`. Их нет со стороны Spotify, поэтому нельзя использовать при запросе рекомендаций. 

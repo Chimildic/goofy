@@ -1078,21 +1078,16 @@ const Filter = (function () {
                 console.log(`У трека ${t.artists[0].name} ${t.name} нет features`);
                 return;
             }
-            urls.push(
-                Source.createUrlForRecomTracks({
-                    seed_tracks: t.id,
-                    seed_artists: t.artists[0].id,
-                    target_acousticness: features[t.id].acousticness,
-                    target_danceability: features[t.id].danceability,
-                    target_energy: features[t.id].energy,
-                    target_instrumentalness: features[t.id].instrumentalness,
-                    target_liveness: features[t.id].liveness,
-                    target_loudness: features[t.id].loudness,
-                    target_speechiness: features[t.id].speechiness,
-                    target_valence: features[t.id].valence,
-                    target_tempo: features[t.id].tempo,
-                })
-            );
+            let params = {
+                seed_tracks: t.id,
+                seed_artists: Selector.sliceFirst(t.artists.map(a => a.id), 4).join(','),
+            };
+            Object.entries(features).forEach(item => {
+                if (!isNaN(item[1])) {
+                    params['target_' + item[0]] = item[1];
+                }
+            });
+            urls.push(Source.createUrlForRecomTracks(params));
         });
 
         let similarTracks = {};
@@ -1102,16 +1097,18 @@ const Filter = (function () {
         });
 
         let keys = Object.keys(similarTracks);
-        let resultTracks = originTracks.map((t) => {
-            if (keys.includes(t.id)) {
-                if (similarTracks[t.id].length > 0) {
-                    Filter.removeTracks(similarTracks[t.id], replacementTracks);
-                    t = Selector.sliceRandom(similarTracks[t.id], 1)[0];
+        let removedTracks = Combiner.push([], replacementTracks, originTracks);
+        let resultTracks = originTracks.map((track) => {
+            if (keys.includes(track.id)) {
+                if (similarTracks[track.id].length > 0) {
+                    Filter.removeTracks(similarTracks[track.id], removedTracks);
+                    track = Selector.sliceRandom(similarTracks[track.id], 1)[0];
+                    removedTracks.push(track);
                 } else {
-                    t = null;
+                    track = null;
                 }
             }
-            return t;
+            return track;
         });
         Combiner.replace(originTracks, resultTracks.filter(t => t != null));
     }
