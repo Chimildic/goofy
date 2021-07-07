@@ -668,7 +668,7 @@ const RecentTracks = (function () {
     }
 
     function getSpotifyRecentTracks() {
-        let url = `${API_BASE_URL}/me/player/recently-played?limit=50`;
+        let url = `${API_BASE_URL}/me/player/recently-played?limit=50&locale=${KeyValue.LOCALE || "RU"}`;
         return Source.extractTracks(SpotifyRequest.get(url).items);
     }
 
