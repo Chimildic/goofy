@@ -5,120 +5,7 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link href="https://bootswatch.com/4/darkly/bootstrap.min.css" rel="stylesheet" />
-        <style>
-            input {
-                outline: none;
-            }
-            body {
-                background-color: #121212;
-            }
-            .list-group-item {
-                background-color: #181818;
-                border: 0px;
-            }
-            .btn-success {
-                background-color: #1db954;
-                border-color: #1db954;
-            }
-            .btn-success:hover {
-                color: #fff;
-                background-color: #1db954;
-                border-color: #1db954;
-            }
-            .btn-success:focus,
-            .btn-success.focus {
-                color: #fff;
-                background-color: #1db954;
-                border-color: #1db954;
-            }
-            .title-block {
-                color: white;
-                font-size: x-large;
-                font-weight: 500;
-            }
-            .form-check {
-                display: block;
-                min-height: 1.5rem;
-                padding-left: 1.5em;
-                margin-bottom: 0.125rem;
-            }
-            .form-check .form-check-input {
-                float: left;
-                margin-left: -1.5em;
-            }
-            .form-check-input {
-                width: 1em;
-                height: 1em;
-                margin-top: 0.25em;
-                vertical-align: top;
-                background-color: #fff;
-                background-repeat: no-repeat;
-                background-position: center;
-                background-size: contain;
-                border: 1px solid rgba(0, 0, 0, 0.25);
-                -webkit-appearance: none;
-                -moz-appearance: none;
-                appearance: none;
-                -webkit-print-color-adjust: exact;
-                color-adjust: exact;
-            }
-            .form-check-input[type='checkbox'] {
-                border-radius: 0.25em;
-            }
-            .form-check-input:active {
-                filter: brightness(90%);
-            }
-            .form-check-input:checked {
-                background-color: #1db954;
-                border-color: #1db954;
-            }
-            .form-check-input:checked[type='checkbox'] {
-                background-image: url("data:image/svg+xml,%3csvg xmlns='https://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
-            }
-            .form-check-input[type='checkbox']:indeterminate {
-                background-color: #1db954;
-                border-color: #41b723fe;
-                background-image: url("data:image/svg+xml,%3csvg xmlns='https://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10h8'/%3e%3c/svg%3e");
-            }
-            .form-switch {
-                padding-left: 2.5em;
-            }
-            .form-switch .form-check-input {
-                width: 2em;
-                margin-left: -2.5em;
-                background-image: url("data:image/svg+xml,%3csvg xmlns='https://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e");
-                background-position: left center;
-                border-radius: 2em;
-                transition: background-position 0.15s ease-in-out;
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .form-switch .form-check-input {
-                    transition: none;
-                }
-            }
-            .form-switch .form-check-input:checked {
-                background-position: right center;
-                background-image: url("data:image/svg+xml,%3csvg xmlns='https://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
-            }
-            .custom-range::-webkit-slider-thumb {
-                background: #1db954;
-            }
-            .custom-range::-moz-range-thumb {
-                background: #1db954;
-            }
-            .custom-range::-ms-thumb {
-                background: #1db954;
-            }
-            .custom-range::-webkit-slider-thumb:active {
-                background: #65af7f;
-            }
-            .custom-range::-moz-range-thumb {
-                background: #65af7f;
-            }
-            .custom-range::-ms-thumb {
-                background: #65af7f;
-            }
-        </style>
+        <style>input{outline:none}body{background-color:#121212}.list-group-item{background-color:#181818;border:0}.btn-success{background-color:#1db954;border-color:#1db954}.btn-success:hover{color:#fff;background-color:#1db954;border-color:#1db954}.btn-success:focus,.btn-success.focus{color:#fff;background-color:#1db954;border-color:#1db954}.title-block{color:#fff;font-size:x-large;font-weight:500}.form-check{display:block;min-height:1.5rem;padding-left:1.5em;margin-bottom:.125rem}.form-check .form-check-input{float:left;margin-left:-1.5em}.form-check-input{width:1em;height:1em;margin-top:.25em;vertical-align:top;background-color:#fff;background-repeat:no-repeat;background-position:center;background-size:contain;border:1px solid rgba(0,0,0,0.25);-webkit-appearance:none;-moz-appearance:none;appearance:none;-webkit-print-color-adjust:exact;color-adjust:exact}.form-check-input[type='checkbox']{border-radius:.25em}.form-check-input:active{filter:brightness(90%)}.form-check-input:checked{background-color:#1db954;border-color:#1db954}.form-check-input:checked[type='checkbox']{background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e")}.form-check-input[type='checkbox']:indeterminate{background-color:#1db954;border-color:#41b723fe;background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10h8'/%3e%3c/svg%3e")}.form-switch{padding-left:2.5em}.form-switch .form-check-input{width:2em;margin-left:-2.5em;background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280,0,0,0.25%29'/%3e%3c/svg%3e");background-position:left center;border-radius:2em;transition:background-position .15s ease-in-out}@media (prefers-reduced-motion: reduce){.form-switch .form-check-input{transition:none}}.form-switch .form-check-input:checked{background-position:right center;background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e")}.custom-range::-webkit-slider-thumb{background:#1db954}.custom-range::-moz-range-thumb{background:#1db954}.custom-range::-ms-thumb{background:#1db954}.custom-range::-webkit-slider-thumb:active{background:#65af7f}.custom-range::-moz-range-thumb{background:#65af7f}.custom-range::-ms-thumb{background:#65af7f}</style>
     </head>
     <body>
         <div class="container">
@@ -129,56 +16,60 @@
                 <div class="col-lg-9 d-flex flex-column-reverse text-start" id="logger"></div>
             </div>
         </div>
-
-        <ul class="list-group" id="list_function"></ul>
-
         <script>
-            const func = [
+            const ACTIONS = [
                 {
-                    name: 'createSavedAndForgot',
-                    text: 'Обновить плейлист забытых любимых треков',
+                    action: 'createSavedAndForgot',
+                    title: 'Обновить плейлист забытых любимых треков',
                 },
                 {
-                    name: 'removeRecentTracks',
-                    text: 'Удалить недавние треки',
-                    args: [{ key: 'playlistUrl', name: 'Ссылка на плейлист' }],
+                    action: 'removeRecentTracks',
+                    title: 'Удалить недавние треки',
+                    forms: [
+                        {
+                            key: 'playlistUrl',
+                            placeholder: 'Ссылка на плейлист',
+                        },
+                    ],
                 },
                 {
-                    name: 'updateRadio',
-                    text: 'Радио',
-                    args: [
+                    action: 'updateRadio',
+                    title: 'Радио',
+                    forms: [
                         {
                             key: 'station',
                             select: [
-                                { value: 'evropa-plyus-light', name: 'Европа Плюс Лайт' },
-                                { value: 'energy', name: 'Радио ENERGY' },
+                                { value: 'evropa-plyus-light', label: 'Европа Плюс Лайт' },
+                                { value: 'energy', label: 'Радио ENERGY' },
                             ],
                         },
                         {
                             key: 'customStation',
-                            name: 'Кастомная станция',
+                            placeholder: 'Кастомная станция',
                         },
                         {
                             checkbox: [
-                                { value: 'isRemoveHistory', name: 'Удалить историю прослушиваний', default: true },
-                                { value: 'isDedup', name: 'Удалить дубликаты' },
+                                { key: 'isRemoveHistory', label: 'Удалить историю прослушиваний', default: true },
+                                { key: 'isDedup', label: 'Удалить дубликаты' },
                             ],
                         },
                         {
                             range: [
-                                { key: 'tempo', name: 'Темп', min: 0.0, max: 1.0, step: 0.05, default: 0.7 },
-                                { key: 'energy', name: 'Энергичность', min: 0.0, max: 1.0, step: 0.05, default: 0.5 },
+                                { key: 'tempo', label: 'Темп', min: 0.0, max: 1.0, step: 0.05, default: 0.7 },
+                                { key: 'energy', label: 'Энергичность', min: 0.0, max: 1.0, step: 0.05, default: 0.5 },
                             ],
                         },
                     ],
                 },
             ];
-
+        </script>
+        <script>
             fillListFunction();
 
             function fillListFunction() {
                 let list = document.getElementById('list_function');
-                func.forEach((obj) => {
+                ACTIONS.forEach((obj) => {
+                    obj.parentId = generateId();
                     let item = createItemListFunction(obj);
                     list.insertAdjacentElement('beforeEnd', item);
                 });
@@ -186,13 +77,13 @@
 
             function createItemListFunction(obj) {
                 let link = document.createElement('li');
-                if (obj.hasOwnProperty('args')) {
+                if (obj.hasOwnProperty('forms')) {
                     let subitem = createSubitem(obj);
                     link.insertAdjacentElement('afterbegin', subitem);
                     link.setAttribute('class', 'list-group-item');
                 } else {
-                    link.innerText = obj.text || obj.name;
-                    link.addEventListener('click', () => call(obj.name));
+                    link.innerText = obj.title || obj.action;
+                    link.addEventListener('click', () => onClick(obj));
                     link.setAttribute('class', 'list-group-item list-group-item-action');
                 }
                 return link;
@@ -200,87 +91,77 @@
 
             function createSubitem(obj) {
                 let html = createTitle(obj);
-                obj.args.forEach((form, index) => {
+                obj.forms.forEach((form, index) => {
                     if (form.hasOwnProperty('select')) {
-                        html += createSelectForm(obj, form, index);
+                        html += createSelectForm(obj, form);
                     } else if (form.hasOwnProperty('checkbox')) {
-                        html += createCheckboxForm(obj, form, index);
+                        html += createCheckboxForm(obj, form);
                     } else if (form.hasOwnProperty('range')) {
-                        html += createRangeForm(obj, form, index);
+                        html += createRangeForm(obj, form);
                     } else {
-                        html += createTextForm(form.name, obj.name, index);
+                        html += createTextForm(obj, form);
                     }
                 });
                 let button = createStartButton(obj);
                 return createContainer(html, button);
             }
 
-            function createTextForm(placeholder, dataName, index) {
-                let html = `<input class="form-control" placeholder="${placeholder}" data-${dataName}="${index}"></input>`;
+            function createTitle(obj) {
+                return `<p class="title-block">${obj.title || obj.action}</p>`;
+            }
+
+            function createSelectForm(obj, formData) {
+                let options = formData.select.reduce(
+                    (options, item) => options + `<option value="${item.value}">${item.label}</option>`,
+                    ''
+                );
+                let select = `<select class="form-select form-control" data-parentId="${obj.parentId}" data-key="${formData.key}" data-type="select">${options}</select>`;
+                return createInputGroup(select);
+            }
+
+            function createCheckboxForm(obj, formData) {
+                let root = document.createElement('div');
+                formData.checkbox.forEach((item) => {
+                    let id = generateId();
+                    let input = `<input class="form-check-input" id="${id}" value="${item.key}" type="checkbox" data-parentId="${
+                        obj.parentId
+                    }" data-type="check" data-key="${item.key}" ${item.default ? 'checked' : ''}>`;
+                    let label = `<label class="form-check-label" for="${id}">${item.label}</label>`;
+                    let checkbox = `<div class="form-check form-switch">${input + label}</div>`;
+                    root.insertAdjacentHTML('beforeend', checkbox);
+                });
+                return createInputGroup(root.outerHTML);
+            }
+
+            function createRangeForm(obj, formData) {
+                let root = document.createElement('div');
+                root.setAttribute('style', 'width: 50%');
+                formData.range.forEach((item) => {
+                    let id = generateId();
+                    let input = `<input class="custom-range" id="${id}" value="${item.default}" min="${item.min}" max="${item.max}" step="${item.step}" type="range" onchange="updateRangeValue(this)" data-parentId="${obj.parentId}" data-type="range" data-key="${item.key}">`;
+                    let label = `<label class="form-label" for="${id}">${item.label}:</label> `;
+                    let span = `<span id="${id}-value">${item.default}</span>`;
+                    let bar = `<div>${label + span + input}</div>`;
+                    root.insertAdjacentHTML('beforeend', bar);
+                });
+                return createInputGroup(root.outerHTML);
+            }
+
+            function createTextForm(obj, formData) {
+                let html = `<input class="form-control" placeholder="${formData.placeholder}" data-parentId="${obj.parentId}" data-key="${formData.key}" data-type="text"></input>`;
                 return createInputGroup(html);
             }
 
-            function createRangeForm(obj, formData, index) {
-                let root = document.createElement('div');
-                root.setAttribute('style', 'width: 50%');
-                for (let i = 0; i < formData.range.length; i++) {
-                    let item = formData.range[i];
-                    let id = createElementId();
-                    let input = `<input data-key="${item.key}" data-${obj.name}="${index + i}"" value="${item.default}" id="${id}" min="${item.min}" max="${
-                        item.max
-                    }" step="${item.step}" class="custom-range" type="range" onchange="updateRangeValue(this)">`;
-                    let label = `<label class="form-label" for="${id}">${item.name}:</label> `;
-                    let span = `<span id="${id}-value">${item.default}</span>`;
-                    let rangebar = document.createElement('div');
-                    rangebar.insertAdjacentHTML('beforeend', label + span + input);
-                    root.insertAdjacentElement('beforeend', rangebar);
-                }
-                return createInputGroup(root.outerHTML);
-            }
-
-            function createCheckboxForm(obj, formData, index) {
-                let root = document.createElement('div');
-                for (let i = 0; i < formData.checkbox.length; i++) {
-                    let item = formData.checkbox[i];
-                    let id = createElementId();
-                    let input = `<input data-${obj.name}=${index + i} value="${item.value}" id="${id}" ${
-                        item.default ? 'checked' : ''
-                    } class="form-check-input" type="checkbox">`;
-                    let label = `<label class="form-check-label" for="${id}">${item.name}</label>`;
-                    let checkbox = document.createElement('div');
-                    checkbox.setAttribute('class', 'form-check form-switch');
-                    checkbox.insertAdjacentHTML('beforeend', input + label);
-                    root.insertAdjacentElement('beforeend', checkbox);
-                }
-                return createInputGroup(root.outerHTML);
-            }
-
-            function createSelectForm(obj, formData, index) {
-                let select = document.createElement('select');
-                select.setAttribute('class', 'form-select form-control');
-                select.setAttribute(`data-${obj.name}`, index);
-                for (let i = 0; i < formData.select.length; i++) {
-                    let item = formData.select[i];
-                    let option = `<option value="${item.value}">${item.name}</option>`;
-                    select.insertAdjacentHTML('beforeend', option);
-                }
-                return createInputGroup(select.outerHTML);
-            }
-
-            function createTitle(obj) {
-                return `<p class="title-block">${obj.text || obj.name}</p>`;
+            function createInputGroup(html) {
+                return `<div class="input-group mb-3">${html}</div>`;
             }
 
             function createStartButton(obj) {
                 let button = document.createElement('button');
                 button.setAttribute('class', 'btn btn-success');
                 button.innerText = 'Запустить';
-                button.addEventListener('click', () => call(obj.name, true));
+                button.addEventListener('click', () => onClick(obj, true));
                 return button;
-            }
-
-            function createInputGroup(html) {
-                return `<div class="input-group mb-3">${html}</div>`;
             }
 
             function createContainer(html, button) {
@@ -291,50 +172,59 @@
                 return container;
             }
 
-            function call(name, hasArgs) {
-                let values = collectArgs(name, hasArgs);
-                google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onError).withUserObject(name)[name](values);
-                console.log(getTime(), 'Запущено', name);
+            function onClick(obj, hasArgs) {
+                let values = hasArgs ? collectArgs(obj.parentId, hasArgs) : {};
+                call(obj.action, values);
+                console.log(getTime(), 'Запущено', obj.action);
             }
 
-            function collectArgs(name, hasArgs) {
+            function collectArgs(parentId) {
                 let values = {};
-                if (!hasArgs) return {};
-                let indexFormData = func.findIndex((obj) => obj.name == name);
-                let formData = func[indexFormData];
-                document.querySelectorAll(`[data-${name}]`).forEach((el) => {
-                    let index = el.getAttribute(`data-${name}`);
-                    let data = formData.args[index];
-                    if (el.classList.contains('form-check-input')) {
-                        values.check = values.check || {};
-                        values.check[el.value] = el.checked;
-                    } else if (el.classList.contains('form-select')) {
-                        values.select = values.select || {};
-                        values.select[data.key] = el.value;
-                    } else if(el.classList.contains('custom-range')){
-                        values.range = values.range || {};
-                        values.range[el.getAttribute('data-key')] = parseFloat(el.value);
-                    } else {
-                        values.text = values.text || {};
-                        values.text[data.key] = el.value;
+                document.querySelectorAll(`[data-parentId="${parentId}"]`).forEach((el) => {
+                    let key = el.getAttribute('data-key');
+                    let type = el.getAttribute('data-type');
+                    values[type] = values[type] || {};
+                    if (type == 'check') {
+                        values.check[key] = el.checked;
+                    } else if (type == 'select') {
+                        values.select[key] = el.value;
+                    } else if (type == 'range') {
+                        values.range[key] = parseFloat(el.value);
+                    } else if (type == 'text') {
+                        values.text[key] = el.value;
                     }
                 });
                 return values;
             }
 
-            function onSuccess(response, name) {
-                console.log(getTime(), 'Завершено', name);
+            function call(action, values, userObj) {
+                try {
+                    google.script.run
+                        .withUserObject(userObj || action)
+                        .withSuccessHandler(onSuccess)
+                        .withFailureHandler(onFailure)
+                        [action](values);
+                } catch (error) {
+                    console.log('Примечание: проверьте наличие обрабатывающей функции', action, 'Скрытые функции вызваться не могут.');
+                    throw error.message;
+                }
             }
 
-            function onError(response, name) {
-                console.log(getTime(), 'Ошибка в', name);
+            function onSuccess(response, action) {
+                console.log(getTime(), 'Завершено', action);
+                response && console.log('Результат: ', response);
+            }
+
+            function onFailure(error, action) {
+                console.log(getTime(), 'Ошибка в', action);
+                response && console.log('Подробности: ', error.message);
             }
 
             function getTime() {
                 return new Date().toLocaleTimeString() + ' |';
             }
 
-            function createElementId() {
+            function generateId() {
                 return Math.random().toString(36).substr(2, 9);
             }
 
@@ -342,23 +232,7 @@
                 document.getElementById(`${inputElement.id}-value`).innerText = inputElement.value;
             }
         </script>
-        <script>
-            !(function (o) {
-                (console.old = console.log),
-                    (console.log = function () {
-                        var n,
-                            e,
-                            l = '<div class="p-2">';
-                        for (e = 0; e < arguments.length; e++)
-                            (l += '<span class="log-' + typeof (n = arguments[e]) + '">'),
-                                'object' == typeof n && 'object' == typeof JSON && 'function' == typeof JSON.stringify
-                                    ? (l += JSON.stringify(n))
-                                    : (l += n),
-                                (l += '</span> ');
-                        (o.innerHTML += l + '</div>'), console.old.apply(void 0, arguments);
-                    });
-            })(document.getElementById('logger'));
-        </script>
+        <script>!(function (o) { (console.old = console.log), (console.log = function () { var n, e, l = '<div class="p-2">'; for (e = 0; e < arguments.length; e++) (l += '<span class="log-' + typeof (n = arguments[e]) + '">'), 'object' == typeof n && 'object' == typeof JSON && 'function' == typeof JSON.stringify ? (l += JSON.stringify(n)) : (l += n), (l += '</span> '); (o.innerHTML += l + '</div>'), console.old.apply(void 0, arguments); }); })(document.getElementById('logger'));</script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>
