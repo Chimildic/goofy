@@ -1082,7 +1082,7 @@ const Filter = (function () {
                 seed_tracks: t.id,
                 seed_artists: Selector.sliceFirst(t.artists.map(a => a.id), 4).join(','),
             };
-            Object.entries(features).forEach(item => {
+            Object.entries(features[t.id]).forEach(item => {
                 if (!isNaN(item[1])) {
                     params['target_' + item[0]] = item[1];
                 }
