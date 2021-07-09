@@ -1220,7 +1220,7 @@ const Filter = (function () {
 
         function separateArtistsDuplicated(items) {
             _items = items;
-            _duplicates = findArtistsDuplicated();
+            findArtistsDuplicated();
             let indexArray = _duplicates.map((item) => item.index);
             let result = { original: [], duplicate: [] };
             for (let i = 0; i < _items.length; i++) {
