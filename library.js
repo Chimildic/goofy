@@ -1252,7 +1252,7 @@ const Filter = (function () {
             }, []);
 
             function isDuplicateByTrackId(id) {
-                return id in seenTrackKeys;
+                return id in seenIds;
             }
 
             function isDuplicateByName(track) {
