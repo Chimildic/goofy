@@ -977,6 +977,7 @@ const RangeTracks = (function () {
     }
 
     function isSomeIncludes(targetArray, valueArray) {
+        if (!targetArray) return false;
         return valueArray.some((str) => {
             return targetArray.some((item) => item.includes(str));
         });
