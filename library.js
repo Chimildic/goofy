@@ -2840,6 +2840,8 @@ const Auth = (function () {
         'user-library-modify',
         'user-read-recently-played',
         'user-read-currently-playing',
+        'user-read-playback-position',
+        'user-read-playback-state',
         'user-top-read',
         'user-follow-read',
         'user-follow-modify',
