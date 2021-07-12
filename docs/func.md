@@ -1300,16 +1300,13 @@ let tracks = RecentTracks.get();
 let tracks = RecentTracks.get(100);
 ```
 
-### getPlayingTrack
+### getPlayback
 
-Возвращает активный трек (играющий или на паузе). Если данных нет, пустой объект.
+Возвращает объект, содержащий играющий трек и сопутствующий контекст плеера. Пример объекта [здесь](https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-information-about-the-users-current-playback). Если данных нет, объект пустой.
 
 Аргументов нет.
 
-Пример
-```js
-let track = RecentTracks.getPlayingTrack();
-```
+[Пример использования](https://github.com/Chimildic/goofy/discussions/102)
 
 ## Search
 

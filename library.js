@@ -582,7 +582,7 @@ const RecentTracks = (function () {
     }
 
     return {
-        getPlayingTrack: getPlayingTrack,
+        getPlayback: getPlayback,
         get: getRecentTracks,
         update: update,
         compress: compress,
@@ -609,9 +609,9 @@ const RecentTracks = (function () {
         }
     }
 
-    function getPlayingTrack() {
-        let url = `${API_BASE_URL}/me/player/currently-playing`;
-        return SpotifyRequest.get(url).item || {};
+    function getPlayback() {
+        let url = `${API_BASE_URL}/me/player`;
+        return SpotifyRequest.get(url) || {};
     }
 
     function getRecentTracks(limit) {
