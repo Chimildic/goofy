@@ -3157,3 +3157,7 @@ Date.prototype.setBound = function (value) {
 Date.prototype.getTimestampUNIX = function (bound) {
     return Math.trunc(this.setBound(bound).getTime() / 1000);
 };
+
+Object.prototype.isEmpty = function () {
+    return Object.keys(this).length == 0;
+}
