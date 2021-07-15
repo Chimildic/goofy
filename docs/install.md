@@ -87,11 +87,12 @@
 
 ## Настройка last.fm
 
-Если не используется, выполнять не нужно.
+Если не используется, выполнять не нужно. 
 
-1. Создайте точку входа [здесь](https://www.last.fm/api/account/create). Заполните название и описание произвольно. Остальное пропустить, оставить пустым.
-2. Полученный `API key` присвоить параметру `LASTFM_API_KEY`. 
-3. Запустить в редакторе выполнение функции `setProperties`.
+1. Подключите Spotify к Last.fm [здесь](https://www.last.fm/settings/applications)
+2. Создайте точку входа [здесь](https://www.last.fm/api/account/create). Заполните название и описание произвольно. Остальное пропустить, оставить пустым.
+3. Полученный `API key` присвоить параметру `LASTFM_API_KEY`. Также укажите свой логин в `LASTFM_LOGIN`. И задайте `true` для `ON_LASTFM_RECENT_TRACKS`.
+4. Запустить в редакторе выполнение функции `setProperties`.
 
 ![Lastfm account api](/img/lastfm_account_api3.png)
 
