@@ -412,6 +412,39 @@ function templateArtistOfDay() {
 }
 ```
 
+# Исполнители одного хита
+
+Отбор исполнителей одного трека за период в истории Last.fm, который прослушали множество раз. Для настройки укажите период `from` и `to`, а также минимальное значение прослушиваний в условии `countPlayed`. Не подразумевает триггер на короткие дистанции.
+
+К сожалению, Last.fm содержит дубликаты исполнителей. Они появляются из-за скробблинга пиратских треков. К примеру ВКонтакте, где пользователи могли задать свое название [illenium и kerli](https://www.last.fm/search?q=illenium+kerli). Если вы скробблили треки из подобных источников, то выходной плейлист будет содержать треки исполнителей, у которых больше одного хита, но в следствии дубликата это упущено. Чем дольше слушали треки с корректными названиями, тем интереснее получится плейлист.
+
+```js
+function templateAritstsWithOneHit() {
+  let lastfmTracks = Lastfm.getCustomTop({
+    user: KeyValue.LASTFM_LOGIN,
+    from: '2013-01-01',
+    to: '2021-12-12',
+    isRawItems: true, // важно
+  });
+
+  let artists = lastfmTracks.reduce((artists, track) => {
+    let key = track.artist['#text'];
+    artists[key] = artists[key] || [];
+    artists[key].push(track);
+    return artists;
+  }, {});
+
+  lastfmTracks = Object.values(artists).filter(items => items.length == 1 && items[0].countPlayed >= 20).flat(1);
+
+  Playlist.saveWithReplace({
+    // id: 'ваше id',
+    name: 'Исполнители одного хита',
+    tracks: Lastfm.convertToSpotify(lastfmTracks, 'track'),
+    randomCover: 'update',
+  });
+}
+```
+
 # Назад в этот день
 
 Собирает альбомы отслеживаемых исполнителей, которые вышли в этот день (число, месяц), но в другие года. Удаляет миксы и слишком короткие треки (интро). 

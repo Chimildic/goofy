@@ -636,6 +636,16 @@ Filter.replaceWithSimilar(tracks, RecentTracks.get(2000), Source.getSavedTracks(
 
 Модуль по работе с сервисом Last fm
 
+### convertToSpotify
+
+Возвращает массив по `type`, элементы которого найдены поиском Spotify.
+
+Аргументы
+- (массив) `items` - элементы в lastfm-формате. Например, полученные из [getCustomTop](/func?id=getcustomtop) при `isRawItems = true`.
+- (строка) `type` - тип поиска: `track`, `artist` или `album`. По умолчанию `track`.
+
+[Пример в шаблоне](/template?id=Исполнители-одного-хита)
+
 ### getCustomTop
 
 Возвращает массив элементов по `type`, отсортированных по количеству прослушиваний за указанный период. К объектам результата добавится ключ `countPlayed` со значением числа прослушиваний
@@ -652,6 +662,7 @@ Filter.replaceWithSimilar(tracks, RecentTracks.get(2000), Source.getSavedTracks(
 - (число) `offset` - пропуск первых N элементов. По умолчанию 0.
 - (число) `minPlayed` - минимальное количество прослушиваний, включительно. По умолчанию 0.
 - (число) `maxPlayed` - максимальное количество прослушиваний, включительно. По умолчанию 100 тысяч.
+- (бул) `isRawItems` - если `true`, результат из lastfm-элементов. Игнорируются `count` и `offset`. Когда не указано или `false`, поиск элементом по названию в Spotify.
 
 ?> На форуме есть [подробный пример](https://github.com/Chimildic/goofy/discussions/91) использования, позволяющий получить _рекомендации из прошлого_
 

@@ -1992,6 +1992,7 @@ const Lastfm = (function () {
         getSimilarTracks: getSimilarTracks,
         getSimilarArtists: getSimilarArtists,
         getCustomTop: getCustomTop,
+        convertToSpotify: convertToSpotify,
     };
 
     function getSimilarTracks(tracks, match, limit, isFlat = true) {
@@ -2203,33 +2204,30 @@ const Lastfm = (function () {
         return Selector.sliceFirst(response, count);
     }
 
+    function convertToSpotify(items, type) {
+        let [formatMethod, searchMethod] = obtainMethodNamesByType(type);
+        return searchMethod(items, formatMethod);
+    }
+
     function getCustomTop(params) {
-        let formatMethod, searchMethod;
-        if (params.type == 'artist') {
-            formatMethod = formatArtistNameLastfm;
-            searchMethod = Search.multisearchArtists;
-        } else if (params.type == 'album') {
-            formatMethod = formatAlbumNameLastfm;
-            searchMethod = Search.multisearchAlbums;
-        } else {
-            formatMethod = formatTrackNameLastfm;
-            searchMethod = Search.multisearchTracks;
-        }
+        let [formatMethod, searchMethod] = obtainMethodNamesByType(params.type);
         let tracks = getTracksForPeriod(params);
         let played = calcCountPlayed(tracks, formatMethod);
 
         params.minPlayed = params.minPlayed || 0;
         params.maxPlayed = params.maxPlayed || 100000;
         played = played.filter(p => p.count >= params.minPlayed && p.count <= params.maxPlayed);
-
         played.sort((x, y) => y.count - x.count);
-        Selector.keepAllExceptFirst(played, params.offset || 0);
-        Selector.keepFirst(played, params.count || 40);
+        
+        if (!params.isRawItems) {
+            Selector.keepAllExceptFirst(played, params.offset || 0);
+            Selector.keepFirst(played, params.count || 40);
+        }
         let items = played.map((p) => {
             p.item.countPlayed = p.count;
             return p.item;
         });
-        return searchMethod(items, formatMethod);
+        return params.isRawItems ? items : searchMethod(items, formatMethod);
 
         function getTracksForPeriod(params) {
             let fromDate = params.from instanceof Date ? params.from : new Date(params.from);
@@ -2278,6 +2276,21 @@ const Lastfm = (function () {
             });
             return Object.values(items);
         }
+    }
+
+    function obtainMethodNamesByType(type = 'track'){
+        let formatMethod, searchMethod;
+        if (type == 'artist') {
+            formatMethod = formatArtistNameLastfm;
+            searchMethod = Search.multisearchArtists;
+        } else if (type == 'album') {
+            formatMethod = formatAlbumNameLastfm;
+            searchMethod = Search.multisearchAlbums;
+        } else {
+            formatMethod = formatTrackNameLastfm;
+            searchMethod = Search.multisearchTracks;
+        }
+        return [formatMethod, searchMethod];
     }
 
     function getPage(queryObj) {
