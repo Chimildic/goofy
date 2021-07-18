@@ -414,7 +414,7 @@ function templateArtistOfDay() {
 
 # Исполнители одного хита
 
-Отбор исполнителей одного трека за период в истории Last.fm, который прослушали множество раз. Для настройки укажите период `from` и `to`, а также минимальное значение прослушиваний в условии `countPlayed`. Не подразумевает триггер на короткие дистанции.
+Отбор исполнителей одного трека за период в истории Last.fm, который прослушали множество раз. Для настройки укажите период `from` и `to`, а также минимальное значение прослушиваний в условии `countPlayed`. Не подразумевает триггер на короткие дистанции. Кроме того, `minPlayed` позволит исключить единичные прослушивания, что даст больший охват.
 
 К сожалению, Last.fm содержит дубликаты исполнителей. Они появляются из-за скробблинга пиратских треков. К примеру ВКонтакте, где пользователи могли задать свое название [illenium и kerli](https://www.last.fm/search?q=illenium+kerli). Если вы скробблили треки из подобных источников, то выходной плейлист будет содержать треки исполнителей, у которых больше одного хита, но в следствии дубликата это упущено. Чем дольше слушали треки с корректными названиями, тем интереснее получится плейлист.
 
@@ -424,6 +424,7 @@ function templateAritstsWithOneHit() {
     user: KeyValue.LASTFM_LOGIN,
     from: '2013-01-01',
     to: '2021-12-12',
+    // minPlayed: 3, 
     isRawItems: true, // важно
   });
 
@@ -435,11 +436,13 @@ function templateAritstsWithOneHit() {
   }, {});
 
   lastfmTracks = Object.values(artists).filter(items => items.length == 1 && items[0].countPlayed >= 20).flat(1);
+  let sporifyTracks = Lastfm.convertToSpotify(lastfmTracks, 'track');
+  Order.sort(sporifyTracks, 'meta.countPlayed', 'desc');
 
   Playlist.saveWithReplace({
     // id: 'ваше id',
     name: 'Исполнители одного хита',
-    tracks: Lastfm.convertToSpotify(lastfmTracks, 'track'),
+    tracks: sporifyTracks,
     randomCover: 'update',
   });
 }
