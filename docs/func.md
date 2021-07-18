@@ -1372,7 +1372,7 @@ let tracks = Search.multisearchTracks(items, (item) => {
 });
 ```
 
-## sendMusicRequest
+### sendMusicRequest
 
 Заполняет форму [music request](https://docs.google.com/forms/d/e/1FAIpQLScMGwTBnCz8nOPkM5g9IwwbpKolEWOXkhpAUSl8JjlkKcBGKw/viewform) данными из [getNoFound](/func?id=getnofound). То есть отправляет запрос на добавление исполнителей или треков, которых не удалось найти в Spotify.
 

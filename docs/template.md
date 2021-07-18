@@ -436,13 +436,13 @@ function templateAritstsWithOneHit() {
   }, {});
 
   lastfmTracks = Object.values(artists).filter(items => items.length == 1 && items[0].countPlayed >= 20).flat(1);
-  let sporifyTracks = Lastfm.convertToSpotify(lastfmTracks, 'track');
-  Order.sort(sporifyTracks, 'meta.countPlayed', 'desc');
+  let spotifyTracks = Lastfm.convertToSpotify(lastfmTracks, 'track');
+  Order.sort(spotifyTracks, 'meta.countPlayed', 'desc');
 
   Playlist.saveWithReplace({
     // id: 'ваше id',
     name: 'Исполнители одного хита',
-    tracks: sporifyTracks,
+    tracks: spotifyTracks,
     randomCover: 'update',
   });
 }
