@@ -7,6 +7,7 @@
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
 ## Версия 1.4.9
+- Эксперимент с функцией [sendMusicRequest](/func?id=sendmusicrequest)
 - Новый параметр в [Lastfm.getCustomTop](/func?id=getcustomtop), новая функция [Lastfm.convertToSpotify](/func?id=converttospotify) и шаблон с их использованием - [исполнители одного хита](/template?id=Исполнители-одного-хита).
 - Удалена функция `getPlayingTrack`. Взамен добавлена [getPlayback](/func?id=getplayback). Для использования нужно [обновить права доступа](/install?id=Обновить-права-доступа).
 - `doGet` адаптирован под открытие `launch.html`, больше не нужно заменять функцию для [управления с телефона](https://github.com/Chimildic/goofy/discussions/9)

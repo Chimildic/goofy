@@ -753,6 +753,7 @@ const Combiner = (function () {
 
     function push(sourceArray, ...additionalArray) {
         additionalArray.forEach((array) => {
+            array = Array.isArray(array) ? array : [array];
             if (array.length < 1000) {
                 sourceArray.push.apply(sourceArray, array);
             } else {
@@ -2218,7 +2219,7 @@ const Lastfm = (function () {
         params.maxPlayed = params.maxPlayed || 100000;
         played = played.filter(p => p.count >= params.minPlayed && p.count <= params.maxPlayed);
         played.sort((x, y) => y.count - x.count);
-        
+
         if (!params.isRawItems) {
             Selector.keepAllExceptFirst(played, params.offset || 0);
             Selector.keepFirst(played, params.count || 40);
@@ -2278,7 +2279,7 @@ const Lastfm = (function () {
         }
     }
 
-    function obtainMethodNamesByType(type = 'track'){
+    function obtainMethodNamesByType(type = 'track') {
         let formatMethod, searchMethod;
         if (type == 'artist') {
             formatMethod = formatArtistNameLastfm;
@@ -2649,7 +2650,30 @@ const Search = (function () {
         findTracks: findTracks,
         findArtists: findArtists,
         getNoFound: () => noFound,
+        sendMusicRequest: sendMusicRequest,
     };
+
+    function sendMusicRequest(context) {
+        if (noFound.length == 0) {
+            console.log('sendMusicRequest: все элементы найдены, запрос не отправлен');
+            return;
+        }
+        let id = '1FAIpQLScMGwTBnCz8nOPkM5g9IwwbpKolEWOXkhpAUSl8JjlkKcBGKw';
+        let baseurl = `https://docs.google.com/forms/u/0/d/e/${id}/formResponse`;
+        CustomUrlFetchApp.fetchAll(noFound.map((data) => {
+            let request = {
+                url: baseurl,
+                method: 'post',
+                payload: { 'entry.802476445': data.item.artist ? data.item.artist['#text'] : data.keyword }
+            }
+            if (data.type == 'track') { 
+                request.payload['entry.2097460120'] = data.item.name ? data.item.name : data.keyword;
+                request.payload['entry.840314673'] = data.item.album ? data.item.album['#text'] : '';
+            }
+            return request;
+        }));
+        Cache.append('NoFoundItems', { context: context, items: noFound });
+    }
 
     function multisearchTracks(items, parseNameMethod) {
         return multisearch(items, 'track', parseNameMethod);
@@ -2681,7 +2705,7 @@ const Search = (function () {
                     item.keyword = uniqueKeyword[i];
                     resultItems.push(item);
                 } else {
-                    noFound.push({ type: type, keyword: uniqueKeyword[i] });
+                    noFound.push({ type: type, keyword: uniqueKeyword[i], item: items[originKeyword.findIndex(item => item == uniqueKeyword[i])] });
                     console.info('Spotify по типу', type, 'не нашел:', uniqueKeyword[i]);
                 }
             }

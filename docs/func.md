@@ -1348,7 +1348,7 @@ let playlists = Search.findPlaylists(keywords, 2);
 
 ```js
 let noFound = Search.getNoFound();
-// структура: { type: '', keyword: '' }
+// структура: { type: '', keyword: '', item: {} }
 ```
 
 ### multisearch*
@@ -1370,6 +1370,32 @@ let artists = Search.multisearchArtists(keywords, (i) => i);
 let tracks = Search.multisearchTracks(items, (item) => {
     return `${item.artist} ${item.title}`.formatName();
 });
+```
+
+## sendMusicRequest
+
+Заполняет форму [music request](https://docs.google.com/forms/d/e/1FAIpQLScMGwTBnCz8nOPkM5g9IwwbpKolEWOXkhpAUSl8JjlkKcBGKw/viewform) данными из [getNoFound](/func?id=getnofound). То есть отправляет запрос на добавление исполнителей или треков, которых не удалось найти в Spotify.
+
+?> Эксперимент. Используйте после запросов к lastfm, например `getCustomTop`, в конце функции.
+
+Аргумент
+- (объект) `context` - контекст текущего массива ненайденных элементов для сохранения в кэш файл `NoFoundItems`. Позволит выполнить повторный поиск позже, а также узнать куда планировалось добавлять элемент.
+
+Пример 1 - Выполнить некоторый поиск треков в lastfm и отправить запрос на добавления для ненайденных
+```js
+let tracks = Lastfm.getCustomTop({
+  user: KeyValue.LASTFM_LOGIN,
+  from: '2013-01-01',
+  to: '2013-12-12',
+});
+Search.sendMusicRequest({ name: 'Топ 2013', id: 'abc' });
+```
+
+Пример 2 - Повторный поиск треков, который планировали добавить в плейлист с `id = abc` 
+```js
+let file = Cache.read('NoFoundItems');
+let itemTracks = file.filter(i => i.context.id == 'abc').map(i => i.items).flat(1);
+let tracks = Search.multisearchTracks(itemTracks, (item) => item.keyword);
 ```
 
 ## Selector
