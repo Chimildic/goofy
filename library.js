@@ -668,7 +668,7 @@ const RecentTracks = (function () {
     }
 
     function getSpotifyRecentTracks() {
-        let url = `${API_BASE_URL}/me/player/recently-played?limit=50&locale=${KeyValue.LOCALE || "RU"}`;
+        let url = `${API_BASE_URL}/me/player/recently-played?limit=50`;
         return Source.extractTracks(SpotifyRequest.get(url).items);
     }
 
@@ -1669,7 +1669,7 @@ const Playlist = (function () {
     const LIMIT_TRACKS = 11000;
     const LIMIT_DESCRIPTION = 300;
     const SIZE = ['500', '600', '700', '800', '900', '1000'];
-    const ARGS = `?limit=50&locale=${KeyValue.LOCALE || "RU"}`;
+    const ARGS = `?limit=50`;
 
     const getPlaylistArray = (function () {
         let playlistsOfUsers = {};
@@ -2666,7 +2666,7 @@ const Search = (function () {
                 method: 'post',
                 payload: { 'entry.802476445': data.item.artist ? data.item.artist['#text'] : data.keyword }
             }
-            if (data.type == 'track') { 
+            if (data.type == 'track') {
                 request.payload['entry.2097460120'] = data.item.name ? data.item.name : data.keyword;
                 request.payload['entry.840314673'] = data.item.album ? data.item.album['#text'] : '';
             }
@@ -3063,19 +3063,23 @@ const SpotifyRequest = (function () {
     }
 
     function get(url) {
-        return extractContent(fetch(url));
+        return extractContent(fetch(appendLocale(url)));
     }
 
     function getAll(urls) {
         let requests = [];
-        urls.forEach((url) =>
+        urls.forEach((url) => {
             requests.push({
-                url: url,
+                url: appendLocale(url),
                 headers: getHeaders(),
                 method: 'get',
-            })
-        );
+            });
+        });
         return CustomUrlFetchApp.fetchAll(requests).map((response) => extractContent(response));
+    }
+
+    function appendLocale(url) {
+        return url + `${url.includes('?') ? '&' : '?'}locale=${KeyValue.LOCALE || "RU"}`;
     }
 
     function extractContent(response) {
