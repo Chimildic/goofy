@@ -1,5 +1,5 @@
 // Документация: https://chimildic.github.io/goofy/
-const VERSION = '1.4.9';
+const VERSION = '1.5.0';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -266,9 +266,12 @@ const Source = (function () {
     function getArtistsTracks(params) {
         let artists = getArtists(params.artist);
         params.album = params.album || {};
-        return getArtistsAlbums(artists, params.album).reduce((tracks, album) => {
-            return Combiner.push(tracks, getAlbumTracks(album, params.album.track_limit));
+        params.album.isFlat = false;
+        let tracks = getArtistsAlbums(artists, params.album).reduce((tracks, albums) => {
+            tracks.push(getAlbumsTracks(albums, params.album.track_limit));
+            return tracks;
         }, []);
+        return !params.hasOwnProperty('isFlat') || params.isFlat ? tracks.flat(1) : tracks;
     }
 
     function getArtists(paramsArtist) {
@@ -303,20 +306,21 @@ const Source = (function () {
         return SpotifyRequest.getItemsByPath('me/following?type=artist&limit=50');
     }
 
-    function getArtistsAlbums(artists, paramsAlbum = {}) {
-        let groups = paramsAlbum.groups || 'album,single';
+    function getArtistsAlbums(artists, params = {}) {
+        let groups = params.groups || 'album,single';
         let albums = artists.reduce((albums, artist) => {
             let path = `artists/${artist.id}/albums?include_groups=${groups}&limit=50&market=from_token`;
-            return Combiner.push(albums, SpotifyRequest.getItemsByPath(path));
+            let response = SpotifyRequest.getItemsByPath(path).filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, params.release_date));
+            Filter.dedupAlbums(response);
+            albums.push(Selector.sliceRandom(response, params.album_limit));
+            return albums;
         }, []);
-        Filter.dedupAlbums(albums);
-        albums = albums.filter((album) => RangeTracks.isBelongReleaseDate(album.release_date, paramsAlbum.release_date));
-        return Selector.sliceRandom(albums, paramsAlbum.album_limit);
+        return !params.hasOwnProperty('isFlat') || params.isFlat ? albums.flat(1) : albums;
     }
 
-    function getAlbumsTracks(albums) {
+    function getAlbumsTracks(albums, limit) {
         return albums.reduce((tracks, album) => {
-            return Combiner.push(tracks, getAlbumTracks(album));
+            return Combiner.push(tracks, getAlbumTracks(album, limit));
         }, []);
     }
 

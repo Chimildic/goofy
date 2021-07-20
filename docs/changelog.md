@@ -6,6 +6,10 @@
 
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+## Версия 1.5.0
+- [getArtistsTracks](/func?id=getartiststracks) и [getArtistsAlbums](/func?id=getartistsalbums) получили параметр `isFlat`, позволяющий сгруппировать результат по исполнителю. По аналогии с [getArtistsTopTracks](/func?id=getartiststoptracks). Поведение по умолчанию не изменилось, код менять не нужно.
+- Все get-запросы из `SpotifyRequest` содержат параметр локали ([подробнее](https://github.com/Chimildic/goofy/discussions/79#discussioncomment-1019029)).
+
 ## Версия 1.4.9
 - Эксперимент с функцией [sendMusicRequest](/func?id=sendmusicrequest)
 - Новый параметр в [Lastfm.getCustomTop](/func?id=getcustomtop), новая функция [Lastfm.convertToSpotify](/func?id=converttospotify) и шаблон с их использованием - [исполнители одного хита](/template?id=Исполнители-одного-хита).
