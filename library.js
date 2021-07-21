@@ -1725,11 +1725,8 @@ const Playlist = (function () {
     }
 
     function getDescription(tracks, limit = 5) {
-        let copyTracks = Selector.sliceCopy(tracks);
-        Filter.dedupArtists(copyTracks);
-        let artists = Selector.sliceRandom(copyTracks, limit);
-        let strArtists = artists.map((track) => track.artists[0].name).join(', ');
-        return `${strArtists} и не только`;
+        let artists = Array.from(new Set(tracks.map(t => t.artists[0].name)));
+        return `${Selector.sliceRandom(artists, limit).join(', ')} и не только`;
     }
 
     function removeNonExistingTracks(id, localTracks) {
