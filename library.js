@@ -1047,21 +1047,19 @@ const Filter = (function () {
         }
     }
 
-    function removeTracks(sourceArray, removedArray, invert = false) {
-        let removedIds = removedArray.map((item) => item.id);
-        let removedNames = removedArray.map((item) => getTrackKey(item));
-        let filteredTracks = sourceArray.filter((item) => {
-            return invert ^ (!removedIds.includes(item.id) && !removedNames.includes(getTrackKey(item)));
-        });
-        Combiner.replace(sourceArray, filteredTracks);
+    function removeTracks(original, removable, invert = false) {
+        let ids = removable.toObject((item) => item.id);
+        let names = removable.toObject((item) => getTrackKey(item));
+        Combiner.replace(original, original.filter((item) => {
+            return invert ^ (!ids.hasOwnProperty(item.id) && !names.hasOwnProperty(getTrackKey(item)));
+        }));
     }
 
-    function removeArtists(sourceArray, removedArray, invert = false) {
-        let removedIds = removedArray.map((item) => getArtistId(item));
-        let filteredTracks = sourceArray.filter((item) => {
-            return invert ^ !removedIds.includes(getArtistId(item));
-        });
-        Combiner.replace(sourceArray, filteredTracks);
+    function removeArtists(original, removable, invert = false) {
+        let ids = removable.toObject((item) => getArtistId(item));
+        Combiner.replace(original, original.filter((item) => {
+            return invert ^ !ids.hasOwnProperty(getArtistId(item));
+        }));
     }
 
     function getTrackKey(track) {
@@ -3204,4 +3202,8 @@ Date.prototype.getTimestampUNIX = function (bound) {
 
 Object.prototype.isEmpty = function () {
     return Object.keys(this).length == 0;
+}
+
+Array.prototype.toObject = function (parseMethod) {
+    return this.reduce((accumulator, element) => (accumulator[parseMethod(element)] = '', accumulator), {});
 }
