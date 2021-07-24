@@ -7,6 +7,7 @@
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
 ## Версия 1.5.0
+- Учитывать всех исполнителей трека в фильтр-функциях `remove*`, `match*`, `dedup*`.
 - [getArtistsTracks](/func?id=getartiststracks) и [getArtistsAlbums](/func?id=getartistsalbums) получили параметр `isFlat`, позволяющий сгруппировать результат по исполнителю. По аналогии с [getArtistsTopTracks](/func?id=getartiststoptracks). Поведение по умолчанию не изменилось, код менять не нужно.
 - Все get-запросы из `SpotifyRequest` содержат параметр локали ([подробнее](https://github.com/Chimildic/goofy/discussions/79#discussioncomment-1019029)).
 

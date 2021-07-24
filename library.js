@@ -1035,7 +1035,7 @@ const Filter = (function () {
                     availableState.push(id);
                 } else {
                     unavailableState.push(t.id);
-                    console.log('Трек нельзя послушать:', t.id, '-', getTrackKey(t));
+                    console.log('Трек нельзя послушать:', t.id, '-', getTrackKeys(t)[0]);
                 }
             });
         }
@@ -1049,25 +1049,27 @@ const Filter = (function () {
 
     function removeTracks(original, removable, invert = false) {
         let ids = removable.toObject((item) => item.id);
-        let names = removable.toObject((item) => getTrackKey(item));
-        Combiner.replace(original, original.filter((item) => {
-            return invert ^ (!ids.hasOwnProperty(item.id) && !names.hasOwnProperty(getTrackKey(item)));
-        }));
+        let names = removable.map(item => getTrackKeys(item)).flat(1);
+        let filteredTracks = original.filter((item) => invert ^ (
+            !ids.hasOwnProperty(item.id) &&
+            !getTrackKeys(item).some(name => names.hasOwnProperty(name))
+        ));
+        Combiner.replace(original, filteredTracks);
     }
 
     function removeArtists(original, removable, invert = false) {
-        let ids = removable.toObject((item) => getArtistId(item));
-        Combiner.replace(original, original.filter((item) => {
-            return invert ^ !ids.hasOwnProperty(getArtistId(item));
-        }));
+        let artists = removable.map(item => item.artists || item).flat(1);
+        let ids = artists.toObject((item) => item.id);
+        let filteredTracks = original.filter((item) => invert ^ !getArtistIds(item).some(id => ids.hasOwnProperty(id)));
+        Combiner.replace(original, filteredTracks);
     }
 
-    function getTrackKey(track) {
-        return `${track.artists[0].name} ${track.name}`.formatName();
+    function getTrackKeys(track) {
+        return track.artists.map(artist => `${artist.name} ${track.name}`.formatName());  
     }
 
-    function getArtistId(item) {
-        return item.artists ? item.artists[0].id : item.id;
+    function getArtistIds(item) {
+        return item.artists ? item.artists.map(a => a.id) : [item.id];
     }
 
     function replaceWithSimilar(originTracks, ...replacementArrayTracks) {
@@ -1146,7 +1148,7 @@ const Filter = (function () {
                 return invert ^ (
                     regex.test(item.name.formatName()) ||
                     regex.test(item.album.name.formatName()) ||
-                    regex.test(item.artists[0].name.formatName())
+                    item.artists.every(a => regex.test(a.name.formatName()))
                 );
             }
             return invert ^ regex.test(item.name.formatName());
@@ -1240,31 +1242,25 @@ const Filter = (function () {
             _duplicates = _items.reduce((duplicates, track, index) => {
                 if (track === null || track.id === null) {
                     return duplicates;
-                } else if (isDuplicateByTrackId(track.id) || isDuplicateByName(track)) {
+                } else if (seenIds.hasOwnProperty(track.id) || isDuplicateByName(track)) {
                     duplicates.push({
                         index: index,
                         track: track,
-                        reason: track.id in seenIds ? 'same-track-id' : 'same-track-name',
+                        reason: seenIds.hasOwnProperty(track.id)  ? 'same-track-id' : 'same-track-name',
                     });
                 } else {
                     seenIds[track.id] = true;
-                    const trackKey = getTrackKey(track);
-                    seenTrackKeys[trackKey] = seenTrackKeys[trackKey] || [];
-                    seenTrackKeys[trackKey].push(track.duration_ms);
+                    getTrackKeys(track).forEach(key => {
+                        seenTrackKeys[key] = seenTrackKeys[key] || [];
+                        seenTrackKeys[key].push(track.duration_ms);
+                    });
                 }
                 return duplicates;
             }, []);
 
-            function isDuplicateByTrackId(id) {
-                return id in seenIds;
-            }
-
             function isDuplicateByName(track) {
-                const trackKey = getTrackKey(track);
-                return (
-                    trackKey in seenTrackKeys &&
-                    0 != seenTrackKeys[trackKey].filter((duration) => Math.abs(duration - track.duration_ms) < 2000).length
-                );
+                return getTrackKeys(track).some(key => seenTrackKeys.hasOwnProperty(key)
+                    && seenTrackKeys[key].filter((duration) => Math.abs(duration - track.duration_ms) < 2000).length > 0);
             }
         }
 
@@ -1274,7 +1270,7 @@ const Filter = (function () {
                 const artistId = getArtistId(item);
                 if (artistId == undefined) {
                     return duplicates;
-                } else if (isDuplicateByArtistId(artistId)) {
+                } else if (seenArtists.hasOwnProperty(artistId)) {
                     duplicates.push({
                         index: index,
                         item: item,
@@ -1293,10 +1289,6 @@ const Filter = (function () {
                     return item.id;
                 }
             }
-
-            function isDuplicateByArtistId(artistId) {
-                return artistId in seenArtists;
-            }
         }
 
         function findAlbumsDuplicated() {
@@ -1305,7 +1297,7 @@ const Filter = (function () {
                 const albumId = getAlbumId(item);
                 if (albumId == undefined) {
                     return duplicates;
-                } else if (isDuplicateByAlbumId(albumId)) {
+                } else if (seenAlbums.hasOwnProperty(albumId)) {
                     duplicates.push({
                         index: index,
                         item: item,
@@ -1320,10 +1312,6 @@ const Filter = (function () {
                 return item.album
                     ? `${item.artists[0].name} ${item.album.name}`.formatName() + ` ${item.album.release_date} ${item.album.total_tracks}`
                     : `${item.artists[0].name} ${item.name}`.formatName() + ` ${item.release_date} ${item.total_tracks}`;
-            }
-
-            function isDuplicateByAlbumId(albumId) {
-                return albumId in seenAlbums;
             }
         }
 
