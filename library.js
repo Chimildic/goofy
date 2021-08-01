@@ -1771,7 +1771,9 @@ const Playlist = (function () {
     }
 
     function addTracks(data) {
-        modifyTracks('post', data);
+        if (data.tracks.length > 0) {
+            modifyTracks('post', data);
+        }
     }
 
     function replaceTracks(data) {
@@ -1779,24 +1781,12 @@ const Playlist = (function () {
     }
 
     function updateTracks(data) {
-        let currentTracks = Source.getPlaylistTracks('', data.id);
-
-        addNewTracks();
-        removeOldTracks();
-
-        function addNewTracks() {
-            let currentIds = currentTracks.map((t) => t.id);
-            let tracksToAdd = data.tracks.filter((t) => !currentIds.includes(t.id));
-            if (tracksToAdd.length > 0) {
-                addTracks({ id: data.id, tracks: tracksToAdd, toEnd: data.toEnd });
-            }
-        }
-
-        function removeOldTracks() {
-            let newIds = data.tracks.map((t) => t.id);
-            let tracksToDelete = currentTracks.filter((t) => !newIds.includes(t.id));
-            removeTracksRequest(data.id, tracksToDelete);
-        }
+        let remoteTracks = Source.getPlaylistTracks('', data.id);
+        let newTracks = Selector.sliceCopy(data.tracks);
+        Filter.removeTracks(newTracks, remoteTracks);
+        Filter.removeTracks(remoteTracks, data.tracks);
+        removeTracksRequest(data.id, remoteTracks);
+        addTracks({ id: data.id, tracks: newTracks, toEnd: data.toEnd });
     }
 
     function removeTracksRequest(id, tracks) {
