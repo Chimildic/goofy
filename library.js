@@ -1099,7 +1099,9 @@ const Filter = (function () {
         let similarTracks = {};
         SpotifyRequest.getAll(urls).forEach((r) => {
             let item = r.seeds.find((s) => s.type.toLowerCase() == 'track');
-            similarTracks[item.id] = r.tracks;
+            similarTracks[item.id] = similarTracks[item.id] || [];
+            Combiner.push(similarTracks[item.id], r.tracks);
+            Filter.dedupTracks(similarTracks[item.id]);
         });
 
         let keys = Object.keys(similarTracks);
