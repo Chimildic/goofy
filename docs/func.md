@@ -292,8 +292,9 @@ Filter.dedupArtists(relatedArtists);
 
 Аргументы
 - (массив) `tracks` - массив треков, в котором требуется удалить дубликаты.
+- (число) `offsetDurationMs` - отклонение в миллисекундах, при котором идентичные по названию треки считаются одинаковыми. По умолчанию 2000 (2 секунды). Подробнее [здесь](https://github.com/Chimildic/goofy/discussions/116).
 
-Пример 1 - Удалить дубликаты.
+Пример 1 - Удалить дубликаты. Отклонение указывать необязательно.
 ```js
 let tracks = Source.getTracks(playlistArray);
 Filter.dedupTracks(tracks);

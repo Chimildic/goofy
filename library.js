@@ -1210,9 +1210,9 @@ const Filter = (function () {
         let _items;
         let _duplicates;
 
-        function dedupTracks(tracks) {
+        function dedupTracks(tracks, offsetDurationMs = 2000) {
             _items = tracks;
-            findTracksDuplicated();
+            findTracksDuplicated(offsetDurationMs);
             removeDuplicated();
         }
 
@@ -1240,7 +1240,7 @@ const Filter = (function () {
             return result;
         }
 
-        function findTracksDuplicated() {
+        function findTracksDuplicated(offsetDurationMs) {
             const seenIds = {};
             const seenTrackKeys = {};
             _duplicates = _items.reduce((duplicates, track, index) => {
@@ -1264,7 +1264,7 @@ const Filter = (function () {
 
             function isDuplicateByName(track) {
                 return getTrackKeys(track).some(key => seenTrackKeys.hasOwnProperty(key)
-                    && seenTrackKeys[key].filter((duration) => Math.abs(duration - track.duration_ms) < 2000).length > 0);
+                    && seenTrackKeys[key].filter((duration) => Math.abs(duration - track.duration_ms) < offsetDurationMs).length > 0);
             }
         }
 
