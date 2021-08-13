@@ -524,9 +524,10 @@ let args = {
     },
     album: {
         popularity: { min: 30, max: 70 },
-        genres: [], // Тесты показывают, что у альбомов список жанров всегда пуст
+        album_type: ['single', 'album'],
         release_date: { sinceDays: 6, beforeDays: 0 },
         // или release_date: { startDate: new Date('2020.11.30'), endDate: new Date('2020.12.30') },
+        // genres: [], // Тесты показывают, что у альбомов список жанров всегда пуст
     },
 };
 ```
@@ -1297,9 +1298,9 @@ RecentTracks.compress();
 
 | Включенный параметр | Возвращаемый массив |
 |-|-|
-| `ON_SPOTIFY_RECENT_TRACKS` | История прослушиваний только Spotify |
-| `ON_LASTFM_RECENT_TRACKS` | История прослушиваний только Lastfm.   |
-| `ON_SPOTIFY_RECENT_TRACKS` и `ON_LASTFM_RECENT_TRACKS` | Объединение обоих источников с удалением дубликатов треков. |
+| `ON_SPOTIFY_RECENT_TRACKS` | История прослушиваний только Spotify. Файл `SpotifyRecentTracks`. Дубли не удаляются. |
+| `ON_LASTFM_RECENT_TRACKS` | История прослушиваний только Lastfm. Файл `LastfmRecentTracks`. Дубли не удаляются.  |
+| `ON_SPOTIFY_RECENT_TRACKS` и `ON_LASTFM_RECENT_TRACKS` | Объединение обоих источников с удалением дубликатов. Файл `BothRecentTracks`. |
 
 Пример 1 - Получить массив треков истории прослушиваний. Источник треков зависит от параметров. 
 ```js

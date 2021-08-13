@@ -940,7 +940,7 @@ const RangeTracks = (function () {
         }
 
         return (
-            isBelong(trackAlbum, _args.albums) &&
+            isBelong(trackAlbum, _args.album) &&
             isBelongGenres(trackAlbum.genres, _args.album.genres) &&
             !isBelongBanGenres(trackAlbum.genres, _args.album.ban_genres) &&
             isBelongReleaseDate(trackAlbum.release_date, _args.album.release_date)
@@ -997,7 +997,9 @@ const RangeTracks = (function () {
                 continue;
             }
 
-            if (typeof args[key] == 'object' && (obj[key] < args[key].min || obj[key] > args[key].max)) {
+            if (Array.isArray(args[key]) && !args[key].some(value => value == obj[key])) {
+                return false;
+            } else if (typeof args[key] == 'object' && (obj[key] < args[key].min || obj[key] > args[key].max)) {
                 return false;
             } else if (typeof args[key] != 'object' && args[key] != obj[key]) {
                 return false;
