@@ -1152,7 +1152,8 @@ const Filter = (function () {
                 return invert ^ (
                     regex.test(item.name.formatName()) ||
                     regex.test(item.album.name.formatName()) ||
-                    item.artists.every(a => regex.test(a.name.formatName()))
+                    item.artists.every(a => regex.test(a.name.formatName())) ||
+                    (item.album.artists && item.album.artists.every(a => regex.test(a.name.formatName())))
                 );
             }
             return invert ^ regex.test(item.name.formatName());
