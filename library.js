@@ -1,5 +1,5 @@
 // Документация: https://chimildic.github.io/goofy/
-const VERSION = '1.5.0';
+const VERSION = '1.5.1';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -168,8 +168,10 @@ const CustomUrlFetchApp = (function () {
 
     function parseQuery(obj) {
         return Object.keys(obj)
-            .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`)
-            .join('&');
+            .map((k) => (typeof obj[k] != 'string' && obj[k] != undefined) || (typeof obj[k] == 'string' && obj[k].length > 0)
+                ? `${encodeURIComponent(k)}=${encodeURIComponent(obj[k])}`
+                : ''
+            ).filter(s => s.length > 0).join('&');
     }
 })();
 
@@ -564,6 +566,70 @@ const Source = (function () {
     }
 })();
 
+const Player = (function () {
+    return {
+        getPlayback: getPlayback,
+        getAvailableDevices: getAvailableDevices,
+        next: next,
+        previous: previous,
+        pause: pause,
+        resume: resume,
+        toggleShuffle: toggleShuffle,
+        setRepeatMode: setRepeatMode,
+        addToQueue: addToQueue,
+    }
+
+    function getPlayback() {
+        return SpotifyRequest.get(API_BASE_URL + '/me/player') || {};
+    }
+
+    function getAvailableDevices() {
+        return SpotifyRequest.get(API_BASE_URL + '/me/player/devices');
+    }
+
+    function next(deviceId) {
+        return SpotifyRequest.post(createUrl('/me/player/next', deviceId));
+    }
+
+    function previous(deviceId) {
+        return SpotifyRequest.post(createUrl('/me/player/previous', deviceId));
+    }
+
+    function pause(deviceId) {
+        return SpotifyRequest.put(createUrl('/me/player/pause', deviceId));
+    }
+
+    function toggleShuffle(state, deviceId) {
+        return SpotifyRequest.put(createUrl('/me/player/shuffle', deviceId, { state: state }));
+    }
+
+    function setRepeatMode(state, deviceId) {
+        return SpotifyRequest.put(createUrl('/me/player/repeat', deviceId, { state: state }));
+    }
+
+    function resume(params = {}) {
+        if (params.hasOwnProperty('tracks')) {
+            params.uris = params.tracks.map(t => t.uri || `spotify:track:${t.id}`);
+            delete params.tracks;
+        }
+        let url = createUrl('/me/player/play', params.deviceId);
+        return SpotifyRequest.put(url, params);
+    }
+
+    function addToQueue(track, deviceId) {
+        let queryObj = { uri: `spotify:track:${track.id}` };
+        let url = createUrl('/me/player/queue', deviceId, queryObj);
+        return SpotifyRequest.post(url);
+    }
+
+    function createUrl(path, deviceId = '', queryObj = {}) {
+        queryObj.device_id = queryObj.device_id || deviceId;
+        let query = CustomUrlFetchApp.parseQuery(queryObj);
+        return API_BASE_URL + path + `?${query ? query : ''}`;
+    }
+
+})();
+
 const RecentTracks = (function () {
     const ON_SPOTIFY_RECENT_TRACKS = 'true' === KeyValue.ON_SPOTIFY_RECENT_TRACKS;
     const ON_LASTFM_RECENT_TRACKS = 'true' === KeyValue.ON_LASTFM_RECENT_TRACKS;
@@ -586,7 +652,6 @@ const RecentTracks = (function () {
     }
 
     return {
-        getPlayback: getPlayback,
         get: getRecentTracks,
         update: update,
         compress: compress,
@@ -611,11 +676,6 @@ const RecentTracks = (function () {
                 return triggers[i];
             }
         }
-    }
-
-    function getPlayback() {
-        let url = `${API_BASE_URL}/me/player`;
-        return SpotifyRequest.get(url) || {};
     }
 
     function getRecentTracks(limit) {
@@ -2859,12 +2919,13 @@ const getCachedTracks = (function () {
 const Auth = (function () {
     const SCOPE = [
         'user-read-private',
-        'user-library-read',
-        'user-library-modify',
         'user-read-recently-played',
         'user-read-currently-playing',
         'user-read-playback-position',
         'user-read-playback-state',
+        'user-modify-playback-state',
+        'user-library-read',
+        'user-library-modify',
         'user-top-read',
         'user-follow-read',
         'user-follow-modify',

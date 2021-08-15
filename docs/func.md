@@ -1097,6 +1097,113 @@ Order.sort(tracks, 'artist.popularity', 'desc');
 Order.sort(tracks, 'features.energy', 'asc');
 ```
 
+## Player
+
+Управление плеером и очередью
+
+### addToQueue
+
+Добавляет трек в очередь. Эквивалент "играть следующим" при воспроизведении плейлиста. 
+
+Аргументы
+- (объект) `track` - трек для добавления, значимо только `id`.
+- (строка) `deviceId` - идентификатор устройства. Необязательно при активном воспроизведении.
+
+Пример 1 - Играть следующим последний добавленный лайк
+```js
+let tracks = Source.getSavedTracks();
+Player.addToQueue(tracks[0]);
+```
+
+### getAvailableDevices
+
+Возвращает массив со списком доступных устройств. Пример массива [здесь](https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-a-users-available-devices). Используйте для получения `id` доступных устройств. Значение из `getPlayback` достаточно быстро становится пустым при паузе.
+
+Аргументов нет.
+
+Пример 1 - Отбор устройства по типу. `Smartphone` для телефона, `Computer` для ПК.
+```js
+let device = Player.getAvailableDevices().find(d => d.type == 'Smartphone');
+// device.id
+```
+
+### getPlayback
+
+Возвращает объект, содержащий играющий трек и сопутствующий контекст плеера. Пример объекта [здесь](https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-information-about-the-users-current-playback). Если данных нет, объект пустой. При паузе достаточно быстро становится пустым. 
+
+Аргументов нет.
+
+[Пример использования](https://github.com/Chimildic/goofy/discussions/102)
+
+### next
+
+Переход к следующему треку в очереди.
+
+Аргументов нет.
+
+### pause
+
+Постановка воспроизведения на паузу.
+
+Аргументов нет.
+
+### previous
+
+Возврат к предыдущему треку в очереди.
+
+Аргументов нет.
+
+### resume
+
+Продолжает воспроизведение текущей очереди или создает новую.
+
+Аргумент
+- (объект) `params` - параметры очереди
+  - (строка) `deviceId` - идентификатор устройства. Необязательно при активном воспроизведении.
+  - (строка) `context_uri` - воспроизведение по URI, например плейлист или альбом
+  - (массив) `tracks` - создать новую очередь с треками (преобразует их в URI). Используется либо `context_uri`, либо `tracks`.
+  - (число) `position_ms` - прогресс трека в миллисекундах.
+  - (объект) `offset` - задает активный трек в очереди `{ "position": 5 }`. Отсчет от нуля.
+
+Пример 1 - Продолжить воспроизведение после паузы
+```js
+Player.pause();
+Utilities.sleep(5000);
+Player.resume();
+```
+
+Пример 2 - Создать очередь из любимых треков
+```js
+let tracks = Source.getSavedTracks();
+Player.resume({
+    tracks: tracks
+});
+```
+
+Пример 3 - Воспроизвести плейлист по URI
+```js
+let playlistId = '37i9dQZF1DWYmDNATMglFU';
+Player.resume({
+    context_uri: `spotify:playlist:${playlistId}`,
+});
+```
+
+### setRepeatMode
+
+Устанавливает режим повтора.
+
+Аргументы
+- (строка) `state` - при `track` повторяет текущий трек, при `context` текущую очередь, при `off` отключено.
+- (строка) `deviceId` - идентификатор устройства. Необязательно при активном воспроизведении.
+
+### toggleShuffle
+
+Переключает режим перемешивания очереди.
+
+Аргументы
+- (бул) `state` - при `true` включает перемешивание, при `false` выключает.
+- (строка) `deviceId` - идентификатор устройства. Необязательно при активном воспроизведении.
+
 ## Playlist
 
 Создание или обновление плейлиста
@@ -1312,14 +1419,6 @@ let tracks = RecentTracks.get();
 ```js
 let tracks = RecentTracks.get(100);
 ```
-
-### getPlayback
-
-Возвращает объект, содержащий играющий трек и сопутствующий контекст плеера. Пример объекта [здесь](https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-information-about-the-users-current-playback). Если данных нет, объект пустой.
-
-Аргументов нет.
-
-[Пример использования](https://github.com/Chimildic/goofy/discussions/102)
 
 ## Search
 

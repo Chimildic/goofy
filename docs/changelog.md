@@ -6,6 +6,10 @@
 
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+## Версия 1.5.1
+- Новый модуль [Player](/func?id=player). Нужно [обновить права доступа](/install?id=Обновить-права-доступа).
+- `getPlayback` перемещен в `Player`.
+
 ## Версия 1.5.0
 - Учитывать всех исполнителей трека в фильтр-функциях `remove*`, `match*`, `dedup*`.
 - [getArtistsTracks](/func?id=getartiststracks) и [getArtistsAlbums](/func?id=getartistsalbums) получили параметр `isFlat`, позволяющий сгруппировать результат по исполнителю. По аналогии с [getArtistsTopTracks](/func?id=getartiststoptracks). Поведение по умолчанию не изменилось, код менять не нужно.
