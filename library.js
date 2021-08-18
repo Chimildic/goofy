@@ -1575,6 +1575,14 @@ const Order = (function () {
             }
         };
 
+        function appendValue(items) {
+            _source.forEach((s, i) => {
+                if (!s.hasOwnProperty(_key)) {
+                    _source[i][_key] = items[s.id][_key];
+                }
+            })
+        }
+
         function sortArtist() {
             // popularity, followers, name
             let items = getCachedTracks(_source, { artist: {} }).artists;
@@ -1605,37 +1613,30 @@ const Order = (function () {
         function sortMeta() {
             // name, popularity, duration_ms, explicit, added_at, played_at
             let hasKey = _source.every((t) => t[_key] != undefined);
-            let items = {};
-            if (hasKey) {
-                _source.forEach((t) => (items[t.id] = t));
-            } else {
-                items = getCachedTracks(_source, { meta: {} }).meta;
+            if (!hasKey) {
+                appendValue(getCachedTracks(_source, { meta: {} }).meta);
             }
             if (_key == 'name') {
-                _source.sort((x, y) => compareString(items[x.id], items[y.id]));
+                _source.sort((x, y) => compareString(x, y));
             } else if (_key == 'added_at' || _key == 'played_at') {
-                _source.sort((x, y) => compareDate(items[x.id], items[y.id]));
+                _source.sort((x, y) => compareDate(x, y));
             } else {
-                _source.sort((x, y) => compareNumber(items[x.id], items[y.id]));
+                _source.sort((x, y) => compareNumber(x, y));
             }
         }
 
         function sortAlbum() {
             // popularity, name, release_date
             let hasKey = _source.every((t) => extract(t)[_key] != undefined);
-            let items = {};
-            if (hasKey) {
-                _source.forEach((t) => (items[extract(t).id] = extract(t)));
-            } else {
-                items = getCachedTracks(_source, { album: {} }).albums;
+            if (!hasKey) {
+                appendValue(getCachedTracks(_source, { album: {} }).albums);
             }
-
             if (_key == 'name') {
-                _source.sort((x, y) => compareString(items[extract(x).id], items[extract(y).id]));
+                _source.sort((x, y) => compareString(extract(x), extract(y)));
             } else if (_key == 'release_date') {
-                _source.sort((x, y) => compareDate(items[extract(x).id], items[extract(y).id]));
+                _source.sort((x, y) => compareDate(extract(x), extract(y)));
             } else if (_key == 'popularity') {
-                _source.sort((x, y) => compareNumber(items[extract(x).id], items[extract(y).id]));
+                _source.sort((x, y) => compareNumber(extract(x), extract(y)));
             }
 
             function extract(item) {
