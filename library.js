@@ -903,6 +903,7 @@ const Combiner = (function () {
 const RangeTracks = (function () {
     const BAN_KEYS = [
         'genres',
+        'ban_genres',
         'release_date',
         'followed_include',
         'include',
