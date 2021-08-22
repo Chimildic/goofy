@@ -1576,14 +1576,6 @@ const Order = (function () {
             }
         };
 
-        function appendValue(items) {
-            _source.forEach((s, i) => {
-                if (!s.hasOwnProperty(_key)) {
-                    _source[i][_key] = items[s.id][_key];
-                }
-            })
-        }
-
         function sortArtist() {
             // popularity, followers, name
             let items = getCachedTracks(_source, { artist: {} }).artists;
@@ -1596,12 +1588,14 @@ const Order = (function () {
                 }
             }
 
+            let arrayItems = Object.values(items);
             let compareMethod = _key == 'name' ? compareString : compareNumber;
-            _source.sort((x, y) => {
-                let keyX = x.artists ? x.artists[0].id : x.id;
-                let keyY = y.artists ? y.artists[0].id : y.id;
-                return compareMethod(items[keyX], items[keyY])
-            });
+            _source.sort((x, y) => compareMethod(getItem(x), getItem(y)));
+
+            function getItem(x) {
+                let artist = x.artists ? x.artists[0] : x;
+                return items[artist.id] || arrayItems.find(i => i.name == artist.name) || {};
+            }
         }
 
         function sortFeatures() {
@@ -1615,7 +1609,12 @@ const Order = (function () {
             // name, popularity, duration_ms, explicit, added_at, played_at
             let hasKey = _source.every((t) => t[_key] != undefined);
             if (!hasKey) {
-                appendValue(getCachedTracks(_source, { meta: {} }).meta);
+                let items = getCachedTracks(_source, { meta: {} }).meta;
+                _source.forEach((s, i) => {
+                    if (!s.hasOwnProperty(_key)) {
+                        _source[i][_key] = items[s.id][_key];
+                    }
+                });
             }
             if (_key == 'name') {
                 _source.sort((x, y) => compareString(x, y));
@@ -1629,15 +1628,19 @@ const Order = (function () {
         function sortAlbum() {
             // popularity, name, release_date
             let hasKey = _source.every((t) => extract(t)[_key] != undefined);
-            if (!hasKey) {
-                appendValue(getCachedTracks(_source, { album: {} }).albums);
+            let items = {};
+            if (hasKey) {
+                _source.forEach((t) => (items[extract(t).id] = extract(t)));
+            } else {
+                items = getCachedTracks(_source, { album: {} }).albums;
             }
+
             if (_key == 'name') {
-                _source.sort((x, y) => compareString(extract(x), extract(y)));
+                _source.sort((x, y) => compareString(items[extract(x).id], items[extract(y).id]));
             } else if (_key == 'release_date') {
-                _source.sort((x, y) => compareDate(extract(x), extract(y)));
+                _source.sort((x, y) => compareDate(items[extract(x).id], items[extract(y).id]));
             } else if (_key == 'popularity') {
-                _source.sort((x, y) => compareNumber(extract(x), extract(y)));
+                _source.sort((x, y) => compareNumber(items[extract(x).id], items[extract(y).id]));
             }
 
             function extract(item) {
