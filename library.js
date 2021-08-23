@@ -1331,7 +1331,7 @@ const Filter = (function () {
             }, []);
 
             function isDuplicateByName(track) {
-                return getTrackKeys(track, mode).some(key => seenTrackKeys.hasOwnProperty(key)
+                return getTrackKeys(track).some(key => seenTrackKeys.hasOwnProperty(key)
                     && seenTrackKeys[key].filter((duration) => Math.abs(duration - track.duration_ms) < offsetDurationMs).length > 0);
             }
         }
