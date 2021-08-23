@@ -1110,29 +1110,35 @@ const Filter = (function () {
         }
     }
 
-    function removeTracks(original, removable, invert = false) {
+    function removeTracks(original, removable, invert = false, mode = 'every') {
         let ids = removable.toObject((item) => item.id);
-        let names = removable.map(item => getTrackKeys(item)).flat(1);
+        let names = removable.map(item => getTrackKeys(item, mode)).flat(1);
         let filteredTracks = original.filter((item) => invert ^ (
             !ids.hasOwnProperty(item.id) &&
-            !getTrackKeys(item).some(name => names.includes(name))
+            !getTrackKeys(item, mode).some(name => names.includes(name))
         ));
         Combiner.replace(original, filteredTracks);
     }
 
-    function removeArtists(original, removable, invert = false) {
-        let artists = removable.map(item => item.artists || item).flat(1);
+    function removeArtists(original, removable, invert = false, mode = 'every') {
+        let artists = removable.map(item =>
+            mode == 'every' ? (item.artists || item) : (item.artists[0] || item)
+        ).flat(1);
         let ids = artists.toObject((item) => item.id);
-        let filteredTracks = original.filter((item) => invert ^ !getArtistIds(item).some(id => ids.hasOwnProperty(id)));
+        let filteredTracks = original.filter((item) => invert ^ !getArtistIds(item, mode).some(id => ids.hasOwnProperty(id)));
         Combiner.replace(original, filteredTracks);
     }
 
-    function getTrackKeys(track) {
-        return track.artists.map(artist => `${artist.name} ${track.name}`.formatName());
+    function getTrackKeys(track, mode) {
+        return mode == 'every'
+            ? track.artists.map(artist => `${artist.name} ${track.name}`.formatName())
+            : [`${track.artists[0].name} ${track.name}`.formatName()];
     }
 
-    function getArtistIds(item) {
-        return item.artists ? item.artists.map(a => a.id) : [item.id];
+    function getArtistIds(item, mode) {
+        return mode == 'every'
+            ? item.artists ? item.artists.map(a => a.id) : [item.id]
+            : item.artists ? [item.artists[0].id] : [item.id]
     }
 
     function replaceWithSimilar(originTracks, ...replacementArrayTracks) {
@@ -1325,7 +1331,7 @@ const Filter = (function () {
             }, []);
 
             function isDuplicateByName(track) {
-                return getTrackKeys(track).some(key => seenTrackKeys.hasOwnProperty(key)
+                return getTrackKeys(track, mode).some(key => seenTrackKeys.hasOwnProperty(key)
                     && seenTrackKeys[key].filter((duration) => Math.abs(duration - track.duration_ms) < offsetDurationMs).length > 0);
             }
         }
@@ -2111,17 +2117,17 @@ const Lastfm = (function () {
         }
     }
 
-    function removeRecentTracks(original, user, count = 600) {
+    function removeRecentTracks(original, user, count = 600, mode = 'every') {
         let removableTracks = getLastfmRecentTracks(user, count);
         let removableNames = removableTracks.map((item) => formatLastfmTrackKey(item));
-        let filteredTracks = original.filter((item) => !formatSpotifyTrackKeys(item).some(name => removableNames.includes(name)));
+        let filteredTracks = original.filter((item) => !formatSpotifyTrackKeys(item, mode).some(name => removableNames.includes(name)));
         Combiner.replace(original, filteredTracks);
     }
 
-    function removeRecentArtists(original, user, count = 600) {
+    function removeRecentArtists(original, user, count = 600, mode = 'every') {
         let removableTracks = getLastfmRecentTracks(user, count);
         let removableNames = removableTracks.map((item) => item.artist['#text'].formatName());
-        let filteredTracks = original.filter((item) => !formatSpotifyArtistKeys(item).some(name => removableNames.includes(name)));
+        let filteredTracks = original.filter((item) => !formatSpotifyArtistKeys(item, mode).some(name => removableNames.includes(name)));
         Combiner.replace(original, filteredTracks);
     }
 
@@ -2361,12 +2367,16 @@ const Lastfm = (function () {
         return `${artist} ${item.name}`.formatName();
     }
 
-    function formatSpotifyTrackKeys(item) {
-        return item.artists.map(artist => `${artist.name} ${item.name}`.formatName());
+    function formatSpotifyTrackKeys(item, mode) {
+        return mode == 'every'
+            ? item.artists.map(artist => `${artist.name} ${item.name}`.formatName())
+            : [`${item.artists[0].name} ${item.name}`.formatName()];
     }
 
-    function formatSpotifyArtistKeys(item) {
-        return item.artists.map(artist => `${artist.name}`.formatName());
+    function formatSpotifyArtistKeys(item, mode) {
+        return mode == 'every'
+            ? item.artists.map(artist => `${artist.name}`.formatName())
+            : [item.artists[0].name.formatName()];
     }
 
     function formatTrackNameLastfm(item) {
