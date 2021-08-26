@@ -624,16 +624,22 @@ Filter.removeUnavailable(tracks);
 
 ### replaceWithSimilar
 
-Заменяет треки на похожие. На одну замену один случайный трек из результатов [getRecomTracks](/func?id=getrecomtracks). Если замены нет трек удаляется.
+Заменяет треки на похожие. На одну замену N случайных треков из результатов [getRecomTracks](/func?id=getrecomtracks). Если замены нет трек удаляется.
 
-Аргументы
-- (массив) `originTracks` - где заменять
-- (массив) `replacementTracks` - что заменять (можно несколько)
+Аргумент
+- (объект) `params` - параметры замены
+  - (массив) `origin` - где заменять
+  - (массив) `replace` - что заменять (можно несколько)
+  - (число) `count` - количество рекомендованных треков на место оригинала. По умолчанию 1, максимум 100. Выходное количество может быть меньше из-за отсутствия рекомендаций или удаления дубликатов.
 
 Пример 1 - Заменить недавно игравшие треки и лайки плейлиста на близкие аналоги
 ```js
 let tracks = Source.getPlaylistTracks('', 'id');
-Filter.replaceWithSimilar(tracks, RecentTracks.get(2000), Source.getSavedTracks());
+Filter.replaceWithSimilar({
+    origin: tracks,
+    replace: [RecentTracks.get(2000), Source.getSavedTracks()],
+    count: 3
+});
 ```
 
 ## Lastfm

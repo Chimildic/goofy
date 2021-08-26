@@ -1141,9 +1141,9 @@ const Filter = (function () {
             : item.artists ? [item.artists[0].id] : [item.id]
     }
 
-    function replaceWithSimilar(originTracks, ...replacementArrayTracks) {
-        let replacementTracks = Combiner.push([], ...replacementArrayTracks);
-        let copyTracks = Selector.sliceCopy(originTracks);
+    function replaceWithSimilar(params) {
+        let replacementTracks = Combiner.push([], params.replace.flat(1));
+        let copyTracks = Selector.sliceCopy(params.origin);
         Filter.removeTracks(copyTracks, replacementTracks, true);
         let features = getCachedTracks(copyTracks, { features: {} }).features;
 
@@ -1174,20 +1174,20 @@ const Filter = (function () {
         });
 
         let keys = Object.keys(similarTracks);
-        let removedTracks = Combiner.push([], replacementTracks, originTracks);
-        let resultTracks = originTracks.map((track) => {
+        let removedTracks = Combiner.push([], replacementTracks, params.origin);
+        let resultTracks = params.origin.map((track) => {
             if (keys.includes(track.id)) {
                 if (similarTracks[track.id].length > 0) {
-                    Filter.removeTracks(similarTracks[track.id], removedTracks);
-                    track = Selector.sliceRandom(similarTracks[track.id], 1)[0];
+                    Filter.removeTracks(similarTracks[track.id], removedTracks.flat(1));
+                    track = Selector.sliceRandom(similarTracks[track.id], params.count || 1);
                     removedTracks.push(track);
                 } else {
                     track = null;
                 }
             }
             return track;
-        });
-        Combiner.replace(originTracks, resultTracks.filter(t => t != null));
+        }).flat(1);
+        Combiner.replace(params.origin, resultTracks.filter(t => t != null));
     }
 
     function matchExceptMix(items) {
