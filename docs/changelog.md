@@ -11,6 +11,7 @@
 - `getPlayback` перемещен в `Player`.
 - `removeTracks` и `removeArtists` получили режим проверки только основного исполнителя трека.
 - Изменен формат входных параметров у [replaceWithSimilar](/func?id=replacewithsimilar).
+- Исправлена ошибка с `getTop*`. Spotify не допускает в нем параметр `locale`. Пишите на форум если встретите ошибку `invalid request`.
 
 ## Версия 1.5.0
 - Учитывать всех исполнителей трека в фильтр-функциях `remove*`, `match*`, `dedup*`.

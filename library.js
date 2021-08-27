@@ -212,11 +212,11 @@ const Source = (function () {
     function getTop(timeRange, type) {
         timeRange = isValidTimeRange(timeRange) ? timeRange : 'medium';
         // Баг Spotify: https://community.spotify.com/t5/Spotify-for-Developers/Bug-with-offset-for-method-quot-Get-User-s-Top-Artists-and/td-p/5032362
-        let template = API_BASE_URL + '/me/top/%s?offset=%s&limit=%s&&time_range=%s_term';
+        let template = API_BASE_URL + '/me/top/%s?offset=%s&limit=%s&time_range=%s_term';
         return SpotifyRequest.getAll([
             Utilities.formatString(template, type, 0, 49, timeRange),
             Utilities.formatString(template, type, 49, 49, timeRange),
-        ]).reduce((items, response) => {
+        ], false).reduce((items, response) => {
             return Combiner.push(items, response.items);
         }, []);
     }
@@ -3128,11 +3128,11 @@ const SpotifyRequest = (function () {
         return extractContent(fetch(appendLocale(url)));
     }
 
-    function getAll(urls) {
+    function getAll(urls, allowLocale = true) {
         let requests = [];
         urls.forEach((url) => {
             requests.push({
-                url: appendLocale(url),
+                url: allowLocale ? appendLocale(url) : url,
                 headers: getHeaders(),
                 method: 'get',
             });
