@@ -1638,6 +1638,15 @@ let tracks = Source.getTracks(playlistArray);
 tracks = Selector.sliceNoLongerThan(tracks, 60);
 ```
 
+Пример 2 - Чтобы вычислить продолжительность треков из массива, используйте один из вариантов
+```js
+let tracks = Source.getPlaylistTracks('', '37i9dQZF1DX5PcuIKocvtW');
+let duration_ms = tracks.reduce((d, t) => d + t.duration_ms, 0); // миллесекунды
+let duration_s = tracks.reduce((d, t) => d + t.duration_ms, 0) / 1000; // секунды
+let duration_min = tracks.reduce((d, t) => d + t.duration_ms, 0) / 1000 / 60; // минуты
+let duration_h = tracks.reduce((d, t) => d + t.duration_ms, 0) / 1000 / 60 / 60; // часы
+```
+
 ### keepRandom / sliceRandom
 
 Изменяет / возвращает массив, состоящий из случайно отобранных элементов исходного массива.
@@ -2166,15 +2175,21 @@ let tracks = Source.getSavedAlbumTracks();
 
 ### getSavedTracks
 
-Возвращает массив любимых треков (лайков).
+Возвращает массив любимых треков (лайков). Сортировка от новых к старым. Если лайки добавлялись автоматическими средствами, дата одинакова. Поэтому конечная сортировка массива и интерфейса Spotify может различаться.
 
-Аргументов нет.
+Аргумент
+- (число) `limit` - если указано, ограничивает количество треков и запросы для их получения. Когда не указано возвращаются все.
 
 ?> Если у вас много любимых треков и в скрипте нужно выполнить разные действия над ними, создайте копию массива [sliceCopy](/func?id=slicecopy) вместо новых запросов к Spotify.
 
 Пример 1 - Получить массив любимых треков.
 ```js
 let tracks = Source.getSavedTracks();
+```
+
+Пример 2 - Получить последние 5 лайков.
+```js
+let tracks = Source.getSavedTracks(5);
 ```
 
 ### getTopArtists

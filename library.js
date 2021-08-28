@@ -544,9 +544,10 @@ const Source = (function () {
         return items;
     }
 
-    function getSavedTracks() {
-        let items = SpotifyRequest.getItemsByPath('me/tracks?limit=50', 400);
-        return extractTracks(items);
+    function getSavedTracks(limit = 25000) {
+        let requestCount = Math.ceil(limit / 50);
+        let items = SpotifyRequest.getItemsByPath('me/tracks?limit=50', requestCount);
+        return Selector.sliceFirst(extractTracks(items), limit);
     }
 
     function extractTracks(items) {
@@ -3050,7 +3051,7 @@ const SpotifyRequest = (function () {
         let response = get(url);
         if (response.items.length < response.total) {
             let method = response.cursors ? getItemsByCursor : getItemsByNext;
-            return method(response, limitRequestCount);
+            return method(response, limitRequestCount - 1);
         }
         return response.items;
     }
