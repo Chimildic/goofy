@@ -91,6 +91,8 @@ let tracks = Source.getSavedTracks();
 tracks.forEach(track => console.log(track.name));
 ```
 
+Кроме того, полезным будут [горячие клавиши](https://github.com/Chimildic/goofy/discussions/112) для быстрого перехода к описанию функции прямо из редактора кода.
+
 ## Палитра команд
 
 Палитра команд - это список действий, доступных редактору кода. Приведем некоторые полезные из них.
