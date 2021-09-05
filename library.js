@@ -902,18 +902,7 @@ const Combiner = (function () {
 })();
 
 const RangeTracks = (function () {
-    const BAN_KEYS = [
-        'genres',
-        'ban_genres',
-        'release_date',
-        'followed_include',
-        'include',
-        'exclude',
-        'groups',
-        'artist_limit',
-        'album_limit',
-        'track_limit',
-    ];
+    const BAN_KEYS = ['genres', 'ban_genres', 'release_date', 'followed_include', 'include', 'exclude', 'groups', 'artist_limit', 'album_limit', 'track_limit'];
 
     let _cachedTracks;
     let _lastOutRange;
@@ -1055,16 +1044,13 @@ const RangeTracks = (function () {
             return false;
         }
         for (let key in args) {
-            if ((typeof obj[key] === 'boolean' && !obj[key]) || BAN_KEYS.includes(key)) {
+            if (BAN_KEYS.includes(key)) {
                 continue;
-            }
-
-            if (Array.isArray(args[key]) && !args[key].some(value => value == obj[key])) {
-                return false;
-            } else if (typeof args[key] == 'object' && (obj[key] < args[key].min || obj[key] > args[key].max)) {
-                return false;
-            } else if (typeof args[key] != 'object' && args[key] != obj[key]) {
-                return false;
+            } else if ((Array.isArray(args[key]) && !args[key].some(value => value == obj[key]))
+                || (typeof args[key] == 'object' && (obj[key] < args[key].min || obj[key] > args[key].max))
+                || (typeof args[key] != 'object' && args[key] != obj[key])
+            ) {
+                return false
             }
         }
         return true;
