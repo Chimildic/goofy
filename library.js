@@ -2790,13 +2790,10 @@ const Search = (function () {
             return Utilities.formatString(TEMPLATE, CustomUrlFetchApp.parseQuery(queryObj));
         });
         return SpotifyRequest.getAll(urls).map((response, index) => {
-            if (!response || !response.items) {
-                return {};
-            }
+            if (!response || !response.items) return {};
             let foundItem = response.items.find(item => {
-                let foundName = item.name.formatName();
-                let keyword = textArray[index].formatName();
-                return foundName == keyword;
+                let foundName = type == 'track' ? `${item.artists[0].name} ${item.name}` : item.name;
+                return foundName.formatName() == textArray[index].formatName();
             });
             return foundItem || response.items[0];
         });
