@@ -2283,6 +2283,9 @@ const Lastfm = (function () {
             };
             let firstPage = getPage(queryObj);
             let totalPages = parseInt(firstPage.recenttracks['@attr'].totalPages);
+            if (totalPages == 0) {
+                return [];
+            }
 
             let urls = [];
             for (let i = 2; i <= totalPages; i++) {
