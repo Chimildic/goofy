@@ -1793,6 +1793,7 @@ const Playlist = (function () {
         } else if (data.hasOwnProperty('randomCover')) {
             setCover(playlist.id, getRandomCoverContent());
         }
+        return playlist.id;
     }
 
     function createPlaylist(payload) {
@@ -1801,15 +1802,15 @@ const Playlist = (function () {
     }
 
     function saveWithReplace(data) {
-        saveWithModify(replaceTracks, data);
+        return saveWithModify(replaceTracks, data);
     }
 
     function saveWithAppend(data) {
-        saveWithModify(addTracks, data);
+        return saveWithModify(addTracks, data);
     }
 
     function saveWithUpdate(data) {
-        saveWithModify(updateTracks, data);
+        return saveWithModify(updateTracks, data);
     }
 
     function saveWithModify(modifyMethod, data) {
@@ -1821,15 +1822,15 @@ const Playlist = (function () {
             modifyMethod(data);
             changeDetails(data);
             changeCover(data);
-            return;
+            return data.id;
         }
 
         let playlist = getByName(data.name);
         if (playlist == null) {
-            saveAsNew(data);
+            return saveAsNew(data);
         } else {
             data.id = playlist.id;
-            saveWithModify(modifyMethod, data);
+            return saveWithModify(modifyMethod, data);
         }
     }
 
