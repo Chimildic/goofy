@@ -570,6 +570,7 @@ const Source = (function () {
 const Player = (function () {
     return {
         getPlayback: getPlayback,
+        transferPlayback: transferPlayback,
         getAvailableDevices: getAvailableDevices,
         next: next,
         previous: previous,
@@ -582,6 +583,13 @@ const Player = (function () {
 
     function getPlayback() {
         return SpotifyRequest.get(API_BASE_URL + '/me/player') || {};
+    }
+
+    function transferPlayback(deviceId, isPlay) {
+        return SpotifyRequest.put('https://api.spotify.com/v1/me/player', {
+            device_ids: [deviceId],
+            play: isPlay,
+        });
     }
 
     function getAvailableDevices() {

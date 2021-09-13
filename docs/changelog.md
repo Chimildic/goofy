@@ -9,6 +9,7 @@
 ## Версия 1.5.1
 - Новый модуль [Player](/func?id=player). Нужно [обновить права доступа](/install?id=Обновить-права-доступа).
 - `getPlayback` перемещен в `Player`.
+- Добавлена функция [Player.transferPlayback](/func?id=transferplayback)
 - `removeTracks` и `removeArtists` получили режим проверки только основного исполнителя трека.
 - Изменен формат входных параметров у [replaceWithSimilar](/func?id=replacewithsimilar).
 - Исправлена ошибка с `getTop*`. Spotify не допускает в нем параметр `locale`. Пишите на форум если встретите ошибку `invalid request`.
