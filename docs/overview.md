@@ -1,10 +1,10 @@
 # goofy  
 
-Конструктор плейлистов Spotify. Позволяет агрегировать треки, применять фильтры и обновлять плейлисты по расписанию.
+Конструктор плейлистов Spotify. Позволяет агрегировать треки, применять фильтры и обновлять плейлисты по расписанию. Чтобы начать перейдите к [установке](/install).
 
 Представляет собой библиотеку JavaScript для взаимодействия [Spotify Web API](https://developer.spotify.com/documentation/web-api/) и [Google Apps Script](https://developers.google.com/apps-script). 
 
-Обладает широкой функциональностью. Отслеживает историю прослушиваний, взаимодействует с Last.fm, позволяет импортировать треки FM-радио. Реализует все возможности сервисов [Smarter Playlists](http://smarterplaylists.playlistmachinery.com/about.html), [Playlist Miner](http://playlistminer.playlistmachinery.com/).
+Обладает широкой функциональностью. Отслеживает историю прослушиваний, взаимодействует с Last.fm, позволяет импортировать треки FM-радио. Реализует все возможности сервисов [Smarter Playlists](http://smarterplaylists.playlistmachinery.com/about.html), [Playlist Miner](http://playlistminer.playlistmachinery.com/). С помощью [Tasker](https://github.com/Chimildic/goofy/discussions/124) количество событий для активации практически неограниченно (голос, местоположение, кнопка, будильник, уведомление и прочее).
 
 ?> Базовое использование не требует навыков программирования. У всего есть пошаговая инструкция.
 
