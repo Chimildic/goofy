@@ -1117,7 +1117,9 @@ const Filter = (function () {
 
     function removeArtists(original, removable, invert = false, mode = 'every') {
         let artists = removable.map(item =>
-            mode == 'every' ? (item.artists || item) : (item.artists[0] || item)
+            item.artists
+                ? mode == 'every' ? item.artists : item.artists[0]
+                : item
         ).flat(1);
         let ids = artists.toObject((item) => item.id);
         let filteredTracks = original.filter((item) => invert ^ !getArtistIds(item, mode).some(id => ids.hasOwnProperty(id)));
