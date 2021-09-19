@@ -1,5 +1,5 @@
 // Документация: https://chimildic.github.io/goofy/
-const VERSION = '1.5.1';
+const VERSION = '1.5.2';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -185,6 +185,7 @@ const Source = (function () {
         getFollowedTracks: getFollowedTracks,
         getSavedTracks: getSavedTracks,
         getSavedAlbumTracks: getSavedAlbumTracks,
+        getSavedAlbums: getSavedAlbums,
         getRecomTracks: getRecomTracks,
         getArtists: getArtists,
         getArtistsAlbums: getArtistsAlbums,
@@ -336,16 +337,12 @@ const Source = (function () {
     }
 
     function getSavedAlbumTracks(limit) {
-        let items = getSavedAlbumItems();
+        let items = getSavedAlbums();
         Selector.keepRandom(items, limit);
-        return extractAlbumTracks(items);
+        return items.reduce((tracks, album) => Combiner.push(tracks, album.tracks.items), []);
     }
 
-    function extractAlbumTracks(albums) {
-        return albums.reduce((tracks, album) => Combiner.push(tracks, album.tracks.items), []);
-    }
-
-    function getSavedAlbumItems() {
+    function getSavedAlbums() {
         return SpotifyRequest.getItemsByPath('me/albums?limit=50', 400).map((item) => {
             let album = item.album;
             album.added_at = item.added_at;

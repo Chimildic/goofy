@@ -6,6 +6,9 @@
 
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+## Версия 1.5.2
+- Новая функция [getSavedAlbums](/func?id=getsavedalbums);
+
 ## Версия 1.5.1
 - Новый модуль [Player](/func?id=player). Нужно [обновить права доступа](/install?id=Обновить-права-доступа).
 - `getPlayback` перемещен в `Player`.
