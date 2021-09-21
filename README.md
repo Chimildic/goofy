@@ -2,8 +2,8 @@
 <p align="center">Конструктор плейлистов Spotify. Сбор треков, фильтр, обновление по событиям. Бесплатно.</p>
 </br>
 
-<a target="_blank" href="https://unsplash.com/photos/8e0EHPUx3Mo"><img align="right" width="200px" style="border-radius: 10px; margin: 0 0 0 0" src="docs/img/pls-cover-1.jpg"></a>
-<a target="_blank" href="https://unsplash.com/photos/wejxKZ-9IZg"><img align="right" width="200px" style="border-radius: 10px; margin: 0 0 0 0" src="docs/img/pls-cover-2.jpg"></a>
+<a target="_blank" href="https://unsplash.com/photos/8e0EHPUx3Mo"><img align="right" width="160px" style="border-radius: 10px; margin: 0 0 0 0" src="docs/img/pls-cover-1.jpg"></a>
+<a target="_blank" href="https://unsplash.com/photos/wejxKZ-9IZg"><img align="right" width="160px" style="border-radius: 10px; margin: 0 0 0 0" src="docs/img/pls-cover-2.jpg"></a>
 
 Песочница для экспериментов
     <ul style="margin: 10em">
