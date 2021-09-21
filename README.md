@@ -1,37 +1,21 @@
-# goofy 
+<center><img width="40%" style="margin: 4em 0 2em 0" src="docs/img/logo.svg"></img></center>
 
-Конструктор плейлистов. Позволяет агрегировать треки, применять фильтры и обновлять плейлисты по расписанию.
+<center style="margin: 0 0 3em 0">Конструктор плейлистов Spotify. Сбор треков, фильтр, обновление по событиям. Бесплатно.</center>
 
-Представляет собой библиотеку JavaScript для взаимодействия [Spotify Web API](https://developer.spotify.com/documentation/web-api/) и [Google Apps Script](https://developers.google.com/apps-script). 
+<div style="display: flex; justify-content: space-between; flex-wrap: wrap; margin: 0 0 2em 0">
+  <div><a target="_blank" href="https://unsplash.com/photos/8e0EHPUx3Mo"><img width="200px" style="border-radius: 10px; margin: 0 0 0 0" src="docs/img/pls-cover-1.jpg"></a> </div>
+  <div>
+    <center>Песочница для экспериментов</center>
+    <ul>
+      <li>отслеживает историю прослушиваний</li>
+      <li>повторяет функции <a target="_blank" href="http://smarterplaylists.playlistmachinery.com/about.html">Smarter Playlists</a> и <a target="_blank" href="http://playlistminer.playlistmachinery.com/">Playlist Miner</a></li>
+      <li>импортирует <a target="_blank" href="https://chimildic.github.io/goofy/#/addon?id=Импорт-треков-с-радио">FM-радио</a> и Last.fm</li>
+      <li>позволяет динамически менять очередь треков</li>
+      <li>собирает рекомендации и новые релизы, включая <a target="_blank" href="https://everynoise.com/new_releases_by_genre.cgi">Every Noise</a></li>
+      <li>работает по расписанию и событиям <a target="_blank" href="https://github.com/Chimildic/goofy/discussions/124">Tasker</a></li>
+    </ul>
+  </div>
+  <div><a target="_blank" href="https://unsplash.com/photos/wejxKZ-9IZg"><img width="200px" style="border-radius: 10px; margin: 0 0 0 0" src="docs/img/pls-cover-2.jpg"></a> </div>
+</div> 
 
-Обладает широкой функциональностью. Отслеживает историю прослушиваний, взаимодействует с Last.fm, позволяет импортировать треки FM-радио. Реализует все возможности сервисов [Smarter Playlists](http://smarterplaylists.playlistmachinery.com/about.html), [Playlist Miner](http://playlistminer.playlistmachinery.com/).
-
-> Базовое использование не требует навыков программирования. Процесс сводится к выполнению простых шагов.
-
-К примеру, несколько коротких алгоритмов:
-- Объединить личные миксы с удалением ранее прослушанных треков
-- Собирать треки из найденных по ключевым словам плейлистам
-- Миксовать треки разных FM-радиостанций
-- Выявлять давно непрослушиваемых треков
-- Собирать новинки отслеживаемых исполнителей
-- Получать рекомендации Last.fm любого пользователя
-- Переносить треки с Яндекс.Музыки, в том числе любимых (лайков)
-
-## Начало работы
-- [Обзор](https://chimildic.github.io/goofy/#/overview?id=Принцип-работы)
-- [Установка](https://chimildic.github.io/goofy/#/install)
-- [Первый плейлист](https://chimildic.github.io/goofy/#/first-playlist)
-
-## Использование
-- [Шаблоны](https://chimildic.github.io/goofy/#/template)
-- [Аддоны](https://chimildic.github.io/goofy/#/addon)
-
-## Документация
-- [Список функций](https://chimildic.github.io/goofy/#/func)
-- [Решение ошибок](https://chimildic.github.io/goofy/#/errors)
-- [Дополнительно](https://chimildic.github.io/goofy/#/guide)
-
-## Помощь
-
-При возникновении ошибки, поищите решение [здесь](https://chimildic.github.io/goofy/#/errors). Если не удается решить проблему или нужна помощь с алгоритмом создайте новую тему [на форуме](https://github.com/Chimildic/goofy/discussions).
-Подробная документация о функциях доступна [здесь](https://chimildic.github.io/goofy/#/func). Перед тем как задать вопрос, пожалуйста, ознакомьтесь с ней.
+<center>Выполните <a target="_blank" href="https://chimildic.github.io/goofy/#/install">установку</a> и создайте свой <a target="_blank" href="https://chimildic.github.io/goofy/#/first-playlist">первый плейлист</a></center>
