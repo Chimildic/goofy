@@ -1,9 +1,9 @@
-<center><img width="40%" style="margin: 4em 0 2em 0" src="/img/logo.svg"></img></center>
+<center><img width="40%" style="margin: 4em 0 2em 0" src="img/logo.svg"></img></center>
 
 <center style="margin: 0 0 3em 0">Конструктор плейлистов Spotify. Сбор треков, фильтр, обновление по событиям. Бесплатно.</center>
 
 <div style="display: flex; justify-content: space-between; flex-wrap: wrap; margin: 0 0 2em 0">
-  <div><a target="_blank" href="https://unsplash.com/photos/8e0EHPUx3Mo"><img width="200px" style="border-radius: 10px; margin: 0 0 0 0" src="/img/pls-cover-1.jpg"></a> </div>
+  <div><a target="_blank" href="https://unsplash.com/photos/8e0EHPUx3Mo"><img width="200px" style="border-radius: 10px; margin: 0 0 0 0" src="img/pls-cover-1.jpg"></a> </div>
   <div>
     <center>Песочница для экспериментов</center>
     <ul>
@@ -15,7 +15,7 @@
       <li>работает по расписанию и событиям <a target="_blank" href="https://github.com/Chimildic/goofy/discussions/124">Tasker</a></li>
     </ul>
   </div>
-  <div><a target="_blank" href="https://unsplash.com/photos/wejxKZ-9IZg"><img width="200px" style="border-radius: 10px; margin: 0 0 0 0" src="/img/pls-cover-2.jpg"></a> </div>
+  <div><a target="_blank" href="https://unsplash.com/photos/wejxKZ-9IZg"><img width="200px" style="border-radius: 10px; margin: 0 0 0 0" src="img/pls-cover-2.jpg"></a> </div>
 </div> 
 
 <center>Выполните <a target="_blank" href="https://chimildic.github.io/goofy/#/install">установку</a> и создайте свой <a target="_blank" href="https://chimildic.github.io/goofy/#/first-playlist">первый плейлист</a></center>
