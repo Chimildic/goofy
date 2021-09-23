@@ -2417,27 +2417,11 @@ const Lastfm = (function () {
 })();
 
 const Yandex = (function () {
-    const YANDEX_PLAYLIST = 'https://music.mts.ru/handlers/playlist.jsx?';
     const YANDEX_LIBRARY = 'https://music.mts.ru/handlers/library.jsx?';
 
     return {
-        getTracks: getTracks,
         getArtists: getArtists,
-        getAlbums: getAlbums,
     };
-
-    function getTracks(owner, kinds, limit, offset) {
-        let responsePlaylist = getPlaylist({
-            owner: owner,
-            kinds: kinds,
-            light: false,
-        });
-        if (!(typeof responsePlaylist === 'object' && responsePlaylist.playlist)) {
-            return [];
-        }
-        let trackItems = slice(responsePlaylist.playlist.tracks, limit, offset);
-        return Search.multisearchTracks(trackItems, getTrackNameYandex);
-    }
 
     function getArtists(owner, limit, offset) {
         let responseLibrary = getLibrary({ owner: owner, filter: 'artists' });
@@ -2445,41 +2429,13 @@ const Yandex = (function () {
         return Search.multisearchArtists(artistItems, getArtistNameYandex);
     }
 
-    function getAlbums(owner, limit, offset) {
-        let responseLibrary = getLibrary({ owner: owner, filter: 'albums' });
-        let albumsItems = slice(responseLibrary.albums, limit, offset);
-        return Search.multisearchAlbums(albumsItems, getAlbumNameYandex);
-    }
-
     function getLibrary(queryObj) {
         let url = YANDEX_LIBRARY + CustomUrlFetchApp.parseQuery(queryObj);
         return CustomUrlFetchApp.fetch(url) || {};
     }
 
-    function getPlaylist(queryObj) {
-        let url = YANDEX_PLAYLIST + CustomUrlFetchApp.parseQuery(queryObj);
-        return CustomUrlFetchApp.fetch(url) || {};
-    }
-
-    function getTrackNameYandex(item) {
-        if (!item.title) {
-            return '';
-        }
-        if (item.artists.length == 0 || !item.artists[0].name) {
-            return item.title.formatName();
-        }
-        return `${item.artists[0].name} ${item.title}`.formatName();
-    }
-
     function getArtistNameYandex(item) {
         return item && item.name ? item.name.formatName() : '';
-    }
-
-    function getAlbumNameYandex(item) {
-        if (item && item.title) {
-            return `${item.title} ${item.artists[0].name}`.formatName();
-        }
-        return '';
     }
 
     function slice(array, limit, offset) {

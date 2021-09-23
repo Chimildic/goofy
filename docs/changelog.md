@@ -7,7 +7,8 @@
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
 ## Версия 1.5.2
-- Новые функции [getSavedAlbums](/func?id=getsavedalbums), [followPlaylists](/func?id=followPlaylists), [unfollowPlaylists](/func?id=unfollowPlaylists)
+- Новые функции [getSavedAlbums](/func?id=getsavedalbums), [followPlaylists](/func?id=followPlaylists), [unfollowPlaylists](/func?id=unfollowPlaylists).
+- Из модуля `Yandex` удалены функции `getTracks` и `getAlbums`. Поскольку Яндекс перестал отвечать на такие запросы от Apps Script.
 
 ## Версия 1.5.1
 - Новый модуль [Player](/func?id=player). Нужно [обновить права доступа](/install?id=Обновить-права-доступа).
