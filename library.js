@@ -262,8 +262,12 @@ const Source = (function () {
     }
 
     function getFollowedTracks(params = {}) {
-        let items = getFollowedItems(params.type, params.userId, params.exclude);
-        return getTracks(Selector.sliceRandom(items, params.limit));
+        let playlists = getFollowedPlaylists(params.type, params.userId, params.exclude);
+        Selector.keepRandom(playlists, params.limit);
+        return !params.hasOwnProperty('isFlat') || params.isFlat  ? getTracks(playlists) : playlists.map(p => {
+            p.tracks.items = getTracks([p]);
+            return p;
+        });
     }
 
     function getArtistsTracks(params) {
@@ -350,7 +354,7 @@ const Source = (function () {
         });
     }
 
-    function getFollowedItems(type = 'followed', userId = User.getId(), excludePlaylist = []) {
+    function getFollowedPlaylists(type = 'followed', userId = User.getId(), excludePlaylist = []) {
         let playlistArray = Playlist.getPlaylistArray(userId);
         if (type != 'all') {
             playlistArray = playlistArray.filter((playlist) => {

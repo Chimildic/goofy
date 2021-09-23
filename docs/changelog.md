@@ -8,6 +8,7 @@
 
 ## Версия 1.5.2
 - Новые функции [getSavedAlbums](/func?id=getsavedalbums), [followPlaylists](/func?id=followPlaylists), [unfollowPlaylists](/func?id=unfollowPlaylists).
+- Функция [getFollowedTracks](/func?id=getfollowedtracks) получила параметр `isFlat`.
 - Из модуля `Yandex` удалены функции `getTracks` и `getAlbums`. Поскольку Яндекс перестал отвечать на такие запросы от Apps Script.
 
 ## Версия 1.5.1
