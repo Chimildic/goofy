@@ -2,7 +2,7 @@
 <p align="center">Конструктор плейлистов Spotify. Сбор треков, фильтр, обновление по событиям. Бесплатно.</p>
 <p align="center">Выполните <a target="_blank" href="https://chimildic.github.io/goofy/#/install">установку</a> и создайте свой <a target="_blank" href="https://chimildic.github.io/goofy/#/first-playlist">первый плейлист</a>.</p>
 
-### Песочница для экспериментов
+**Песочница для экспериментов**
 - отслеживает историю прослушиваний
 - повторяет функции <a target="_blank" href="http://smarterplaylists.playlistmachinery.com/about.html">Smarter Playlists</a> и <a target="_blank" href="http://playlistminer.playlistmachinery.com/">Playlist Miner</a></li>
 - импортирует <a target="_blank" href="https://chimildic.github.io/goofy/#/addon?id=Импорт-треков-с-радио">FM-радио</a> и Last.fm</li>

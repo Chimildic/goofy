@@ -1970,12 +1970,14 @@ const Playlist = (function () {
 
 const Library = (function () {
     return {
-        followArtists: followArtists,
-        unfollowArtists: unfollowArtists,
-        saveFavoriteTracks: saveFavoriteTracks,
-        deleteFavoriteTracks: deleteFavoriteTracks,
-        saveAlbums: saveAlbums,
         deleteAlbums: deleteAlbums,
+        deleteFavoriteTracks: deleteFavoriteTracks,
+        followArtists: followArtists,
+        followPlaylists: followPlaylists,
+        saveAlbums: saveAlbums,
+        saveFavoriteTracks: saveFavoriteTracks,
+        unfollowArtists: unfollowArtists,
+        unfollowPlaylists: unfollowPlaylists,
     };
 
     function followArtists(artists) {
@@ -1990,6 +1992,20 @@ const Library = (function () {
         let url = `${API_BASE_URL}/me/following?type=artist`;
         let ids = artists.map((artist) => artist.id);
         method({ url: url, items: ids, limit: 50, key: 'ids' });
+    }
+
+    function followPlaylists(playlists) {
+        modifyFollowPlaylists(SpotifyRequest.put, playlists);
+    }
+
+    function unfollowPlaylists(playlists) {
+        modifyFollowPlaylists(SpotifyRequest.deleteRequest, playlists);
+    }
+
+    function modifyFollowPlaylists(method, playlists) {
+        playlists = Array.isArray(playlists) ? playlists : playlists.split(',').map(id => { return { id: id } });
+        let urls = playlists.map(p => `${API_BASE_URL}/playlists/${p.id}/followers`);
+        urls.forEach(url => method(url));
     }
 
     function saveFavoriteTracks(tracks) {

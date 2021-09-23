@@ -929,6 +929,13 @@ Library.deleteFavoriteTracks(savedTracks);
 
 Пример в [Yandex.getArtists](/func?id=getartists)
 
+### followPlaylists
+
+Подписаться на плейлисты
+
+Аргумент
+- (массив/строка) `playlists` - перечень плейлистов (значимо только _id_) или строка с _id_, разделенными запятой.
+
 ### saveAlbums
 
 Добавить альбомы в библиотеку.
@@ -959,6 +966,13 @@ Library.saveFavoriteTracks(yandexTracks);
 - (массив) `artists` - перечень исполнителей. Значимо только `id`.
 
 Пример аналогичен [Yandex.getArtists](/func?id=getartists). Только использовать `unfollowArtists`.
+
+### unfollowPlaylists
+
+Отписаться от плейлистов
+
+Аргумент
+- (массив/строка) `playlists` - перечень плейлистов (объекты с _id_) или строка с _id_, разделенными запятой.
 
 ## Order
 
