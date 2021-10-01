@@ -1089,7 +1089,12 @@ const Filter = (function () {
         function defineUnavailableState() {
             if (unclearState.length == 0) return;
             SpotifyRequest.getFullObjByIds('tracks', unclearState, 50, market).forEach((t, i) => {
-                if (t.hasOwnProperty('is_playable') && t.is_playable) {
+                if (!t) {
+                  let id = unclearState[i];
+                  let track = tracks.find(t => t.id == id);
+                  console.log(`У трека изменился id, старое значение ${id} (${getTrackKeys(track)})`);
+                  unavailableState.push(id);
+                } else if (t.hasOwnProperty('is_playable') && t.is_playable) {
                     let id = t.linked_from ? t.linked_from.id : t.id;
                     availableState.push(id);
                 } else {
