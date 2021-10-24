@@ -631,6 +631,7 @@ Filter.removeUnavailable(tracks);
   - (массив) `origin` - где заменять
   - (массив) `replace` - что заменять (можно несколько)
   - (число) `count` - количество рекомендованных треков на место оригинала. По умолчанию 1, максимум 100. Выходное количество может быть меньше из-за отсутствия рекомендаций или удаления дубликатов.
+  - (бул) `isRemoveOriginArtists` - при `true` удаляет из рекомендаций исполнителей, встречающихся в `origin`. При `false` оставляет. По умолчанию `false`.
 
 Пример 1 - Заменить недавно игравшие треки и лайки плейлиста на близкие аналоги
 ```js
@@ -640,6 +641,16 @@ Filter.replaceWithSimilar({
     replace: [RecentTracks.get(2000), Source.getSavedTracks()],
     count: 3
 });
+```
+
+Пример 2 - Получить рекомендации по любимым трекам без участия исходных исполнителей
+```js
+let tracks = Source.getSavedTracks();
+Filter.replaceWithSimilar({
+  origin: tracks,
+  replace: tracks,
+  isRemoveOriginArtists: true,
+})
 ```
 
 ## Lastfm

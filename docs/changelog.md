@@ -8,6 +8,7 @@
 
 ## Версия 1.5.3
 - Новая функция [checkFavoriteTracks](/func?id=checkfavoritetracks).
+- К [replaceWithSimilar](/func?id=replacewithsimilar) добавлен параметр, позволяющий удалить исходных исполнителей из рекомендаций.
 
 ## Версия 1.5.2
 - Новые функции [getSavedAlbums](/func?id=getsavedalbums), [followPlaylists](/func?id=followPlaylists), [unfollowPlaylists](/func?id=unfollowPlaylists).

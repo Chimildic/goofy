@@ -1174,6 +1174,9 @@ const Filter = (function () {
             similarTracks[item.id] = similarTracks[item.id] || [];
             Combiner.push(similarTracks[item.id], r.tracks);
             Filter.dedupTracks(similarTracks[item.id]);
+            if (params.isRemoveOriginArtists) {
+                Filter.removeArtists(similarTracks[item.id], params.origin);
+            }
         });
 
         let keys = Object.keys(similarTracks);
