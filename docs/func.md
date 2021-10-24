@@ -900,6 +900,20 @@ Playlist.saveAsNew({
 
 Действия над любимыми треками и подписками на исполнителей
 
+### checkFavoriteTracks
+
+Проверяет каждый трек на наличие в любимых (лайках). К трекам добавляется ключ `isFavorite` с бул значением.
+
+Аргументы
+- (массив) `tracks` - массив проверяемых треков.
+
+Пример 1 - Оставить только отсутствующие в любимых треки
+```js
+let tracks = Source.getPlaylistTracks('', 'id')
+Library.checkFavoriteTracks(tracks);
+tracks = tracks.filter(t => !t.isFavorite);
+```
+
 ### deleteAlbums
 
 Удалить альбомы из библиотеки.

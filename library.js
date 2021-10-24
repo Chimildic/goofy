@@ -1,5 +1,5 @@
 // Документация: https://chimildic.github.io/goofy/
-const VERSION = '1.5.2';
+const VERSION = '1.5.3';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -1979,6 +1979,7 @@ const Playlist = (function () {
 
 const Library = (function () {
     return {
+        checkFavoriteTracks: checkFavoriteTracks,
         deleteAlbums: deleteAlbums,
         deleteFavoriteTracks: deleteFavoriteTracks,
         followArtists: followArtists,
@@ -1988,6 +1989,20 @@ const Library = (function () {
         unfollowArtists: unfollowArtists,
         unfollowPlaylists: unfollowPlaylists,
     };
+
+    function checkFavoriteTracks(tracks) {
+        let urls = [];
+        let limit = 50;
+        let offset = 50;
+        for (let i = 0; i < Math.ceil(tracks.length / limit); i++) {
+            let ids = tracks.slice(i * limit, offset).map(t => t.id);
+            urls.push(`${API_BASE_URL}/me/tracks/contains?ids=${ids}`);
+            offset += limit;
+        }
+        SpotifyRequest.getAll(urls).flat(1).map((value, i) => {
+            tracks[i].isFavorite = value;
+        })
+    }
 
     function followArtists(artists) {
         modifyFollowArtists(SpotifyRequest.putItems, artists);
