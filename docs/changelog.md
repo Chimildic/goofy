@@ -8,6 +8,7 @@
 
 ## Версия 1.5.4
 - Добавлена попытка повторного чтения файла `Cache.read` при возникновении неизвестной ошибки от службы Google Диска.
+- К [mineTracks](/func?id=minetracks) добавлен параметр для пропуска элементов.
 
 ## Версия 1.5.3
 - Новая функция [checkFavoriteTracks](/func?id=checkfavoritetracks).

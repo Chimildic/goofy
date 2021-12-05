@@ -396,6 +396,7 @@ const Source = (function () {
         function reduceResult() {
             return result.reduce((tracks, array) => {
                 selectMethod(array, params.itemCount || 3);
+                Selector.keepAllExceptFirst(array, params.skipCount || 0);
                 let trackItems = getTracksMethod ? getTracksMethod(array) : array;
                 return Combiner.push(tracks, filterPopularity(trackItems));
             }, []);
