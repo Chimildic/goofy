@@ -628,10 +628,18 @@ const Player = (function () {
         return SpotifyRequest.put(url, params);
     }
 
-    function addToQueue(track, deviceId) {
-        let queryObj = { uri: `spotify:track:${track.id}` };
-        let url = createUrl('/me/player/queue', deviceId, queryObj);
-        return SpotifyRequest.post(url);
+    function addToQueue(tracks, deviceId) {
+        if (Array.isArray(tracks)) {
+            tracks.forEach(t => addItem(t.id));
+        } else {
+            addItem(tracks.id);
+        }
+
+        function addItem(id){
+            let queryObj = { uri: `spotify:track:${id}` };
+            let url = createUrl('/me/player/queue', deviceId, queryObj);
+            return SpotifyRequest.post(url);
+        }
     }
 
     function createUrl(path, deviceId = '', queryObj = {}) {
