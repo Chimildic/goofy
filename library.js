@@ -1,4 +1,5 @@
-// Документация: https://chimildic.github.io/goofy/
+// Документация: https://chimildic.github.io/goofy
+// Форум: https://github.com/Chimildic/goofy/discussions
 const VERSION = '1.5.4';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
@@ -80,7 +81,7 @@ const CustomUrlFetchApp = (function () {
                 }
             });
             if (seconds > 0) {
-                console.info('Пауза в отправке запросов', seconds);
+                console.info('Отправка запросов продолжится после паузы', seconds);
                 Utilities.sleep(seconds * 1000);
                 Combiner.push(result, sendPack(failed));
             }
@@ -93,8 +94,8 @@ const CustomUrlFetchApp = (function () {
             } catch (e) {
                 console.error(e.stack);
                 if (attempt++ < 2) {
-                    console.error(`Повторная отправка через 10 секунд. Попытка ${attempt}`);
-                    Utilities.sleep(10000);
+                    console.info(`Через 5 секунд будет предпринята попытка повторить операцию`);
+                    Utilities.sleep(5000);
                     return tryFetchAll(requests, attempt);
                 }
             }
@@ -109,14 +110,14 @@ const CustomUrlFetchApp = (function () {
 
         function onRetryAfter() {
             let value = 1 + (response.getHeaders()['Retry-After'] || 2);
-            console.info('Пауза в отправке запросов', value);
+            console.info('Отправка запросов продолжится после паузы', value);
             Utilities.sleep(value * 1000);
             return fetch(url, params);
         }
 
         function tryFetchOnce() {
-            console.log('Попытка повторить запрос');
-            Utilities.sleep(3500);
+            console.info('Через 2 секунды будет предпринята попытка повторить операцию');
+            Utilities.sleep(2000);
             countRequest++;
             response = UrlFetchApp.fetch(url, params);
             if (isSuccess(response.getResponseCode())) {
@@ -161,7 +162,7 @@ const CustomUrlFetchApp = (function () {
         try {
             return JSON.parse(content);
         } catch (e) {
-            console.error('Не удалось перевести строку JSON в объект. ', e, e.stack, content);
+            console.error('Не удалось перевести строку JSON в объект', e, e.stack, content);
             return [];
         }
     }
@@ -1092,14 +1093,14 @@ const Filter = (function () {
                 if (!t) {
                     let id = unclearState[i];
                     let track = tracks.find(t => t.id == id);
-                    console.log(`У трека изменился id, старое значение ${id} (${getTrackKeys(track)})`);
+                    console.info(`У трека изменился id, старое значение ${id} (${getTrackKeys(track)})`);
                     unavailableState.push(id);
                 } else if (t.hasOwnProperty('is_playable') && t.is_playable) {
                     let id = t.linked_from ? t.linked_from.id : t.id;
                     availableState.push(id);
                 } else {
                     unavailableState.push(t.id);
-                    console.log('Трек нельзя послушать:', t.id, '-', getTrackKeys(t)[0]);
+                    console.info('Трек нельзя послушать:', t.id, '-', getTrackKeys(t)[0]);
                 }
             });
         }
@@ -1153,7 +1154,7 @@ const Filter = (function () {
         let urls = [];
         copyTracks.forEach((t) => {
             if (!features[t.id] || !features[t.id].danceability) {
-                console.log(`У трека ${t.artists[0].name} ${t.name} нет features`);
+                console.info(`У трека ${t.artists[0].name} ${t.name} нет features`);
                 return;
             }
             let params = {
@@ -1525,15 +1526,15 @@ const Selector = (function () {
         if (tracksByYear.hasOwnProperty(year) || tracks.length == 0) {
             return tracksByYear[year] || [];
         }
-        console.log(`Среди ${tracks.length} треков нет вышедших в ${year} году`);
+        console.info(`Среди ${tracks.length} треков нет вышедших в ${year} году`);
         year = parseInt(year);
         let keys = Object.keys(tracksByYear).map((item) => parseInt(item));
         let nearYear = keys.sort((x, y) => Math.abs(year - x) - Math.abs(year - y))[0];
         if (typeof nearYear != 'undefined' && Math.abs(nearYear - year) <= offset) {
-            console.log(`Выбран ближайший год: ${nearYear}`);
+            console.info(`Выбран ближайший год: ${nearYear}`);
             return tracksByYear[nearYear.toString()];
         }
-        console.log(`При смещении ${offset}, ближайший год не найден`);
+        console.info(`При смещении ${offset}, ближайший год не найден`);
         return [];
     }
 
@@ -2551,6 +2552,7 @@ const Cache = (function () {
                 break;
             }
             console.error(`Неизвестная ошибка при записи файла`);
+            console.info('Будет предпринята попытка повторить операцию (до 3 раз)')
             Utilities.sleep(5000);
         } while (--count != 0);
 
@@ -2603,13 +2605,12 @@ const Cache = (function () {
         try {
             return JSON.parse(content);
         } catch (e) {
-            console.error('Не удалось перевести строку JSON в объект. Length:', content.length, 'content:', content);
             console.error(e, e.stack);
-            throw 'Ошибка чтения файла';
+            throw 'Не удалось перевести строку JSON в объект. Length:' + content.length + 'Content:' + content;
         }
     }
 
-    function tryGetBlob(file){
+    function tryGetBlob(file) {
         try {
             return file.getBlob().getDataAsString();
         } catch {
@@ -2723,7 +2724,7 @@ const Search = (function () {
 
     function sendMusicRequest(context) {
         if (noFound.length == 0) {
-            console.log('sendMusicRequest: все элементы найдены, запрос не отправлен');
+            console.info('sendMusicRequest: все элементы найдены, запрос не отправлен');
             return;
         }
         let id = '1FAIpQLScMGwTBnCz8nOPkM5g9IwwbpKolEWOXkhpAUSl8JjlkKcBGKw';
