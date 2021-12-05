@@ -2545,20 +2545,20 @@ const Cache = (function () {
         }
         let ext = obtainFileExtension(filename);
         let raw = ext == 'json' ? JSON.stringify(content) : content;
+        trySetContent();
 
-        let count = 3;
-        do {
-            setContent();
-            if (content.length == 0 || file.getSize() > 0) {
-                break;
+        function trySetContent() {
+            try {
+                file = file.setContent(raw);
+                if (raw.length > 0 && file.getSize() == 0) {
+                    trySetContent();
+                }
+            } catch {
+                console.error(`Неизвестная ошибка при записи в файл`);
+                console.info('Через 5 секунд будет предпринята попытка повторить операцию');
+                Utilities.sleep(5000);
+                trySetContent();
             }
-            console.error(`Неизвестная ошибка при записи файла`);
-            console.info('Будет предпринята попытка повторить операцию (до 3 раз)')
-            Utilities.sleep(5000);
-        } while (--count != 0);
-
-        function setContent() {
-            file = file.setContent(raw);
         }
     }
 
@@ -2615,7 +2615,8 @@ const Cache = (function () {
         try {
             return file.getBlob().getDataAsString();
         } catch {
-            console.error('Неизвестная ошибка при получении данных из файла. Попытка повтора операции через 5 секунд.');
+            console.error('Неизвестная ошибка при получении данных из файла');
+            console.info('Через 5 секунд будет предпринята попытка повторить операцию');
             Utilities.sleep(5000);
             return tryGetBlob(file);
         }
