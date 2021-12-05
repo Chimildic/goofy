@@ -652,11 +652,6 @@ const RecentTracks = (function () {
     const MINUTES = 15;
     const ITEMS_LIMIT = parseInt(KeyValue.COUNT_RECENT_TRACKS) || 20000;
 
-    if (getTrigger('updateRecentTracks')) {
-        // Удаляет триггер предыдущих версий библиотеки
-        deleteTrigger('updateRecentTracks');
-    }
-
     if (!ON_SPOTIFY_RECENT_TRACKS && !ON_LASTFM_RECENT_TRACKS) {
         deleteTrigger(TRIGGER_FUCTION_NAME);
     } else if (!getTrigger(TRIGGER_FUCTION_NAME)) {
