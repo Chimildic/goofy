@@ -1,5 +1,5 @@
 // Документация: https://chimildic.github.io/goofy/
-const VERSION = '1.5.3';
+const VERSION = '1.5.4';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -264,7 +264,7 @@ const Source = (function () {
     function getFollowedTracks(params = {}) {
         let playlists = getFollowedPlaylists(params.type, params.userId, params.exclude);
         Selector.keepRandom(playlists, params.limit);
-        return !params.hasOwnProperty('isFlat') || params.isFlat  ? getTracks(playlists) : playlists.map(p => {
+        return !params.hasOwnProperty('isFlat') || params.isFlat ? getTracks(playlists) : playlists.map(p => {
             p.tracks.items = getTracks([p]);
             return p;
         });
@@ -1090,10 +1090,10 @@ const Filter = (function () {
             if (unclearState.length == 0) return;
             SpotifyRequest.getFullObjByIds('tracks', unclearState, 50, market).forEach((t, i) => {
                 if (!t) {
-                  let id = unclearState[i];
-                  let track = tracks.find(t => t.id == id);
-                  console.log(`У трека изменился id, старое значение ${id} (${getTrackKeys(track)})`);
-                  unavailableState.push(id);
+                    let id = unclearState[i];
+                    let track = tracks.find(t => t.id == id);
+                    console.log(`У трека изменился id, старое значение ${id} (${getTrackKeys(track)})`);
+                    unavailableState.push(id);
                 } else if (t.hasOwnProperty('is_playable') && t.is_playable) {
                     let id = t.linked_from ? t.linked_from.id : t.id;
                     availableState.push(id);
@@ -2496,7 +2496,7 @@ const Cache = (function () {
         if (ext == 'json') {
             return tryParseJSON(file);
         } else if (ext == 'txt' && file) {
-            return file.getBlob().getDataAsString();
+            return tryGetBlob(file);
         }
         return '';
     }
@@ -2599,13 +2599,23 @@ const Cache = (function () {
 
     function tryParseJSON(file) {
         if (!file) return [];
-        let content = file.getBlob().getDataAsString();
+        let content = tryGetBlob(file);
         try {
             return JSON.parse(content);
         } catch (e) {
             console.error('Не удалось перевести строку JSON в объект. Length:', content.length, 'content:', content);
             console.error(e, e.stack);
             throw 'Ошибка чтения файла';
+        }
+    }
+
+    function tryGetBlob(file){
+        try {
+            return file.getBlob().getDataAsString();
+        } catch {
+            console.error('Неизвестная ошибка при получении данных из файла. Попытка повтора операции через 5 секунд.');
+            Utilities.sleep(5000);
+            return tryGetBlob(file);
         }
     }
 

@@ -6,6 +6,9 @@
 
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+## Версия 1.5.4
+- Добавлена попытка повторного чтения файла `Cache.read` при возникновении неизвестной ошибки от службы Google Диска.
+
 ## Версия 1.5.3
 - Новая функция [checkFavoriteTracks](/func?id=checkfavoritetracks).
 - К [replaceWithSimilar](/func?id=replacewithsimilar) добавлен параметр, позволяющий удалить исходных исполнителей из рекомендаций.
