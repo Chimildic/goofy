@@ -1064,7 +1064,7 @@ const RangeTracks = (function () {
 })();
 
 const Filter = (function () {
-    function removeUnavailable(tracks, market = 'RU') {
+    function removeUnavailable(tracks, market = 'RU', isLogging = true) {
         let availableState = [];
         let unavailableState = [];
         let unclearState = [];
@@ -1089,14 +1089,14 @@ const Filter = (function () {
                 if (!t) {
                     let id = unclearState[i];
                     let track = tracks.find(t => t.id == id);
-                    console.info(`У трека изменился id, старое значение ${id} (${getTrackKeys(track)})`);
+                    isLogging && console.info(`У трека изменился id, старое значение ${id} (${getTrackKeys(track)})`);
                     unavailableState.push(id);
                 } else if (t.hasOwnProperty('is_playable') && t.is_playable) {
                     let id = t.linked_from ? t.linked_from.id : t.id;
                     availableState.push(id);
                 } else {
                     unavailableState.push(t.id);
-                    console.info('Трек нельзя послушать:', t.id, '-', getTrackKeys(t)[0]);
+                    isLogging && console.info('Трек нельзя послушать:', t.id, '-', getTrackKeys(t)[0]);
                 }
             });
         }

@@ -9,6 +9,7 @@
 ## Версия 1.5.4
 - Добавлена попытка повторного чтения/записи при неизвестной ошибки службы Google Диска.
 - К [mineTracks](/func?id=minetracks) добавлен параметр для пропуска элементов.
+- К [removeUnavailable](/func?id=removeunavailable) добавлен аргумент отключения сообщений с логами.
 
 ## Версия 1.5.3
 - Новая функция [checkFavoriteTracks](/func?id=checkfavoritetracks).
