@@ -635,7 +635,7 @@ const Player = (function () {
             addItem(tracks.id);
         }
 
-        function addItem(id){
+        function addItem(id) {
             let queryObj = { uri: `spotify:track:${id}` };
             let url = createUrl('/me/player/queue', deviceId, queryObj);
             return SpotifyRequest.post(url);
@@ -2073,6 +2073,7 @@ const Lastfm = (function () {
     const LASTFM_API_BASE_URL = 'http://ws.audioscrobbler.com/2.0/?';
     const LASTFM_STATION = 'https://www.last.fm/player/station/user';
     return {
+        rangeTags: rangeTags,
         removeRecentTracks: removeRecentTracks,
         removeRecentArtists: removeRecentArtists,
         getLovedTracks: getLovedTracks,
@@ -2398,14 +2399,56 @@ const Lastfm = (function () {
         return CustomUrlFetchApp.fetch(url) || [];
     }
 
+    function isNowPlayling(track) {
+        return track['@attr'] && track['@attr'].nowplaying === 'true';
+    }
+
+    function rangeTags(spotifyTracks, args) {
+        spotifyTracks.forEach(t => {
+            let queryObj = {
+                method: 'track.gettoptags',
+                user: args.user || KeyValue.LASTFM_LOGIN,
+                artist: t.artists[0].name.formatName(),
+                track: t.name.formatName(),
+                autocorrect: 1,
+            };
+            let response = CustomUrlFetchApp.fetch(createUrl(queryObj));
+            let trackname = `${t.artists[0].name} - ${t.name}`;
+            if (response.toptags && response.toptags.tag) {
+                if (response.toptags.tag.length > 0) {
+                    t.tags = response.toptags.tag
+                } else if (response.toptags.tag.length == 0 && args.isLogging) {
+                    console.info('У трека нет тегов', trackname);
+                }
+            } else if (response.error && args.isLogging) {
+                console.info(`${response.message}. Трек: ${trackname}`);
+            }
+        });
+
+        Combiner.replace(spotifyTracks, spotifyTracks.filter(t => {
+            if (!t.hasOwnProperty('tags') || t.tags.length == 0) {
+                return !args.isRemoveUnknown;
+            }
+            return isSomeBelong(t, args.include, true) && !isSomeBelong(t, args.exclude, false);
+        }));
+
+        function isSomeBelong(track, inputTags, defaultResult) {
+            if (!track || !Array.isArray(inputTags)) {
+                return defaultResult;
+            }
+            return inputTags.some(inputTag => {
+                return track.tags.some(trackTag =>
+                    trackTag.name == inputTag.name
+                    && trackTag.count >= (inputTag.minCount || 0)
+                );
+            });
+        }
+    }
+
     function createUrl(queryObj) {
         queryObj.api_key = KeyValue.LASTFM_API_KEY;
         queryObj.format = 'json';
         return LASTFM_API_BASE_URL + CustomUrlFetchApp.parseQuery(queryObj);
-    }
-
-    function isNowPlayling(track) {
-        return track['@attr'] && track['@attr'].nowplaying === 'true';
     }
 
     function formatLastfmTrackKey(item) {
@@ -3254,7 +3297,7 @@ const Admin = (function () {
 
 String.prototype.formatName = function () {
     return this.toLowerCase()
-        .replace(/[',?!@#$%^&*()+-./\\]/g, ' ')
+        .replace(/['`,?!@#$%^&*()+-./\\]/g, ' ')
         .replace(/\s{2,}/g, ' ')
         .replace(/ё/g, 'е')
         .trim();
