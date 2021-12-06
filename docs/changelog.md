@@ -8,7 +8,7 @@
 
 ## Версия 1.5.4
 - Добавлена попытка повторного чтения/записи при неизвестной ошибки службы Google Диска.
-- Добавлена функция: [Lastfm.rangeTags](/func?id=rangetags).
+- Добавлены функции: [Lastfm.rangeTags](/func?id=rangetags) и ряд Lastfm.getTop*ByTag.
 - [addToQueue](/func?id=addtoqueue) может добавлять массив треков в очередь.
 - К [mineTracks](/func?id=minetracks) добавлен параметр для пропуска элементов.
 - К [removeUnavailable](/func?id=removeunavailable) добавлен аргумент отключения сообщений с логами.

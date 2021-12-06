@@ -2081,8 +2081,11 @@ const Lastfm = (function () {
         getLastfmRecentTracks: getLastfmRecentTracks,
         findNewPlayed: findNewPlayed,
         getTopTracks: getTopTracks,
+        getTopTracksByTag: getTopTracksByTag,
         getTopArtists: getTopArtists,
+        getTopArtistsByTag: getTopArtistsByTag,
         getTopAlbums: getTopAlbums,
+        getTopAlbumsByTag: getTopAlbumsByTag,
         getMixStation: getMixStation,
         getLibraryStation: getLibraryStation,
         getRecomStation: getRecomStation,
@@ -2377,6 +2380,29 @@ const Lastfm = (function () {
             });
             return Object.values(items);
         }
+    }
+
+    function getTopTracksByTag(params) {
+        params.method = 'tag.gettoptracks';
+        return getTopByTag(params, 'track');
+    }
+
+    function getTopArtistsByTag(params) {
+        params.method = 'tag.gettopartists';
+        return getTopByTag(params, 'artist');
+    }
+
+    function getTopAlbumsByTag(params) {
+        params.method = 'tag.gettopalbums';
+        return getTopByTag(params, 'album');
+    }
+
+    function getTopByTag(queryObj, type) {
+        let [formatMethod, searchMethod] = obtainMethodNamesByType(type);
+        let url = createUrl(queryObj);
+        let response = CustomUrlFetchApp.fetch(url);
+        let key = Object.keys(response)[0];
+        return searchMethod(response[key][type], formatMethod);
     }
 
     function obtainMethodNamesByType(type = 'track') {
