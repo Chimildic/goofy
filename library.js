@@ -696,11 +696,11 @@ const RecentTracks = (function () {
     function getRecentTracks(limit) {
         let tracks = [];
         if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
-            tracks = readValidArray(BOTH_SOURCE_FILENAME);
+            tracks = Cache.read(BOTH_SOURCE_FILENAME);
         } else if (ON_SPOTIFY_RECENT_TRACKS) {
-            tracks = readValidArray(SPOTIFY_FILENAME);
+            tracks = Cache.read(SPOTIFY_FILENAME);
         } else if (ON_LASTFM_RECENT_TRACKS) {
-            tracks = readValidArray(LASTFM_FILENAME);
+            tracks = Cache.read(LASTFM_FILENAME);
         }
         return Selector.sliceFirst(tracks, limit);
     }
@@ -720,14 +720,14 @@ const RecentTracks = (function () {
     }
 
     function updatePlatformRecentTracks(recentTracks, filename, findNewPlayedMethod) {
-        let fileItems = readValidArray(filename);
+        let fileItems = Cache.read(filename);
         let newItems = findNewPlayedMethod(recentTracks, fileItems);
         return appendNewPlayed(newItems, filename);
     }
 
     function updateBothSourceRecentTracks() {
-        let spotifyTracks = readValidArray(SPOTIFY_FILENAME);
-        let lastfmTracks = readValidArray(LASTFM_FILENAME);
+        let spotifyTracks = Cache.read(SPOTIFY_FILENAME);
+        let lastfmTracks = Cache.read(LASTFM_FILENAME);
         Combiner.push(spotifyTracks, lastfmTracks);
         Order.sort(spotifyTracks, 'meta.played_at', 'desc');
         Filter.dedupTracks(spotifyTracks);
@@ -781,24 +781,10 @@ const RecentTracks = (function () {
                 t.played_at = new Date().toISOString();
             }
         });
-        let fileItems = readValidArray(filename);
+        let fileItems = Cache.read(filename);
         Combiner.push(fileItems, tracks);
         Order.sort(fileItems, 'meta.played_at', 'desc');
         Cache.write(filename, fileItems);
-    }
-
-    function readValidArray(filename) {
-        let items = Cache.read(filename) || [];
-        if (items.length > 0 && items[0].hasOwnProperty('track')) {
-            return updateToValidArray(items, filename);
-        }
-        return items;
-    }
-
-    function updateToValidArray(data, filename) {
-        let items = Source.extractTracks(data);
-        Cache.write(filename, items);
-        return items;
     }
 
     function compress() {
@@ -815,7 +801,7 @@ const RecentTracks = (function () {
 
     function compressFile(filename) {
         Cache.copy(filename);
-        let tracks = readValidArray(filename);
+        let tracks = Cache.read(filename);
         Cache.compressTracks(tracks);
         Cache.write(filename, tracks);
     }
