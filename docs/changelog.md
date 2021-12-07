@@ -6,6 +6,9 @@
 
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+## Версия 1.6.0
+- Добавление треков [RecentTracks.appendTracks](/func?id=appendtracks) больше не сбивает алгоритм поиска новых прослушиваний в триггере обновления истории. 
+
 ## Версия 1.5.4
 - Добавлена попытка повторного чтения/записи при неизвестной ошибки службы Google Диска.
 - Добавлены функции: [Lastfm.rangeTags](/func?id=rangetags) и ряд Lastfm.getTop*ByTag.

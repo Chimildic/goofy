@@ -1,6 +1,6 @@
 // Документация: https://chimildic.github.io/goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.5.4';
+const VERSION = '1.6.0';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -763,7 +763,12 @@ const RecentTracks = (function () {
                 return recentItems.slice(0, i);
             }
         }
-        return recentItems;
+
+        return recentItems.filter(recentItem => {
+            return -1 == fileItems.findIndex(fileItem =>
+                fileItem.name == recentItem.name
+                && fileItem.played_at == recentItem.played_at);
+        });
     }
 
     function appendTracks(filename, tracks) {
@@ -773,7 +778,7 @@ const RecentTracks = (function () {
                 t.played_at = t.added_at;
                 delete t.added_at;
             } else if (!t.hasOwnProperty('played_at')) {
-                t.played_at = DEFAULT_DATE;
+                t.played_at = new Date().toISOString();
             }
         });
         let fileItems = readValidArray(filename);
@@ -2194,20 +2199,24 @@ const Lastfm = (function () {
 
     function findNewPlayed(lastfmTracks, spotifyTracks) {
         if (spotifyTracks.length > 0) {
-            let lastPlayedTime = new Date(spotifyTracks[0].played_at).getTime();
-            lastfmTracks = sliceOldPlayed(lastfmTracks, lastPlayedTime);
+            lastfmTracks = sliceNewPlayed();
         }
         return Search.multisearchTracks(lastfmTracks, formatTrackNameLastfm);
-    }
 
-    function sliceOldPlayed(lastfmTracks, lastPlayedTime) {
-        for (let i = lastfmTracks.length - 1; i >= 0; i--) {
-            let time = new Date(lastfmTracks[i].date['#text']).getTime();
-            if (time - lastPlayedTime == 0) {
-                return lastfmTracks.slice(0, i);
+        function sliceNewPlayed() {
+            let lastPlayedTime = new Date(spotifyTracks[0].played_at).getTime();
+            for (let i = lastfmTracks.length - 1; i >= 0; i--) {
+                let time = new Date(lastfmTracks[i].date['#text']).getTime();
+                if (time - lastPlayedTime == 0) {
+                    return lastfmTracks.slice(0, i);
+                }
             }
+
+            return lastfmTracks.filter(lastfmItem => {
+                return -1 == spotifyTracks.findIndex(spotifyItem =>
+                    spotifyItem.played_at == lastfmItem.date['#text']);
+            });
         }
-        return lastfmTracks;
     }
 
     function getLovedTracks(user, limit) {
@@ -3347,5 +3356,5 @@ Object.prototype.isEmpty = function () {
 }
 
 Array.prototype.toObject = function (parseMethod) {
-    return this.reduce((accumulator, element) => (accumulator[parseMethod(element)] = '', accumulator), {});
+    return this.reduce((accumulator, element, i) => (accumulator[parseMethod(element)] = i, accumulator), {});
 }
