@@ -736,13 +736,12 @@ const RecentTracks = (function () {
 
     function appendNewPlayed(newItems, filename) {
         if (newItems.length == 0) {
-            console.info('Нет новых треков для файла', filename);
+            console.info(`Нет новых треков ${filename}`);
             return false;
         }
         Cache.compressTracks(newItems);
-        console.info('Новых треков:', newItems.length, 'в файле', filename);
-        Cache.append(filename, newItems, 'begin', ITEMS_LIMIT);
-        console.info('Общее количество:', newItems.length);
+        let total = Cache.append(filename, newItems, 'begin', ITEMS_LIMIT);
+        console.info(`+${newItems.length}, всего: ${total} (${filename})`);
         return true;
     }
 
@@ -2574,19 +2573,21 @@ const Cache = (function () {
         if (!content || content.length == 0) return;
         let currentContent = read(filename) || [];
         let ext = obtainFileExtension(filename);
-        ext == 'json' ? appendJSON() : appendString();
+        return ext == 'json' ? appendJSON() : appendString();
 
         function appendJSON() {
             if (place == 'begin') {
-                appendNewData(content, currentContent);
+                return appendNewData(content, currentContent);
             } else if (place == 'end') {
-                appendNewData(currentContent, content);
+                return appendNewData(currentContent, content);
             }
 
             function appendNewData(xData, yData) {
-                Combiner.push(xData, yData);
-                Selector.keepFirst(xData, limit);
-                write(filename, xData);
+                let allData = [];
+                Combiner.push(allData, xData, yData);
+                Selector.keepFirst(allData, limit);
+                write(filename, allData);
+                return allData.length;
             }
         }
 
@@ -2598,6 +2599,7 @@ const Cache = (function () {
                 raw = currentContent + content;
             }
             write(filename, raw);
+            return raw.length;
         }
     }
 
