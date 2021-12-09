@@ -238,19 +238,14 @@ const Source = (function () {
     }
 
     function getTop(timeRange, type) {
-        timeRange = isValidTimeRange(timeRange) ? timeRange : 'medium';
         // Баг Spotify: https://community.spotify.com/t5/Spotify-for-Developers/Bug-with-offset-for-method-quot-Get-User-s-Top-Artists-and/td-p/5032362
-        let template = API_BASE_URL + '/me/top/%s?offset=%s&limit=%s&time_range=%s_term';
+        let template = `${API_BASE_URL}/me/top/%s?offset=%s&limit=%s&time_range=%s_term`;
         return SpotifyRequest.getAll([
             Utilities.formatString(template, type, 0, 49, timeRange),
             Utilities.formatString(template, type, 49, 49, timeRange),
         ], false).reduce((items, response) => {
             return Combiner.push(items, response.items);
         }, []);
-    }
-
-    function isValidTimeRange(timeRange) {
-        return ['short', 'medium', 'long'].includes(timeRange);
     }
 
     function getListCategory(params = {}) {
@@ -448,10 +443,7 @@ const Source = (function () {
         }
 
         function getFullPlaylistObject(array) {
-            let urls = [];
-            array.forEach((playlist) => {
-                urls.push(`https://api.spotify.com/v1/playlists/${playlist.id}`);
-            });
+            let urls = array.map(p => `${API_BASE_URL}/playlists/${p.id}`);
             return SpotifyRequest.getAll(urls);
         }
 
@@ -611,18 +603,15 @@ const Player = (function () {
     }
 
     function getPlayback() {
-        return SpotifyRequest.get(API_BASE_URL + '/me/player') || {};
+        return SpotifyRequest.get(`${API_BASE_URL}/me/player`) || {};
     }
 
     function transferPlayback(deviceId, isPlay) {
-        return SpotifyRequest.put('https://api.spotify.com/v1/me/player', {
-            device_ids: [deviceId],
-            play: isPlay,
-        });
+        return SpotifyRequest.put(`${API_BASE_URL}/me/player`, { device_ids: [deviceId], play: isPlay, });
     }
 
     function getAvailableDevices() {
-        return SpotifyRequest.get(API_BASE_URL + '/me/player/devices');
+        return SpotifyRequest.get(`${API_BASE_URL}/me/player/devices`);
     }
 
     function next(deviceId) {
@@ -655,11 +644,7 @@ const Player = (function () {
     }
 
     function addToQueue(tracks, deviceId) {
-        if (Array.isArray(tracks)) {
-            tracks.forEach(t => addItem(t.id));
-        } else {
-            addItem(tracks.id);
-        }
+        Array.isArray(tracks) ? tracks.forEach(t => addItem(t.id)) : addItem(tracks.id);
 
         function addItem(id) {
             let queryObj = { uri: `spotify:track:${id}` };
@@ -933,11 +918,7 @@ const Combiner = (function () {
 
 const RangeTracks = (function () {
     const BAN_KEYS = ['genres', 'ban_genres', 'release_date', 'followed_include', 'include', 'exclude', 'groups', 'artist_limit', 'album_limit', 'track_limit'];
-
-    let _cachedTracks;
-    let _lastOutRange;
-    let _args;
-
+    let _cachedTracks, _lastOutRange, _args;
     return {
         rangeTracks: rangeTracks,
         getLastOutRange: getLastOutRange,
@@ -1143,10 +1124,9 @@ const Filter = (function () {
     }
 
     function removeArtists(original, removable, invert = false, mode = 'every') {
-        let artists = removable.map(item =>
-            item.artists
-                ? mode == 'every' ? item.artists : item.artists[0]
-                : item
+        let artists = removable.map(item => item.artists
+            ? mode == 'every' ? item.artists : item.artists[0]
+            : item
         ).flat(1);
         let ids = artists.toObject((item) => item.id);
         let filteredTracks = original.filter((item) => invert ^ !getArtistIds(item, mode).some(id => ids.hasOwnProperty(id)));
@@ -1792,13 +1772,13 @@ const Playlist = (function () {
     };
 
     function getById(playlistId) {
-        let url = `${API_BASE_URL}/playlists/${playlistId}` + ARGS;
+        let url = `${API_BASE_URL}/playlists/${playlistId}${ARGS}`;
         return SpotifyRequest.get(url);
     }
 
     function getByName(playlistName, userId) {
         let path = userId == null ? 'me/playlists' : `users/${userId}/playlists`;
-        let url = `${API_BASE_URL}/${path + ARGS}`;
+        let url = `${API_BASE_URL}/${path}${ARGS}`;
         let response = SpotifyRequest.get(url);
         while (true) {
             const name = playlistName;
@@ -3035,21 +3015,10 @@ const getCachedTracks = (function () {
 
 const Auth = (function () {
     const SCOPE = [
-        'user-read-private',
-        'user-read-recently-played',
-        'user-read-currently-playing',
-        'user-read-playback-position',
-        'user-read-playback-state',
-        'user-modify-playback-state',
-        'user-library-read',
-        'user-library-modify',
-        'user-top-read',
-        'user-follow-read',
-        'user-follow-modify',
-        'playlist-read-private',
-        'playlist-modify-private',
-        'playlist-modify-public',
-        'ugc-image-upload',
+        'user-read-private', 'user-read-recently-played', 'user-read-currently-playing', 'user-read-playback-position',
+        'user-read-playback-state', 'user-modify-playback-state', 'user-library-read', 'user-library-modify',
+        'user-top-read', 'user-follow-read', 'user-follow-modify', 'playlist-read-private', 'playlist-modify-private',
+        'playlist-modify-public', 'ugc-image-upload',
     ];
     const service = createService();
 
@@ -3080,7 +3049,7 @@ const Auth = (function () {
     }
 
     function displayAuthPage() {
-        let template = '<a href="%s" target="_blank">Authorize</a><p>%s</p>';
+        let template = '<a href="%s" target="_blank">Выдать права доступа</a><p>%s</p>';
         let html = Utilities.formatString(template, service.getAuthorizationUrl(), getRedirectUri());
         return HtmlService.createHtmlOutput(html);
     }
