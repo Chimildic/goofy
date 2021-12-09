@@ -30,6 +30,7 @@ function displayLaunchPage_() {
 
 const CustomUrlFetchApp = (function () {
     let countRequest = 0;
+    let countPause = 0;
     return {
         fetch: fetch,
         fetchAll: fetchAll,
@@ -38,67 +39,60 @@ const CustomUrlFetchApp = (function () {
     };
 
     function fetch(url, params = {}) {
-        countRequest++;
         params.muteHttpExceptions = true;
-        let response = UrlFetchApp.fetch(url, params);
-        return readResponse(response, url, params);
+        return readResponse(tryFetch(url, params), url, params);
     }
 
     function fetchAll(requests) {
-        countRequest += requests.length;
         requests.forEach((request) => (request.muteHttpExceptions = true));
-        let responseArray = [];
+        let responses = [];
         let limit = KeyValue.REQUESTS_IN_ROW || 40;
         let count = Math.ceil(requests.length / limit);
         for (let i = 0; i < count; i++) {
             let requestPack = requests.splice(0, limit);
-            let responseRaw = sendPack(requestPack);
-            let responses = responseRaw.map((response, index) => {
-                return readResponse(response, requestPack[index].url, {
+            let responsePack = sendPack(requestPack).map((response, index) =>
+                readResponse(response, requestPack[index].url, {
                     headers: requestPack[index].headers,
                     payload: requestPack[index].payload,
                     muteHttpExceptions: requestPack[index].muteHttpExceptions,
-                });
-            });
-            Combiner.push(responseArray, responses);
+                })
+            );
+            Combiner.push(responses, responsePack);
         }
-        return responseArray;
+        return responses;
 
         function sendPack(requests) {
             let raw = tryFetchAll(requests);
             if (typeof raw == 'undefined') {
                 return [];
             }
-            let result = [];
-            let failed = [];
-            let seconds = 0;
-            raw.forEach((response, index) => {
+            let failed = raw.reduce((failed, response, index) => {
                 if (response.getResponseCode() == 429) {
-                    seconds = 1 + (response.getHeaders()['Retry-After'] || 2);
-                    failed.push(requests[index]);
-                } else {
-                    result.push(response);
+                    failed.requests.push(requests[index])
+                    failed.syncIndexes.push(index);
+                    let seconds = parseRetryAfter(response);
+                    if (failed.seconds < seconds) {
+                        failed.seconds = seconds;
+                    }
                 }
-            });
-            if (seconds > 0) {
-                Admin.isInfoLvl && console.info('Отправка запросов продолжится после паузы', seconds);
-                Utilities.sleep(seconds * 1000);
-                Combiner.push(result, sendPack(failed));
+                return failed;
+            }, { seconds: 0, requests: [], syncIndexes: [] });
+
+            if (failed.seconds > 0) {
+                pause(failed.seconds);
+                sendPack(failed.requests).forEach((response, index) => {
+                    let requestIndex = failed.syncIndexes[index];
+                    raw[requestIndex] = response;
+                });
             }
-            return result;
+            return raw;
         }
 
-        function tryFetchAll(requests, attempt = 0) {
-            try {
-                return UrlFetchApp.fetchAll(requests);
-            } catch (e) {
-                Admin.isErrorLvl && console.error(e.stack);
-                if (attempt++ < 2) {
-                    Admin.isInfoLvl && console.info(`Через 5 секунд будет предпринята попытка повторить операцию`);
-                    Utilities.sleep(5000);
-                    return tryFetchAll(requests, attempt);
-                }
-            }
+        function tryFetchAll(requests) {
+            return tryCallback(() => {
+                countRequest += requests.length;
+                return UrlFetchApp.fetchAll(requests)
+            });
         }
     }
 
@@ -108,22 +102,8 @@ const CustomUrlFetchApp = (function () {
         }
         return onError();
 
-        function onRetryAfter() {
-            let value = 1 + (response.getHeaders()['Retry-After'] || 2);
-            Admin.isInfoLvl && console.info('Отправка запросов продолжится после паузы', value);
-            Utilities.sleep(value * 1000);
-            return fetch(url, params);
-        }
-
-        function tryFetchOnce() {
-            Admin.isInfoLvl && console.info('Через 2 секунды будет предпринята попытка повторить операцию');
-            Utilities.sleep(2000);
-            countRequest++;
-            response = UrlFetchApp.fetch(url, params);
-            if (isSuccess(response.getResponseCode())) {
-                return onSuccess();
-            }
-            writeErrorLog();
+        function isSuccess(code) {
+            return code >= 200 && code < 300;
         }
 
         function onSuccess() {
@@ -145,8 +125,19 @@ const CustomUrlFetchApp = (function () {
             }
         }
 
-        function isSuccess(code) {
-            return code >= 200 && code < 300;
+        function onRetryAfter() {
+            pause(parseRetryAfter(response));
+            return fetch(url, params);
+        }
+
+        function tryFetchOnce() {
+            Admin.isInfoLvl && console.info('Через 2 секунды будет предпринята попытка повторить операцию');
+            Utilities.sleep(2000);
+            response = tryFetch(url, params);
+            if (isSuccess(response.getResponseCode())) {
+                return onSuccess();
+            }
+            writeErrorLog();
         }
 
         function writeErrorLog() {
@@ -154,9 +145,43 @@ const CustomUrlFetchApp = (function () {
         }
     }
 
+    function pause(seconds) {
+        if (countPause > 10) {
+            Admin.isInfoLvl && console.info('Паузы с автоматическим продолжением могут продолжится. Сообщения об этом перестанут появляться.');
+        } else {
+            Admin.isInfoLvl && console.info('Отправка запросов продолжится после паузы', seconds);
+        }
+        Utilities.sleep(seconds * 1000);
+    }
+
+    function parseRetryAfter(response) {
+        countPause++;
+        return 1 + (parseInt(response.getHeaders()['Retry-After']) || 2);
+    }
+
     function parseJSON(response) {
         let content = response.getContentText();
         return content.length > 0 ? tryParseJSON(content) : { msg: 'Пустое тело ответа', status: response.getResponseCode() };
+    }
+
+    function tryFetch(url, params) {
+        return tryCallback(() => {
+            countRequest++;
+            return UrlFetchApp.fetch(url, params)
+        });
+    }
+
+    function tryCallback(callback, attempt = 0) {
+        try {
+            return callback();
+        } catch (e) {
+            Admin.isErrorLvl && console.error(e.stack);
+            if (attempt++ < 2) {
+                Admin.isInfoLvl && console.info(`Через 5 секунд будет предпринята попытка повторить операцию`);
+                Utilities.sleep(5000);
+                return tryCallback(callback, attempt);
+            }
+        }
     }
 
     function tryParseJSON(content) {
@@ -3218,7 +3243,10 @@ const SpotifyRequest = (function () {
     }
 
     function appendLocale(url) {
-        return url + `${url.includes('?') ? '&' : '?'}locale=${KeyValue.LOCALE || "RU"}`;
+        if (!url.includes('locale')) {
+            url += `${url.includes('?') ? '&' : '?'}locale=${KeyValue.LOCALE || "RU"}`;
+        }
+        return url;
     }
 
     function extractContent(response) {
