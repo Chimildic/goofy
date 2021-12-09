@@ -135,11 +135,12 @@ const CustomUrlFetchApp = (function () {
         }
 
         function onError() {
-            writeErrorLog();
             let responseCode = response.getResponseCode();
             if (responseCode == 429) {
                 return onRetryAfter();
-            } else if (responseCode >= 500) {
+            }
+            writeErrorLog();
+            if (responseCode >= 500) {
                 return tryFetchOnce();
             }
         }
