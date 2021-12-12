@@ -79,7 +79,7 @@ const CustomUrlFetchApp = (function () {
             }, { seconds: 0, requests: [], syncIndexes: [] });
 
             if (failed.seconds > 0) {
-                pause(failed.seconds);
+                Admin.pause(failed.seconds);
                 sendPack(failed.requests).forEach((response, index) => {
                     let requestIndex = failed.syncIndexes[index];
                     raw[requestIndex] = response;
@@ -126,13 +126,12 @@ const CustomUrlFetchApp = (function () {
         }
 
         function onRetryAfter() {
-            pause(parseRetryAfter(response));
+            Admin.pause(parseRetryAfter(response));
             return fetch(url, params);
         }
 
         function tryFetchOnce() {
-            Admin.isInfoLvl && console.info('Через 2 секунды будет предпринята попытка повторить операцию');
-            Utilities.sleep(2000);
+            Admin.pause(2);
             response = tryFetch(url, params);
             if (isSuccess(response.getResponseCode())) {
                 return onSuccess();
@@ -141,17 +140,8 @@ const CustomUrlFetchApp = (function () {
         }
 
         function writeErrorLog() {
-            Admin.isErrorLvl && console.error('URL:', url, '\nCode:', response.getResponseCode(), '\nContent:', response.getContentText());
+            Admin.printError(`Номер: ${response.getResponseCode()}.\nАдрес: ${url}\nТекст ответа: ${response.getContentText()}`);
         }
-    }
-
-    function pause(seconds) {
-        if (countPause > 10) {
-            Admin.isInfoLvl && console.info('Паузы с автоматическим продолжением могут продолжится. Сообщения об этом перестанут появляться.');
-        } else {
-            Admin.isInfoLvl && console.info('Отправка запросов продолжится после паузы', seconds);
-        }
-        Utilities.sleep(seconds * 1000);
     }
 
     function parseRetryAfter(response) {
@@ -175,10 +165,9 @@ const CustomUrlFetchApp = (function () {
         try {
             return callback();
         } catch (e) {
-            Admin.isErrorLvl && console.error(e.stack);
+            Admin.printError('При отправке запроса произошла ошибка:', e.stack);
             if (attempt++ < 2) {
-                Admin.isInfoLvl && console.info(`Через 5 секунд будет предпринята попытка повторить операцию`);
-                Utilities.sleep(5000);
+                Admin.pause(5);
                 return tryCallback(callback, attempt);
             }
         }
@@ -188,7 +177,7 @@ const CustomUrlFetchApp = (function () {
         try {
             return JSON.parse(content);
         } catch (e) {
-            Admin.isErrorLvl && console.error('Не удалось перевести строку JSON в объект', e, e.stack, content);
+            Admin.printError('Не удалось преобразовать строку JSON из ответа на запрос в объект JavaScript\n', e, e.stack, content);
             return [];
         }
     }
@@ -747,12 +736,12 @@ const RecentTracks = (function () {
 
     function appendNewPlayed(newItems, filename) {
         if (newItems.length == 0) {
-            Admin.isInfoLvl && console.info(`Нет новых треков ${filename}`);
+            Admin.printInfo(`Нет новых треков ${filename}`);
             return false;
         }
         Cache.compressTracks(newItems);
         let total = Cache.append(filename, newItems, 'begin', ITEMS_LIMIT);
-        Admin.isInfoLvl && console.info(`+${newItems.length}, всего: ${total} (${filename})`);
+        Admin.printInfo(`+${newItems.length}, всего: ${total} (${filename})`);
         return true;
     }
 
@@ -1094,14 +1083,14 @@ const Filter = (function () {
                 if (!t) {
                     let id = unclearState[i];
                     let track = tracks.find(t => t.id == id);
-                    Admin.isInfoLvl && console.info(`У трека изменился id, старое значение ${id} (${getTrackKeys(track)})`);
+                    Admin.printInfo(`У трека изменился id, старое значение ${id} (${getTrackKeys(track)})`);
                     unavailableState.push(id);
                 } else if (t.hasOwnProperty('is_playable') && t.is_playable) {
                     let id = t.linked_from ? t.linked_from.id : t.id;
                     availableState.push(id);
                 } else {
                     unavailableState.push(t.id);
-                    Admin.isInfoLvl && console.info('Трек нельзя послушать:', t.id, '-', getTrackKeys(t)[0]);
+                    Admin.printInfo('Трек нельзя послушать:', t.id, '-', getTrackKeys(t)[0]);
                 }
             });
         }
@@ -1154,7 +1143,7 @@ const Filter = (function () {
         let urls = [];
         copyTracks.forEach((t) => {
             if (!features[t.id] || !features[t.id].danceability) {
-                Admin.isInfoLvl && console.info(`У трека ${t.artists[0].name} ${t.name} нет features`);
+                Admin.printInfo(`У трека ${t.artists[0].name} ${t.name} нет features`);
                 return;
             }
             let params = {
@@ -1250,16 +1239,11 @@ const Filter = (function () {
     }
 
     function extractItemsAbs(items, startDate, endDate) {
-        if (!items) {
-            Admin.isErrorLvl && console.error('Filter.extractTracksAbs: items is null');
-            return;
-        }
-
         let startTime = startDate ? startDate.getTime() : Date.now();
         let endTime = endDate ? endDate.getTime() : Date.now();
 
         if (startTime >= endTime) {
-            Admin.isErrorLvl && console.error('Начальная граница больше, чем конечная граница:', startDate, endDate);
+            Admin.printError('Левая граница больше чем правая', startDate, endDate);
             return;
         }
 
@@ -1526,15 +1510,15 @@ const Selector = (function () {
         if (tracksByYear.hasOwnProperty(year) || tracks.length == 0) {
             return tracksByYear[year] || [];
         }
-        Admin.isInfoLvl && console.info(`Среди ${tracks.length} треков нет вышедших в ${year} году`);
+        Admin.printInfo(`Среди ${tracks.length} треков нет вышедших в ${year} году`);
         year = parseInt(year);
         let keys = Object.keys(tracksByYear).map((item) => parseInt(item));
         let nearYear = keys.sort((x, y) => Math.abs(year - x) - Math.abs(year - y))[0];
         if (typeof nearYear != 'undefined' && Math.abs(nearYear - year) <= offset) {
-            Admin.isInfoLvl && console.info(`Выбран ближайший год: ${nearYear}`);
+            Admin.printInfo(`Выбран ближайший год: ${nearYear}`);
             return tracksByYear[nearYear.toString()];
         }
-        Admin.isInfoLvl && console.info(`При смещении ${offset}, ближайший год не найден`);
+        Admin.printInfo(`При смещении ${offset}, ближайший год не найден`);
         return [];
     }
 
@@ -2214,7 +2198,7 @@ const Lastfm = (function () {
         let queryObj = { method: 'user.getlovedtracks', user: user, limit: limit || 200 };
         let tracks = getPage(queryObj);
         if (!tracks.lovedtracks) {
-            Admin.isErrorLvl && console.error('Ошибка при получении любимых треков', tracks);
+            Admin.printError('Ошибка при получении любимых треков', tracks);
             return [];
         }
         return Search.multisearchTracks(tracks.lovedtracks.track, formatTrackNameLastfm);
@@ -2224,7 +2208,7 @@ const Lastfm = (function () {
         params.method = 'user.gettoptracks';
         let tracks = getTopPage(params);
         if (!tracks.toptracks) {
-            Admin.isErrorLvl && console.error('Ошибка при получении топа треков', tracks);
+            Admin.printError('Ошибка при получении топа треков', tracks);
             return [];
         }
         return Search.multisearchTracks(tracks.toptracks.track, formatTrackNameLastfm);
@@ -2234,7 +2218,7 @@ const Lastfm = (function () {
         params.method = 'user.gettopartists';
         let artists = getTopPage(params);
         if (!artists.topartists) {
-            Admin.isErrorLvl && console.error('Ошибка при получении топа исполнителей', artists);
+            Admin.printError('Ошибка при получении топа исполнителей', artists);
             return [];
         }
         return Search.multisearchArtists(artists.topartists.artist, formatArtistNameLastfm);
@@ -2244,7 +2228,7 @@ const Lastfm = (function () {
         params.method = 'user.gettopalbums';
         let albums = getTopPage(params);
         if (!albums.topalbums) {
-            Admin.isErrorLvl && console.error('Ошибка при получении топа альбомов', albums);
+            Admin.printError('Ошибка при получении топа альбомов', albums);
             return [];
         }
         return Search.multisearchAlbums(albums.topalbums.album, formatAlbumNameLastfm);
@@ -2444,10 +2428,10 @@ const Lastfm = (function () {
                 if (response.toptags.tag.length > 0) {
                     t.tags = response.toptags.tag
                 } else if (response.toptags.tag.length == 0) {
-                    Admin.isInfoLvl && console.info('У трека нет тегов', trackname);
+                    Admin.printInfo('У трека нет тегов', trackname);
                 }
             } else if (response.error) {
-                Admin.isInfoLvl && console.info(`${response.message}. Трек: ${trackname}`);
+                Admin.printInfo(`${response.message}. Трек: ${trackname}`);
             }
         });
 
@@ -2629,9 +2613,8 @@ const Cache = (function () {
                     trySetContent();
                 }
             } catch {
-                Admin.isErrorLvl && console.error(`Неизвестная ошибка при записи в файл`);
-                Admin.isInfoLvl && console.info('Через 5 секунд будет предпринята попытка повторить операцию');
-                Utilities.sleep(5000);
+                Admin.printError(`Неизвестная ошибка при записи в файл`);
+                Admin.pause(5);
                 trySetContent();
             }
         }
@@ -2681,8 +2664,8 @@ const Cache = (function () {
         try {
             return JSON.parse(content);
         } catch (e) {
-            Admin.isErrorLvl && console.error(e, e.stack);
-            throw 'Не удалось перевести строку JSON в объект. Length:' + content.length + 'Content:' + content;
+            Admin.printError(e, e.stack);            
+            throw `Не удалось преобразовать строку JSON из файла в объект JavaScript\nДлина: ${content.length}\nКонтент: ${content}`;
         }
     }
 
@@ -2690,9 +2673,8 @@ const Cache = (function () {
         try {
             return file.getBlob().getDataAsString();
         } catch {
-            Admin.isErrorLvl && console.error('Неизвестная ошибка при получении данных из файла');
-            Admin.isInfoLvl && console.info('Через 5 секунд будет предпринята попытка повторить операцию');
-            Utilities.sleep(5000);
+            Admin.printError('Неизвестная ошибка при получении данных из файла');
+            Admin.pause(5);
             return tryGetBlob(file);
         }
     }
@@ -2801,7 +2783,7 @@ const Search = (function () {
 
     function sendMusicRequest(context) {
         if (noFound.length == 0) {
-            Admin.isInfoLvl && console.info('sendMusicRequest: все элементы найдены, запрос не отправлен');
+            Admin.printInfo('sendMusicRequest: все элементы найдены, запрос не отправлен');
             return;
         }
         let id = '1FAIpQLScMGwTBnCz8nOPkM5g9IwwbpKolEWOXkhpAUSl8JjlkKcBGKw';
@@ -2852,7 +2834,7 @@ const Search = (function () {
                     resultItems.push(item);
                 } else {
                     noFound.push({ type: type, keyword: uniqueKeyword[i], item: items[originKeyword.findIndex(item => item == uniqueKeyword[i])] });
-                    Admin.isInfoLvl && console.info('Spotify по типу', type, 'не нашел:', uniqueKeyword[i]);
+                    Admin.printInfo('Spotify по типу', type, 'не нашел:', uniqueKeyword[i]);
                 }
             }
             return resultItems;
@@ -3170,7 +3152,7 @@ const SpotifyRequest = (function () {
             str = '{"' + decodeURI(str).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}';
             return JSON.parse(str);
         } catch (e) {
-            Admin.isErrorLvl && console.error('urlStringToObj', e, e.stack, str);
+            Admin.printError(`Не удалось преобразовать строку в объект JavaScript\nСтрока: ${str}`, e, e.stack);
             return {};
         }
     }
@@ -3299,8 +3281,9 @@ const Admin = (function () {
     return {
         reset: reset,
         setLogLevelOnce: setLogLevelOnce,
-        get isInfoLvl() { return isInfoLvl },
-        get isErrorLvl() { return isErrorLvl },
+        printInfo: printInfo,
+        printError: printError,
+        pause: pause,
     };
 
     function setLogLevelOnce(level = 'info') {
@@ -3312,6 +3295,19 @@ const Admin = (function () {
         } else {
             isInfoLvl = isErrorLvl = false;
         }
+    }
+
+    function printInfo(...data) {
+        isInfoLvl && console.info(...data);
+    }
+
+    function printError(...data) {
+        isErrorLvl && console.error(...data, `\n\nОписание и решение ошибок: https://chimildic.github.io/goofy/#/errors`);
+    }
+
+    function pause(seconds) {
+        isInfoLvl && console.info(`Операция продолжится после паузы ${seconds} секунд`);
+        Utilities.sleep(seconds * 1000);
     }
 
     function sendVersion(value) {
