@@ -1736,8 +1736,7 @@ const Playlist = (function () {
             let key = userId == null ? 'me' : userId;
             if (playlistsOfUsers[key] == null) {
                 let path = userId == null ? 'me/playlists' : `users/${userId}/playlists`;
-                path += ARGS;
-                playlistsOfUsers[key] = SpotifyRequest.getItemsByPath(path);
+                playlistsOfUsers[key] = SpotifyRequest.getItemsByPath(path + ARGS);
             }
             return playlistsOfUsers[key];
         }
@@ -1793,9 +1792,9 @@ const Playlist = (function () {
         let playlist = createPlaylist(payload);
         addTracks({ id: playlist.id, tracks: data.tracks });
         if (data.hasOwnProperty('sourceCover')) {
-            setCover(playlist.id, getCoverContent(data.sourceCover));
+            setCover(playlist.id, getCover(data.sourceCover));
         } else if (data.hasOwnProperty('randomCover')) {
-            setCover(playlist.id, getRandomCoverContent());
+            setCover(playlist.id, getRandomCover());
         }
         return playlist.id;
     }
@@ -1884,7 +1883,7 @@ const Playlist = (function () {
             let end = begin + size;
             let payload = { uris: uris.slice(begin, end) };
             if ((!data.hasOwnProperty('toEnd') || !data.toEnd) && requestType === 'post') {
-                // добавлять треки вначало плейлиста со смещением begin, чтобы сохранить оригинальную сортировку
+                // добавлять треки в начало плейлиста со смещением begin, чтобы сохранить оригинальную сортировку
                 payload.position = begin;
             }
 
@@ -1915,13 +1914,18 @@ const Playlist = (function () {
     }
 
     function changeCover(data) {
-        let imageContent;
+        let img;
         if (data.hasOwnProperty('sourceCover')) {
-            imageContent = getCoverContent(data.sourceCover);
+            img = getCover(data.sourceCover);
         } else if (data.randomCover == 'update' || (data.randomCover == 'once' && hasMosaicCover(data.id))) {
-            imageContent = getRandomCoverContent();
-        }
-        setCover(data.id, imageContent);
+            img = getRandomCover();
+        }    
+        setCover(data.id, img);
+    }
+
+    function getCover(url) {
+        let img = CustomUrlFetchApp.fetch(url);
+        return Utilities.base64Encode(img.getContent());
     }
 
     function hasMosaicCover(playlistId) {
@@ -1929,28 +1933,21 @@ const Playlist = (function () {
         return playlist.images.length > 0 && playlist.images[0].url.includes('mosaic');
     }
 
+    function getRandomCover() {
+        let response = CustomUrlFetchApp.fetch('https://picsum.photos/' + getRandomSize());
+        let img = Utilities.base64Encode(response.getContent());
+        // https://stackoverflow.com/a/32140193/5894542
+        let byteSize = ((4 * img.length / 3) + 3) & ~3;
+        return byteSize > 300000 ? getRandomCover() : img;
+    }
+
     function getRandomSize() {
         let index = Math.floor(Math.random() * SIZE.length);
         return SIZE[index];
     }
 
-    function getRandomCoverContent() {
-        let img = CustomUrlFetchApp.fetch('https://picsum.photos/' + getRandomSize());
-        if (img.getAllHeaders()['content-length'] > 250000) {
-            return getRandomCoverContent();
-        }
-        return img ? img.getContent() : undefined;
-    }
-
-    function getCoverContent(url) {
-        let img = CustomUrlFetchApp.fetch(url);
-        return img ? img.getContent() : undefined;
-    }
-
-    function setCover(playlistId, imageContent) {
-        if (typeof imageContent == 'undefined') return;
-        let url = `${API_BASE_URL}/playlists/${playlistId}/images`;
-        SpotifyRequest.putImage(url, imageContent);
+    function setCover(playlistId, img) {
+        img && SpotifyRequest.putImage(`${API_BASE_URL}/playlists/${playlistId}/images`, img);
     }
 
     function createPayload(data) {
@@ -3237,11 +3234,11 @@ const SpotifyRequest = (function () {
         });
     }
 
-    function putImage(url, imgBytes) {
+    function putImage(url, img) {
         return fetch(url, {
             method: 'put',
             contentType: 'image/jpeg',
-            payload: Utilities.base64Encode(imgBytes),
+            payload: img,
         });
     }
 
@@ -3310,7 +3307,7 @@ const Admin = (function () {
     }
 
     function pause(seconds) {
-        isInfoLvl && console.info(`Операция продолжится после паузы ${seconds} с.`);
+        isInfoLvl && console.info(`Операция продолжится после паузы ${seconds}с.`);
         Utilities.sleep(seconds * 1000);
     }
 
