@@ -140,7 +140,7 @@ const CustomUrlFetchApp = (function () {
         }
 
         function writeErrorLog() {
-            Admin.printError(`Номер: ${response.getResponseCode()}.\nАдрес: ${url}\nТекст ответа: ${response.getContentText()}`);
+            Admin.printError(`Номер: ${response.getResponseCode()}\nАдрес: ${url}\nТекст ответа: ${response.getContentText().substring(0, 500)}`);
         }
     }
 
@@ -165,7 +165,7 @@ const CustomUrlFetchApp = (function () {
         try {
             return callback();
         } catch (e) {
-            Admin.printError('При отправке запроса произошла ошибка:', e.stack);
+            Admin.printError('При отправке запроса произошла ошибка:\n', e.stack);
             if (attempt++ < 2) {
                 Admin.pause(5);
                 return tryCallback(callback, attempt);
@@ -1243,7 +1243,7 @@ const Filter = (function () {
         let endTime = endDate ? endDate.getTime() : Date.now();
 
         if (startTime >= endTime) {
-            Admin.printError('Левая граница больше чем правая', startDate, endDate);
+            Admin.printError('Левая граница больше чем правая:', startDate, endDate);
             return;
         }
 
@@ -3310,7 +3310,7 @@ const Admin = (function () {
     }
 
     function pause(seconds) {
-        isInfoLvl && console.info(`Операция продолжится после паузы ${seconds} секунд`);
+        isInfoLvl && console.info(`Операция продолжится после паузы ${seconds} с.`);
         Utilities.sleep(seconds * 1000);
     }
 
