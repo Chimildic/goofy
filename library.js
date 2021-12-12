@@ -2145,26 +2145,26 @@ const Lastfm = (function () {
     }
 
     function removeRecentTracks(original, user, count = 600, mode = 'every') {
-        let removableTracks = getLastfmRecentTracks(user, count);
+        let removableTracks = getLastfmRecentTracks(validUser(user), count);
         let removableNames = removableTracks.map((item) => formatLastfmTrackKey(item));
         let filteredTracks = original.filter((item) => !formatSpotifyTrackKeys(item, mode).some(name => removableNames.includes(name)));
         Combiner.replace(original, filteredTracks);
     }
 
     function removeRecentArtists(original, user, count = 600, mode = 'every') {
-        let removableTracks = getLastfmRecentTracks(user, count);
+        let removableTracks = getLastfmRecentTracks(validUser(user), count);
         let removableNames = removableTracks.map((item) => item.artist['#text'].formatName());
         let filteredTracks = original.filter((item) => !formatSpotifyArtistKeys(item, mode).some(name => removableNames.includes(name)));
         Combiner.replace(original, filteredTracks);
     }
 
     function getRecentTracks(user, count) {
-        let tracks = getLastfmRecentTracks(user, count);
+        let tracks = getLastfmRecentTracks(validUser(user), count);
         return Search.multisearchTracks(tracks, formatTrackNameLastfm);
     }
 
     function getLastfmRecentTracks(user, count) {
-        let queryObj = { method: 'user.getrecenttracks', user: user, limit: 200 };
+        let queryObj = { method: 'user.getrecenttracks', user: validUser(user), limit: 200 };
         let tracks = getTrackPages(queryObj, count);
         if (isNowPlayling(tracks[0])) {
             tracks.splice(0, 1);
@@ -2195,7 +2195,7 @@ const Lastfm = (function () {
     }
 
     function getLovedTracks(user, limit) {
-        let queryObj = { method: 'user.getlovedtracks', user: user, limit: limit || 200 };
+        let queryObj = { method: 'user.getlovedtracks', user: validUser(user), limit: limit || 200 };
         let tracks = getPage(queryObj);
         if (!tracks.lovedtracks) {
             Admin.printError('Ошибка при получении любимых треков', tracks);
@@ -2241,30 +2241,30 @@ const Lastfm = (function () {
     }
 
     function getMixStation(user, countRequest) {
-        return getStationPlaylist(user, 'mix', countRequest);
+        return getStationPlaylist(validUser(user), 'mix', countRequest);
     }
 
     function getLibraryStation(user, countRequest) {
-        return getStationPlaylist(user, 'library', countRequest);
+        return getStationPlaylist(validUser(user), 'library', countRequest);
     }
 
     function getRecomStation(user, countRequest) {
-        return getStationPlaylist(user, 'recommended', countRequest);
+        return getStationPlaylist(validUser(user), 'recommended', countRequest);
     }
 
     function getNeighboursStation(user, countRequest) {
-        return getStationPlaylist(user, 'neighbours', countRequest);
+        return getStationPlaylist(validUser(user), 'neighbours', countRequest);
     }
 
     function getStationPlaylist(user, type, countRequest) {
-        let stationTracks = getStationTracks(user, type, countRequest);
+        let stationTracks = getStationTracks(validUser(user), type, countRequest);
         let tracks = Search.multisearchTracks(stationTracks, formatTrackNameLastfm);
         Filter.dedupTracks(tracks);
         return tracks;
     }
 
     function getStationTracks(user, type, countRequest) {
-        let url = `${LASTFM_STATION}/${user}/${type}`;
+        let url = `${LASTFM_STATION}/${validUser(user)}/${type}`;
         let stationTracks = [];
         for (let i = 0; i < countRequest; i++) {
             let response = CustomUrlFetchApp.fetch(url);
@@ -2319,7 +2319,7 @@ const Lastfm = (function () {
             let toDate = params.to instanceof Date ? params.to : new Date(params.to);
             let queryObj = {
                 method: 'user.getrecenttracks',
-                user: params.user,
+                user: validUser(params.user),
                 from: fromDate.getTimestampUNIX('startDay'),
                 to: toDate.getTimestampUNIX('endDay'),
                 limit: 200,
@@ -2417,7 +2417,7 @@ const Lastfm = (function () {
         spotifyTracks.forEach(t => {
             let queryObj = {
                 method: 'track.gettoptags',
-                user: args.user || KeyValue.LASTFM_LOGIN,
+                user: validUser(args.user),
                 artist: t.artists[0].name.formatName(),
                 track: t.name.formatName(),
                 autocorrect: 1,
@@ -2459,6 +2459,10 @@ const Lastfm = (function () {
         queryObj.api_key = KeyValue.LASTFM_API_KEY;
         queryObj.format = 'json';
         return LASTFM_API_BASE_URL + CustomUrlFetchApp.parseQuery(queryObj);
+    }
+
+    function validUser(login) {
+        return login && login.length > 0 ? login : KeyValue.LASTFM_LOGIN;
     }
 
     function formatLastfmTrackKey(item) {
