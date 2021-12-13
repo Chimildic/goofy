@@ -1,6 +1,6 @@
 // Документация: https://chimildic.github.io/goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.6.0';
+const VERSION = '1.6.1';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -365,7 +365,7 @@ const Source = (function () {
         });
     }
 
-    function getFollowedPlaylists(type = 'followed', userId = User.getId(), excludePlaylist = []) {
+    function getFollowedPlaylists(type = 'followed', userId = User.id, excludePlaylist = []) {
         let playlistArray = Playlist.getPlaylistArray(userId);
         if (type != 'all') {
             playlistArray = playlistArray.filter((playlist) => {
@@ -656,14 +656,14 @@ const RecentTracks = (function () {
     const SPOTIFY_FILENAME = 'SpotifyRecentTracks.json';
     const LASTFM_FILENAME = 'LastfmRecentTracks.json';
     const BOTH_SOURCE_FILENAME = 'BothRecentTracks.json';
-    const TRIGGER_FUCTION_NAME = 'updateRecentTracks_';
+    const TRIGGER_FUNCTION_NAME = 'updateRecentTracks_';
     const MINUTES = 15;
     const ITEMS_LIMIT = parseInt(KeyValue.COUNT_RECENT_TRACKS) || 20000;
 
     if (!ON_SPOTIFY_RECENT_TRACKS && !ON_LASTFM_RECENT_TRACKS) {
-        deleteTrigger(TRIGGER_FUCTION_NAME);
-    } else if (!getTrigger(TRIGGER_FUCTION_NAME)) {
-        createTrigger(TRIGGER_FUCTION_NAME);
+        deleteTrigger(TRIGGER_FUNCTION_NAME);
+    } else if (!getTrigger(TRIGGER_FUNCTION_NAME)) {
+        createTrigger(TRIGGER_FUNCTION_NAME);
     }
 
     return {
@@ -1800,7 +1800,7 @@ const Playlist = (function () {
     }
 
     function createPlaylist(payload) {
-        let url = `${API_BASE_URL}/users/${User.getId()}/playlists`;
+        let url = `${API_BASE_URL}/users/${User.id}/playlists`;
         return SpotifyRequest.post(url, payload);
     }
 
@@ -1919,7 +1919,7 @@ const Playlist = (function () {
             img = getCover(data.sourceCover);
         } else if (data.randomCover == 'update' || (data.randomCover == 'once' && hasMosaicCover(data.id))) {
             img = getRandomCover();
-        }    
+        }
         setCover(data.id, img);
     }
 
@@ -2533,238 +2533,6 @@ const Yandex = (function () {
     }
 })();
 
-const Cache = (function () {
-    const FOLDER_NAME = 'Goofy Data';
-    const rootFolder = getRootFolder();
-
-    return {
-        read: read,
-        write: write,
-        append: append,
-        clear: clear,
-        copy: copy,
-        remove: remove,
-        rename: rename,
-        compressTracks: compressTracks,
-        compressArtists: compressArtists,
-    };
-
-    function read(filename) {
-        let file = getFile(filename);
-        let ext = obtainFileExtension(filename);
-        if (ext == 'json') {
-            return tryParseJSON(file);
-        } else if (ext == 'txt' && file) {
-            return tryGetBlob(file);
-        }
-        return '';
-    }
-
-    function append(filename, content, place = 'end', limit = 100000) {
-        if (!content || content.length == 0) return;
-        let currentContent = read(filename) || [];
-        let ext = obtainFileExtension(filename);
-        return ext == 'json' ? appendJSON() : appendString();
-
-        function appendJSON() {
-            if (place == 'begin') {
-                return appendNewData(content, currentContent);
-            } else if (place == 'end') {
-                return appendNewData(currentContent, content);
-            }
-
-            function appendNewData(xData, yData) {
-                let allData = [];
-                Combiner.push(allData, xData, yData);
-                Selector.keepFirst(allData, limit);
-                write(filename, allData);
-                return allData.length;
-            }
-        }
-
-        function appendString() {
-            let raw;
-            if (place == 'begin') {
-                raw = content + currentContent;
-            } else if (place == 'end') {
-                raw = currentContent + content;
-            }
-            write(filename, raw);
-            return raw.length;
-        }
-    }
-
-    function clear(filename) {
-        write(filename, []);
-    }
-
-    function write(filename, content) {
-        let file = getFile(filename);
-        if (!file) {
-            file = createFile(filename);
-        }
-        let ext = obtainFileExtension(filename);
-        let raw = ext == 'json' ? JSON.stringify(content) : content;
-        trySetContent();
-
-        function trySetContent() {
-            try {
-                file = file.setContent(raw);
-                if (raw.length > 0 && file.getSize() == 0) {
-                    trySetContent();
-                }
-            } catch {
-                Admin.printError(`Неизвестная ошибка при записи в файл`);
-                Admin.pause(5);
-                trySetContent();
-            }
-        }
-    }
-
-    function copy(filename) {
-        let file = getFile(filename);
-        if (file) {
-            filename = `Copy ${filename}`;
-            file.makeCopy().setName(filename);
-            return filename;
-        }
-    }
-
-    function remove(filename) {
-        let file = getFile(filename);
-        if (file) {
-            file.setTrashed(true);
-        }
-    }
-
-    function rename(oldFilename, newFilename) {
-        let file = getFile(oldFilename);
-        if (file) {
-            file.setName(formatFileExtension(newFilename));
-        }
-    }
-
-    function getFile(filename) {
-        let files = getFileIterator(filename);
-        if (files.hasNext()) {
-            return files.next();
-        }
-    }
-
-    function createFile(filename) {
-        return rootFolder.createFile(formatFileExtension(filename), '');
-    }
-
-    function getFileIterator(filename) {
-        return rootFolder.getFilesByName(formatFileExtension(filename));
-    }
-
-    function tryParseJSON(file) {
-        if (!file) return [];
-        let content = tryGetBlob(file);
-        try {
-            return JSON.parse(content);
-        } catch (e) {
-            Admin.printError(e, e.stack);            
-            throw `Не удалось преобразовать строку JSON из файла в объект JavaScript\nДлина: ${content.length}\nКонтент: ${content}`;
-        }
-    }
-
-    function tryGetBlob(file) {
-        try {
-            return file.getBlob().getDataAsString();
-        } catch {
-            Admin.printError('Неизвестная ошибка при получении данных из файла');
-            Admin.pause(5);
-            return tryGetBlob(file);
-        }
-    }
-
-    function getRootFolder() {
-        let folders = DriveApp.getFoldersByName(FOLDER_NAME);
-        if (folders.hasNext()) {
-            return folders.next();
-        }
-        return DriveApp.createFolder(FOLDER_NAME);
-    }
-
-    function formatFileExtension(filename) {
-        let ext = obtainFileExtension(filename);
-        if (!filename.includes('.')) {
-            filename += `.${ext}`;
-        }
-        return filename;
-    }
-
-    function obtainFileExtension(filename) {
-        let ext = filename.split('.');
-        if (ext.length == 2) {
-            return ext[1];
-        }
-        return 'json';
-    }
-
-    function compressTracks(tracks) {
-        if (!(tracks && tracks.length > 0 && (tracks[0].album || tracks[0].track))) {
-            return;
-        }
-
-        tracks.forEach((item) => {
-            if (typeof item.track === 'object') {
-                delete item.context;
-                item = item.track;
-            }
-
-            delete item.uri;
-            delete item.type;
-            delete item.track_number;
-            delete item.is_local;
-            delete item.preview_url;
-            delete item.href;
-            delete item.external_urls;
-            delete item.external_ids;
-            delete item.disc_number;
-            delete item.available_markets;
-            delete item.track;
-
-            compressAlbum(item.album);
-            compressArtists(item.artists);
-        });
-    }
-
-    function compressAlbum(item) {
-        if (!item) {
-            return;
-        }
-
-        delete item.available_markets;
-        delete item.external_urls;
-        delete item.href;
-        delete item.images;
-        delete item.type;
-        delete item.uri;
-        compressArtists(item.artists);
-    }
-
-    function compressArtists(items) {
-        if (!items || items.length == 0) {
-            return;
-        }
-
-        items.forEach((item) => {
-            delete item.href;
-            delete item.type;
-            delete item.uri;
-            delete item.external_urls;
-            delete item.images;
-
-            if (item.followers && item.followers.total) {
-                item.followers = item.followers.total;
-            }
-        });
-    }
-})();
-
 const Search = (function () {
     const TEMPLATE = API_BASE_URL + '/search?%s';
 
@@ -3055,35 +2823,6 @@ const Auth = (function () {
     }
 })();
 
-const User = (function () {
-    const USER_ID = 'userId';
-    return {
-        getId: getId,
-    };
-
-    function getId() {
-        return KeyValue[USER_ID] ? KeyValue[USER_ID] : setId();
-    }
-
-    function setId() {
-        let user = getUser();
-        if (user.hasOwnProperty('id')) {
-            KeyValue[USER_ID] = user.id;
-            UserProperties.setProperty(USER_ID, KeyValue[USER_ID]);
-            return KeyValue[USER_ID];
-        }
-        return user;
-    }
-
-    function getUser() {
-        try {
-            return SpotifyRequest.get(API_BASE_URL + '/me');
-        } catch (error) {
-            return 'first install';
-        }
-    }
-})();
-
 const SpotifyRequest = (function () {
     return {
         get: get,
@@ -3271,6 +3010,274 @@ const SpotifyRequest = (function () {
     }
 })();
 
+const User = (function () {
+    const USER_ID = 'userId';
+    !KeyValue[USER_ID] && setProfile();
+    return {
+        get id() { return KeyValue[USER_ID] },
+    };
+
+    function setProfile() {
+        let user = getUser();
+        if (user) {
+            KeyValue[USER_ID] = user.id;
+            UserProperties.setProperty(USER_ID, KeyValue[USER_ID]);
+        }
+    }
+
+    function getUser() {
+        try {
+            return SpotifyRequest.get(API_BASE_URL + '/me');
+        } catch (error) {
+            return undefined;
+        }
+    }
+})();
+
+const Cache = (function () {
+    const ROOT_FOLDER_NAME = 'Goofy Data';
+    const ROOT_FOLDER = getRootFolder();
+    const USER_FOLDER = getUserFolder();
+
+    if (ROOT_FOLDER.getId() != USER_FOLDER.getId()) {
+        let rootFiles = ROOT_FOLDER.getFiles();
+        while (rootFiles.hasNext()) {
+            rootFiles.next().moveTo(USER_FOLDER);
+        }
+    }
+    return {
+        read: read,
+        write: write,
+        append: append,
+        clear: clear,
+        copy: copy,
+        remove: remove,
+        rename: rename,
+        compressTracks: compressTracks,
+        compressArtists: compressArtists,
+    };
+
+    function read(filename) {
+        let file = getFile(filename);
+        let ext = obtainFileExtension(filename);
+        if (ext == 'json') {
+            return tryParseJSON(file);
+        } else if (ext == 'txt' && file) {
+            return tryGetBlob(file);
+        }
+        return '';
+    }
+
+    function append(filename, content, place = 'end', limit = 100000) {
+        if (!content || content.length == 0) return;
+        let currentContent = read(filename) || [];
+        let ext = obtainFileExtension(filename);
+        return ext == 'json' ? appendJSON() : appendString();
+
+        function appendJSON() {
+            if (place == 'begin') {
+                return appendNewData(content, currentContent);
+            } else if (place == 'end') {
+                return appendNewData(currentContent, content);
+            }
+
+            function appendNewData(xData, yData) {
+                let allData = [];
+                Combiner.push(allData, xData, yData);
+                Selector.keepFirst(allData, limit);
+                write(filename, allData);
+                return allData.length;
+            }
+        }
+
+        function appendString() {
+            let raw;
+            if (place == 'begin') {
+                raw = content + currentContent;
+            } else if (place == 'end') {
+                raw = currentContent + content;
+            }
+            write(filename, raw);
+            return raw.length;
+        }
+    }
+
+    function clear(filename) {
+        write(filename, []);
+    }
+
+    function write(filename, content) {
+        let file = getFile(filename);
+        if (!file) {
+            file = createFile(filename);
+        }
+        let ext = obtainFileExtension(filename);
+        let raw = ext == 'json' ? JSON.stringify(content) : content;
+        trySetContent();
+
+        function trySetContent() {
+            try {
+                file = file.setContent(raw);
+                if (raw.length > 0 && file.getSize() == 0) {
+                    trySetContent();
+                }
+            } catch {
+                Admin.printError(`Неизвестная ошибка при записи в файл`);
+                Admin.pause(5);
+                trySetContent();
+            }
+        }
+    }
+
+    function copy(filename) {
+        let file = getFile(filename);
+        if (file) {
+            filename = `Copy ${filename}`;
+            file.makeCopy().setName(filename);
+            return filename;
+        }
+    }
+
+    function remove(filename) {
+        let file = getFile(filename);
+        if (file) {
+            file.setTrashed(true);
+        }
+    }
+
+    function rename(oldFilename, newFilename) {
+        let file = getFile(oldFilename);
+        if (file) {
+            file.setName(formatFileExtension(newFilename));
+        }
+    }
+
+    function getFile(filename) {
+        let files = getFileIterator(filename);
+        if (files.hasNext()) {
+            return files.next();
+        }
+    }
+
+    function createFile(filename) {
+        return USER_FOLDER.createFile(formatFileExtension(filename), '');
+    }
+
+    function getFileIterator(filename) {
+        return USER_FOLDER.getFilesByName(formatFileExtension(filename));
+    }
+
+    function tryParseJSON(file) {
+        if (!file) return [];
+        let content = tryGetBlob(file);
+        try {
+            return JSON.parse(content);
+        } catch (e) {
+            Admin.printError(e, e.stack);
+            throw `Не удалось преобразовать строку JSON из файла в объект JavaScript\nДлина: ${content.length}\nКонтент: ${content}`;
+        }
+    }
+
+    function tryGetBlob(file) {
+        try {
+            return file.getBlob().getDataAsString();
+        } catch {
+            Admin.printError('Неизвестная ошибка при получении данных из файла');
+            Admin.pause(5);
+            return tryGetBlob(file);
+        }
+    }
+
+    function getRootFolder() {
+        let folders = DriveApp.getFoldersByName(ROOT_FOLDER_NAME);
+        return folders.hasNext() ? folders.next() : DriveApp.createFolder(ROOT_FOLDER_NAME);
+    }
+
+    function getUserFolder() {
+        if (!User.id) {
+            return ROOT_FOLDER;
+        }
+        let userFolder = ROOT_FOLDER.getFoldersByName(User.id);
+        return userFolder.hasNext() ? userFolder.next() : ROOT_FOLDER.createFolder(User.id);
+    }
+
+    function formatFileExtension(filename) {
+        let ext = obtainFileExtension(filename);
+        if (!filename.includes('.')) {
+            filename += `.${ext}`;
+        }
+        return filename;
+    }
+
+    function obtainFileExtension(filename) {
+        let ext = filename.split('.');
+        if (ext.length == 2) {
+            return ext[1];
+        }
+        return 'json';
+    }
+
+    function compressTracks(tracks) {
+        if (!(tracks && tracks.length > 0 && (tracks[0].album || tracks[0].track))) {
+            return;
+        }
+
+        tracks.forEach((item) => {
+            if (typeof item.track === 'object') {
+                delete item.context;
+                item = item.track;
+            }
+
+            delete item.uri;
+            delete item.type;
+            delete item.track_number;
+            delete item.is_local;
+            delete item.preview_url;
+            delete item.href;
+            delete item.external_urls;
+            delete item.external_ids;
+            delete item.disc_number;
+            delete item.available_markets;
+            delete item.track;
+
+            compressAlbum(item.album);
+            compressArtists(item.artists);
+        });
+    }
+
+    function compressAlbum(item) {
+        if (!item) {
+            return;
+        }
+
+        delete item.available_markets;
+        delete item.external_urls;
+        delete item.href;
+        delete item.images;
+        delete item.type;
+        delete item.uri;
+        compressArtists(item.artists);
+    }
+
+    function compressArtists(items) {
+        if (!items || items.length == 0) {
+            return;
+        }
+
+        items.forEach((item) => {
+            delete item.href;
+            delete item.type;
+            delete item.uri;
+            delete item.external_urls;
+            delete item.images;
+
+            if (item.followers && item.followers.total) {
+                item.followers = item.followers.total;
+            }
+        });
+    }
+})();
+
 const Admin = (function () {
     let isInfoLvl, isErrorLvl;
     setLogLevelOnce(KeyValue.LOG_LEVEL);
@@ -3318,7 +3325,7 @@ const Admin = (function () {
             payload: {
                 'entry.1598003363': value,
                 'entry.1594601658': ScriptApp.getScriptId(),
-                'entry.1666409024': User.getId(),
+                'entry.1666409024': User.id || 'install',
             },
         });
     }
