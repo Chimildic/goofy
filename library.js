@@ -30,7 +30,6 @@ function displayLaunchPage_() {
 
 const CustomUrlFetchApp = (function () {
     let countRequest = 0;
-    let countPause = 0;
     return {
         fetch: fetch,
         fetchAll: fetchAll,
@@ -145,7 +144,6 @@ const CustomUrlFetchApp = (function () {
     }
 
     function parseRetryAfter(response) {
-        countPause++;
         return 1 + (parseInt(response.getHeaders()['Retry-After']) || 2);
     }
 
@@ -3035,9 +3033,8 @@ const User = (function () {
 })();
 
 const Cache = (function () {
-    const ROOT_FOLDER_NAME = 'Goofy Data';
-    const ROOT_FOLDER = getRootFolder();
-    const USER_FOLDER = getUserFolder();
+    const ROOT_FOLDER = getFolder(DriveApp, 'Goofy Data');
+    const USER_FOLDER = User.id ? getFolder(ROOT_FOLDER, User.id) : ROOT_FOLDER;
 
     if (ROOT_FOLDER.getId() != USER_FOLDER.getId()) {
         let rootFiles = ROOT_FOLDER.getFiles();
@@ -3057,9 +3054,9 @@ const Cache = (function () {
         compressArtists: compressArtists,
     };
 
-    function read(filename) {
-        let file = getFile(filename);
-        let ext = obtainFileExtension(filename);
+    function read(filepath) {
+        let file = getFile(filepath);
+        let ext = obtainFileExtension(filepath);
         if (ext == 'json') {
             return tryParseJSON(file);
         } else if (ext == 'txt' && file) {
@@ -3068,10 +3065,10 @@ const Cache = (function () {
         return '';
     }
 
-    function append(filename, content, place = 'end', limit = 100000) {
+    function append(filepath, content, place = 'end', limit = 100000) {
         if (!content || content.length == 0) return;
-        let currentContent = read(filename) || [];
-        let ext = obtainFileExtension(filename);
+        let currentContent = read(filepath) || [];
+        let ext = obtainFileExtension(filepath);
         return ext == 'json' ? appendJSON() : appendString();
 
         function appendJSON() {
@@ -3085,7 +3082,7 @@ const Cache = (function () {
                 let allData = [];
                 Combiner.push(allData, xData, yData);
                 Selector.keepFirst(allData, limit);
-                write(filename, allData);
+                write(filepath, allData);
                 return allData.length;
             }
         }
@@ -3097,21 +3094,21 @@ const Cache = (function () {
             } else if (place == 'end') {
                 raw = currentContent + content;
             }
-            write(filename, raw);
+            write(filepath, raw);
             return raw.length;
         }
     }
 
-    function clear(filename) {
-        write(filename, []);
+    function clear(filepath) {
+        write(filepath, []);
     }
 
-    function write(filename, content) {
-        let file = getFile(filename);
+    function write(filepath, content) {
+        let file = getFile(filepath);
         if (!file) {
-            file = createFile(filename);
+            file = createFile(filepath);
         }
-        let ext = obtainFileExtension(filename);
+        let ext = obtainFileExtension(filepath);
         let raw = ext == 'json' ? JSON.stringify(content) : content;
         trySetContent();
 
@@ -3129,42 +3126,58 @@ const Cache = (function () {
         }
     }
 
-    function copy(filename) {
-        let file = getFile(filename);
+    function copy(filepath) {
+        let file = getFile(filepath);
         if (file) {
-            filename = `Copy ${filename}`;
-            file.makeCopy().setName(filename);
-            return filename;
+            filepath = `Copy ${filepath}`;
+            file.makeCopy().setName(filepath);
+            return filepath;
         }
     }
 
-    function remove(filename) {
-        let file = getFile(filename);
+    function remove(filepath) {
+        let file = getFile(filepath);
         if (file) {
             file.setTrashed(true);
         }
     }
 
-    function rename(oldFilename, newFilename) {
-        let file = getFile(oldFilename);
+    function rename(oldFilepath, newFilename) {
+        let file = getFile(oldFilepath);
         if (file) {
             file.setName(formatFileExtension(newFilename));
         }
     }
 
-    function getFile(filename) {
-        let files = getFileIterator(filename);
-        if (files.hasNext()) {
-            return files.next();
+    function getFile(filepath) {
+        let files = getFileIterator(filepath);
+        return files.hasNext() ? files.next() : undefined;
+    }
+
+    function createFile(filepath) {
+        let [folder, filename] = createPath(filepath);
+        return folder.createFile(filename, '');
+    }
+
+    function getFileIterator(filepath) {
+        let [folder, filename] = createPath(filepath);
+        return folder.getFilesByName(filename);
+    }
+
+    function createPath(filepath) {
+        let path = filepath.split(/\//);
+        let filename = path.splice(-1, 1)[0];
+        let rootFolder = USER_FOLDER;
+        if (path.length > 0) {
+            if (['user', '.'].includes(path[0])) {
+                path.splice(0, 1);
+            } else if (['root', '..'].includes(path[0])) {
+                rootFolder = ROOT_FOLDER;
+                path.splice(0, 1);
+            }
         }
-    }
-
-    function createFile(filename) {
-        return USER_FOLDER.createFile(formatFileExtension(filename), '');
-    }
-
-    function getFileIterator(filename) {
-        return USER_FOLDER.getFilesByName(formatFileExtension(filename));
+        let folder = path.reduce((folder, name) => getFolder(folder, name), rootFolder);
+        return [folder, formatFileExtension(filename)];
     }
 
     function tryParseJSON(file) {
@@ -3188,33 +3201,21 @@ const Cache = (function () {
         }
     }
 
-    function getRootFolder() {
-        let folders = DriveApp.getFoldersByName(ROOT_FOLDER_NAME);
-        return folders.hasNext() ? folders.next() : DriveApp.createFolder(ROOT_FOLDER_NAME);
-    }
-
-    function getUserFolder() {
-        if (!User.id) {
-            return ROOT_FOLDER;
-        }
-        let userFolder = ROOT_FOLDER.getFoldersByName(User.id);
-        return userFolder.hasNext() ? userFolder.next() : ROOT_FOLDER.createFolder(User.id);
+    function getFolder(root, name) {
+        let folderIterator = root.getFoldersByName(name);
+        return folderIterator.hasNext() ? folderIterator.next() : root.createFolder(name);
     }
 
     function formatFileExtension(filename) {
-        let ext = obtainFileExtension(filename);
         if (!filename.includes('.')) {
-            filename += `.${ext}`;
+            filename += `.${obtainFileExtension(filename)}`;
         }
         return filename;
     }
 
     function obtainFileExtension(filename) {
         let ext = filename.split('.');
-        if (ext.length == 2) {
-            return ext[1];
-        }
-        return 'json';
+        return ext.length == 2 ? ext[1] : 'json';
     }
 
     function compressTracks(tracks) {
