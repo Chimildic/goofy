@@ -1,6 +1,6 @@
 // Документация: https://chimildic.github.io/goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.6.1';
+const VERSION = '1.6.2';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -162,8 +162,8 @@ const CustomUrlFetchApp = (function () {
     function tryCallback(callback, attempt = 0) {
         try {
             return callback();
-        } catch (e) {
-            Admin.printError('При отправке запроса произошла ошибка:\n', e.stack);
+        } catch (error) {
+            Admin.printError('При отправке запроса произошла ошибка:\n', error.stack);
             if (attempt++ < 2) {
                 Admin.pause(5);
                 return tryCallback(callback, attempt);
@@ -174,8 +174,8 @@ const CustomUrlFetchApp = (function () {
     function tryParseJSON(content) {
         try {
             return JSON.parse(content);
-        } catch (e) {
-            Admin.printError('Не удалось преобразовать строку JSON из ответа на запрос в объект JavaScript\n', e, e.stack, content);
+        } catch (error) {
+            Admin.printError('Не удалось преобразовать строку JSON из ответа на запрос в объект JavaScript\n', error.stack, '\n', content);
             return [];
         }
     }
@@ -2889,8 +2889,8 @@ const SpotifyRequest = (function () {
         try {
             str = '{"' + decodeURI(str).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}';
             return JSON.parse(str);
-        } catch (e) {
-            Admin.printError(`Не удалось преобразовать строку в объект JavaScript\nСтрока: ${str}`, e, e.stack);
+        } catch (error) {
+            Admin.printError(`Не удалось преобразовать строку в объект JavaScript\nСтрока: ${str}\n`, error.stack);
             return {};
         }
     }
@@ -3035,6 +3035,24 @@ const User = (function () {
 const Cache = (function () {
     const ROOT_FOLDER = getFolder(DriveApp, 'Goofy Data');
     const USER_FOLDER = User.id ? getFolder(ROOT_FOLDER, User.id) : ROOT_FOLDER;
+    const Storage = (function () {
+        let storage = {};
+        return {
+            getFile: (name) => get(name, 'file'),
+            setFile: (name, value) => set(name, 'file', value),
+            getContent: (name) => get(name, 'content'),
+            setContent: (name, value) => set(name, 'content', value)
+        }
+
+        function get(name, key) {
+            return storage[name] && storage[name][key] ? storage[name][key] : undefined;
+        }
+
+        function set(name, key, value) {
+            storage[name] = storage[name] || {};
+            storage[name][key] = value;
+        }
+    })();
 
     if (ROOT_FOLDER.getId() != USER_FOLDER.getId()) {
         let rootFiles = ROOT_FOLDER.getFiles();
@@ -3046,7 +3064,6 @@ const Cache = (function () {
         read: read,
         write: write,
         append: append,
-        clear: clear,
         copy: copy,
         remove: remove,
         rename: rename,
@@ -3055,28 +3072,26 @@ const Cache = (function () {
     };
 
     function read(filepath) {
-        let file = getFile(filepath);
-        let ext = obtainFileExtension(filepath);
-        if (ext == 'json') {
-            return tryParseJSON(file);
-        } else if (ext == 'txt' && file) {
-            return tryGetBlob(file);
+        let content = Storage.getContent(filepath);
+        if (!content) {
+            let file = getFile(filepath);
+            let ext = obtainFileExtension(filepath);
+            content = ext == 'json' ? tryParseJSON(file) : tryGetBlob(file);
+            Storage.setContent(filepath, content);
         }
-        return '';
+        return Selector.sliceCopy(content);
     }
 
     function append(filepath, content, place = 'end', limit = 100000) {
         if (!content || content.length == 0) return;
-        let currentContent = read(filepath) || [];
+        let currentContent = read(filepath);
         let ext = obtainFileExtension(filepath);
         return ext == 'json' ? appendJSON() : appendString();
 
         function appendJSON() {
-            if (place == 'begin') {
-                return appendNewData(content, currentContent);
-            } else if (place == 'end') {
-                return appendNewData(currentContent, content);
-            }
+            return place == 'begin'
+                ? appendNewData(content, currentContent)
+                : appendNewData(currentContent, content);
 
             function appendNewData(xData, yData) {
                 let allData = [];
@@ -3088,38 +3103,27 @@ const Cache = (function () {
         }
 
         function appendString() {
-            let raw;
-            if (place == 'begin') {
-                raw = content + currentContent;
-            } else if (place == 'end') {
-                raw = currentContent + content;
-            }
+            let raw = place == 'begin' ? (content + currentContent) : (currentContent + content);
             write(filepath, raw);
             return raw.length;
         }
     }
 
-    function clear(filepath) {
-        write(filepath, []);
-    }
-
     function write(filepath, content) {
-        let file = getFile(filepath);
-        if (!file) {
-            file = createFile(filepath);
-        }
+        let file = getFile(filepath) || createFile(filepath);
         let ext = obtainFileExtension(filepath);
         let raw = ext == 'json' ? JSON.stringify(content) : content;
         trySetContent();
 
         function trySetContent() {
             try {
-                file = file.setContent(raw);
+                file.setContent(raw);
+                Storage.setContent(filepath, content);
                 if (raw.length > 0 && file.getSize() == 0) {
                     trySetContent();
                 }
-            } catch {
-                Admin.printError(`Неизвестная ошибка при записи в файл`);
+            } catch (error) {
+                Admin.printError(`При записи в файл произошла ошибка\n`, error.stack);
                 Admin.pause(5);
                 trySetContent();
             }
@@ -3129,9 +3133,11 @@ const Cache = (function () {
     function copy(filepath) {
         let file = getFile(filepath);
         if (file) {
-            filepath = `Copy ${filepath}`;
-            file.makeCopy().setName(filepath);
-            return filepath;
+            let path = filepath.split('/');
+            let filename = formatFileExtension('Copy ' + path.splice(-1, 1)[0]);
+            path.push(filename);
+            file.makeCopy().setName(filename);
+            return path.join('/');
         }
     }
 
@@ -3150,18 +3156,25 @@ const Cache = (function () {
     }
 
     function getFile(filepath) {
-        let files = getFileIterator(filepath);
-        return files.hasNext() ? files.next() : undefined;
-    }
-
-    function createFile(filepath) {
-        let [folder, filename] = createPath(filepath);
-        return folder.createFile(filename, '');
+        let file = Storage.getFile(filepath);
+        if (!file) {
+            let iterator = getFileIterator(filepath);
+            file = iterator.hasNext() ? iterator.next() : undefined;
+            Storage.setFile(filepath, file);
+        }
+        return file;
     }
 
     function getFileIterator(filepath) {
         let [folder, filename] = createPath(filepath);
         return folder.getFilesByName(filename);
+    }
+
+    function createFile(filepath) {
+        let [folder, filename] = createPath(filepath);
+        let file = folder.createFile(filename, '');
+        Storage.setFile(filepath, file);
+        return file;
     }
 
     function createPath(filepath) {
@@ -3185,17 +3198,18 @@ const Cache = (function () {
         let content = tryGetBlob(file);
         try {
             return JSON.parse(content);
-        } catch (e) {
-            Admin.printError(e, e.stack);
+        } catch (error) {
+            Admin.printError(error.stack);
             throw `Не удалось преобразовать строку JSON из файла в объект JavaScript\nДлина: ${content.length}\nКонтент: ${content}`;
         }
     }
 
     function tryGetBlob(file) {
+        if (!file) return '';
         try {
             return file.getBlob().getDataAsString();
-        } catch {
-            Admin.printError('Неизвестная ошибка при получении данных из файла');
+        } catch (error) {
+            Admin.printError('При получении данных из файла произошла ошибка\n', error.stack);
             Admin.pause(5);
             return tryGetBlob(file);
         }

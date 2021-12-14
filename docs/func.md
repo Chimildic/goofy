@@ -28,18 +28,6 @@ let tracks = Source.getPlaylistTracks('playlist name', 'id');
 Cache.append('myfile.json', tracks);
 ```
 
-### clear
-
-Перезаписывает содержимое файла пустым массивом.
-
-Аргументы
-- (строка) `filepath` - [путь до файла](/best-practices?id=Путь-до-файла)
-
-Пример 1 - Очистить файл
-```js
-Cache.clear('filename.json');
-```
-
 ### compressArtists
 
 Удаляет некоторые данные о исполнителях. Используется для сокращения объема файла.
@@ -69,7 +57,7 @@ Cache.write('myfile.json', tracks);
 ```
 ### copy
 
-Создает копию файла. Возвращает имя созданной копии.
+Создает копию файла в той же папке. Возвращает путь до созданной копии.
 
 Аргументы
 - (строка) `filepath` - [путь до файла](/best-practices?id=Путь-до-файла)
