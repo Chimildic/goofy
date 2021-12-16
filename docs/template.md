@@ -54,6 +54,57 @@ function updateUnknownSet() {
 }
 ```
 
+## Открытия с альбомов
+```js
+/**
+ * Популярные треки с альбомов, в которых уже есть известные вам любимые треки
+ */
+function updateDiscoveryAlbums() {
+  const LIMIT_TRACKS = 20;
+  const LIMIT_ALB_TRACK = 1;
+
+  let recentTracks = RecentTracks.get(3000);
+  let savedTracks = Source.getSavedTracks();
+  let banTracks = Combiner.push([], recentTracks, savedTracks);
+  let banArtists = Selector.sliceCopy(recentTracks);
+  Filter.rangeDateRel(banArtists, 2, 0);
+
+  let tracks = savedTracks;
+  Order.shuffle(tracks);
+
+  let recomTracks = [];
+  for (let i = 0; i < tracks.length; i++) {
+    if (tracks[i].album.album_type == 'compilation' 
+        || tracks[i].album.total_tracks == 1) {
+      continue;
+    }
+    let albumTracks = Source.getAlbumTracks(tracks[i].album);
+    Filter.matchOriginalOnly(albumTracks);
+    Filter.removeArtists(albumTracks, banArtists);
+    Filter.removeTracks(albumTracks, banTracks);
+    if (albumTracks.length == 0) {
+      continue;
+    }
+
+    Order.sort(albumTracks, 'meta.popularity', 'desc');
+    Selector.keepFirst(albumTracks, LIMIT_ALB_TRACK);
+    Combiner.push(recomTracks, albumTracks);
+
+    Filter.dedupTracks(recomTracks);
+    if (recomTracks.length >= LIMIT_TRACKS) {
+      break;
+    }
+  }
+
+  Playlist.saveWithReplace({
+    name: 'Открытия с альбомов',
+    description: 'Эти треки должны тебе понравится!',
+    tracks: Selector.sliceFirst(recomTracks, LIMIT_TRACKS),
+    randomCover: 'update',
+  });
+}
+```
+
 ## Любимо и забыто
 ```js
 /**
