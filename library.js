@@ -3033,24 +3033,26 @@ const User = (function () {
 })();
 
 const Cache = (function () {
-    const ROOT_FOLDER = getFolder(DriveApp, 'Goofy Data');
-    const USER_FOLDER = User.id ? getFolder(ROOT_FOLDER, User.id) : ROOT_FOLDER;
+    const ROOT_FOLDER = getFolder(DriveApp, 'Goofy Data', true);
+    const USER_FOLDER = User.id ? getFolder(ROOT_FOLDER, User.id, true) : ROOT_FOLDER;
     const Storage = (function () {
         let storage = {};
         return {
-            getFile: (name) => get(name, 'file'),
-            setFile: (name, value) => set(name, 'file', value),
-            getContent: (name) => get(name, 'content'),
-            setContent: (name, value) => set(name, 'content', value)
+            getFile: (filepath) => get(filepath, 'file'),
+            setFile: (filepath, file) => set(filepath, 'file', file),
+            getContent: (filepath) => get(filepath, 'content'),
+            setContent: (filepath, content) => set(filepath, 'content', content),
         }
 
-        function get(name, key) {
-            return storage[name] && storage[name][key] ? storage[name][key] : undefined;
+        function get(rootKey, valueKey) {
+            return storage[rootKey] && storage[rootKey][valueKey]
+                ? storage[rootKey][valueKey]
+                : undefined;
         }
 
-        function set(name, key, value) {
-            storage[name] = storage[name] || {};
-            storage[name][key] = value;
+        function set(rootKey, valueKey, value) {
+            storage[rootKey] = storage[rootKey] || {};
+            storage[rootKey][valueKey] = value;
         }
     })();
 
@@ -3074,7 +3076,7 @@ const Cache = (function () {
     function read(filepath) {
         let content = Storage.getContent(filepath);
         if (!content) {
-            let file = getFile(filepath);
+            let file = findFile(filepath);
             let ext = obtainFileExtension(filepath);
             content = ext == 'json' ? tryParseJSON(file) : tryGetBlob(file);
             Storage.setContent(filepath, content);
@@ -3110,7 +3112,7 @@ const Cache = (function () {
     }
 
     function write(filepath, content) {
-        let file = getFile(filepath) || createFile(filepath);
+        let file = findFile(filepath) || createFile(filepath);
         let ext = obtainFileExtension(filepath);
         let raw = ext == 'json' ? JSON.stringify(content) : content;
         trySetContent();
@@ -3131,7 +3133,7 @@ const Cache = (function () {
     }
 
     function copy(filepath) {
-        let file = getFile(filepath);
+        let file = findFile(filepath);
         if (file) {
             let path = filepath.split('/');
             let filename = formatFileExtension('Copy ' + path.splice(-1, 1)[0]);
@@ -3142,94 +3144,17 @@ const Cache = (function () {
     }
 
     function remove(filepath) {
-        let file = getFile(filepath);
+        let file = findFile(filepath);
         if (file) {
             file.setTrashed(true);
         }
     }
 
     function rename(oldFilepath, newFilename) {
-        let file = getFile(oldFilepath);
+        let file = findFile(oldFilepath);
         if (file) {
             file.setName(formatFileExtension(newFilename));
         }
-    }
-
-    function getFile(filepath) {
-        let file = Storage.getFile(filepath);
-        if (!file) {
-            let iterator = getFileIterator(filepath);
-            file = iterator.hasNext() ? iterator.next() : undefined;
-            Storage.setFile(filepath, file);
-        }
-        return file;
-    }
-
-    function getFileIterator(filepath) {
-        let [folder, filename] = createPath(filepath);
-        return folder.getFilesByName(filename);
-    }
-
-    function createFile(filepath) {
-        let [folder, filename] = createPath(filepath);
-        let file = folder.createFile(filename, '');
-        Storage.setFile(filepath, file);
-        return file;
-    }
-
-    function createPath(filepath) {
-        let path = filepath.split(/\//);
-        let filename = path.splice(-1, 1)[0];
-        let rootFolder = USER_FOLDER;
-        if (path.length > 0) {
-            if (['user', '.'].includes(path[0])) {
-                path.splice(0, 1);
-            } else if (['root', '..'].includes(path[0])) {
-                rootFolder = ROOT_FOLDER;
-                path.splice(0, 1);
-            }
-        }
-        let folder = path.reduce((folder, name) => getFolder(folder, name), rootFolder);
-        return [folder, formatFileExtension(filename)];
-    }
-
-    function tryParseJSON(file) {
-        if (!file) return [];
-        let content = tryGetBlob(file);
-        try {
-            return JSON.parse(content);
-        } catch (error) {
-            Admin.printError(error.stack);
-            throw `Не удалось преобразовать строку JSON из файла в объект JavaScript\nДлина: ${content.length}\nКонтент: ${content}`;
-        }
-    }
-
-    function tryGetBlob(file) {
-        if (!file) return '';
-        try {
-            return file.getBlob().getDataAsString();
-        } catch (error) {
-            Admin.printError('При получении данных из файла произошла ошибка\n', error.stack);
-            Admin.pause(5);
-            return tryGetBlob(file);
-        }
-    }
-
-    function getFolder(root, name) {
-        let folderIterator = root.getFoldersByName(name);
-        return folderIterator.hasNext() ? folderIterator.next() : root.createFolder(name);
-    }
-
-    function formatFileExtension(filename) {
-        if (!filename.includes('.')) {
-            filename += `.${obtainFileExtension(filename)}`;
-        }
-        return filename;
-    }
-
-    function obtainFileExtension(filename) {
-        let ext = filename.split('.');
-        return ext.length == 2 ? ext[1] : 'json';
     }
 
     function compressTracks(tracks) {
@@ -3290,6 +3215,86 @@ const Cache = (function () {
                 item.followers = item.followers.total;
             }
         });
+    }
+
+    function findFile(filepath) {
+        let file = Storage.getFile(filepath);
+        if (!file) {
+            let [folder, filename] = parsePath(filepath, false);
+            if (folder) {
+                let iterator = folder.getFilesByName(filename)
+                file = iterator.hasNext() ? iterator.next() : undefined;
+            }
+            Storage.setFile(filepath, file);
+        }
+        return file;
+    }
+
+    function createFile(filepath) {
+        let [folder, filename] = parsePath(filepath, true);
+        let file = folder.createFile(filename, '');
+        Storage.setFile(filepath, file);
+        return file;
+    }
+
+    function parsePath(filepath, isCreateFolder) {
+        let path = filepath.split('/');
+        let filename = path.splice(-1, 1)[0];
+        let rootFolder = USER_FOLDER;
+        if (path.length > 0) {
+            if (['user', '.'].includes(path[0])) {
+                path.splice(0, 1);
+            } else if (['root', '..'].includes(path[0])) {
+                rootFolder = ROOT_FOLDER;
+                path.splice(0, 1);
+            }
+        }
+        return [path.reduce((root, name) => getFolder(root, name, isCreateFolder), rootFolder),
+        formatFileExtension(filename)];
+    }
+
+    function getFolder(root, name, isCreateFolder) {
+        if (!root) return;
+        let iterator = root.getFoldersByName(name);
+        if (iterator.hasNext()) {
+            return iterator.next()
+        } else if (isCreateFolder) {
+            return root.createFolder(name);
+        }
+    }
+
+    function formatFileExtension(filename) {
+        if (!filename.includes('.')) {
+            filename += `.${obtainFileExtension(filename)}`;
+        }
+        return filename;
+    }
+
+    function obtainFileExtension(filename) {
+        let ext = filename.split('.');
+        return ext.length == 2 ? ext[1] : 'json';
+    }
+
+    function tryParseJSON(file) {
+        if (!file) return [];
+        let content = tryGetBlob(file);
+        try {
+            return JSON.parse(content);
+        } catch (error) {
+            Admin.printError(error.stack);
+            throw `Не удалось преобразовать строку JSON из файла в объект JavaScript\nДлина: ${content.length}\nКонтент: ${content}`;
+        }
+    }
+
+    function tryGetBlob(file) {
+        if (!file) return '';
+        try {
+            return file.getBlob().getDataAsString();
+        } catch (error) {
+            Admin.printError('При получении данных из файла произошла ошибка\n', error.stack);
+            Admin.pause(5);
+            return tryGetBlob(file);
+        }
     }
 })();
 
