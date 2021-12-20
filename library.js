@@ -1472,7 +1472,9 @@ const Selector = (function () {
     }
 
     function sliceCopy(array) {
-        return array.slice();
+        return Array.isArray(array) || typeof array == 'string'
+            ? array.slice()
+            : Object.assign({}, array);
     }
 
     function sliceNoLongerThan(tracks, minutes) {
