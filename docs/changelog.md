@@ -6,6 +6,9 @@
 
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+## Версия 1.6.3
+- [#155](https://github.com/Chimildic/goofy/issues/155) Новая функция [Source.getReleasesByArtists](/func?id=getreleasesbyartists). Собирает релизы исполнителей значительно быстрее прямого перебора, использовавшегося ранее при комбинации разных функций.
+
 ## Версия 1.6.2
 - Уменьшено количество обращений к Google Диску. Операции чтения/записи одного и того же файла в рамках одного выполнения скрипта пройдут за меньшее время.
 - Удалена функция `Cache.clear`. Используйте `Cache.write` для перезаписи файла.

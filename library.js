@@ -1,6 +1,6 @@
 // Документация: https://chimildic.github.io/goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.6.2';
+const VERSION = '1.6.3';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -214,6 +214,7 @@ const Source = (function () {
         craftTracks: craftTracks,
         extractTracks: extractTracks,
         createUrlForRecomTracks: createUrlForRecomTracks,
+        getReleasesByArtists: getReleasesByArtists,
     };
 
     function getTopTracks(timeRange) {
@@ -376,6 +377,35 @@ const Source = (function () {
             playlistArray = playlistArray.filter((item) => !ids.includes(item.id));
         }
         return playlistArray;
+    }
+
+    function getReleasesByArtists(params) {
+        let years = parseYears(params.date);
+        let period = years.join('-');
+        let requestCount = years[1] - years[0] + 1;
+        let keywords = params.artists.map(artist => `"${artist.name}" AND year:${period}`);
+        let responses = Search.findAlbums(keywords, requestCount).reduce((responses, albums) => {
+            if (albums.length > 0) {
+                Filter.dedupAlbums(albums);
+                Filter.removeArtists(albums, params.artists, true);
+                albums = albums.filter(album =>
+                    RangeTracks.isBelongReleaseDate(album.release_date, params.date)
+                    && params.type.includes(album.album_type))
+                albums.length > 0 && responses.push(Source.getAlbumsTracks(albums));
+            }
+            return responses;
+        }, []);
+        return !params.hasOwnProperty('isFlat') || params.isFlat ? responses.flat(1) : responses;
+
+        function parseYears(releaseDate) {
+            let years = Object.keys(releaseDate).map(key => {
+                let bound = ['since', 'start'].some(str => key.includes(str)) ? 'startDay' : 'endDay';
+                let date = releaseDate[key] instanceof Date ? releaseDate[key] : Filter.getDateRel(releaseDate[key], bound);
+                return date.getFullYear();
+            }, []);
+            years.sort((x, y) => x - y);
+            return years;
+        }
     }
 
     function mineTracks(params) {
