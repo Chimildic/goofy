@@ -298,6 +298,48 @@ Filter.dedupTracks(tracks);
 
 Пример в шаблоне [любимо и забыто](/template?id=Любимо-и-забыто).
 
+### detectLanguage
+
+Оставляет только треки с указанным основным языком, определяемым по тексту. 
+
+!> Требуется указать параметр `MUSIXMATCH_API_KEY`, [подробнее](/guide?id=Параметры)
+
+Аргументы
+- (массив) `tracks` - перечень треков.
+- (объект) `params` - параметры фильтрации.
+  - (бул) `isRemoveUnknown` - при `false` оставляет треки с неизвестным языком, при `true` удаляет. Трек без языка - когда нет в базе `musixmatch` или он полностью танцевальный. 
+  - (массив) `include` - перечень языков, которые нужно оставлять.
+  - (массив) `exclude` - перечень языков, которые нужно удалять.
+
+?> Принимаются двухбуквенные обозначения языка в нижнем регистре. Список доступен [здесь](https://ru.wikipedia.org/wiki/Коды_языков).
+
+Пример 1 - Берем [топ Германии](https://open.spotify.com/playlist/37i9dQZEVXbJiZcmkrIHGU?si=33fdf90a2b854fc8) и оставляем только немецкий. 
+```js
+let tracks = Source.getPlaylistTracks('', '37i9dQZEVXbJiZcmkrIHGU');
+Filter.detectLanguage(tracks, {
+  isRemoveUnknown: true,
+  include: ['de'],
+});
+```
+
+Пример 2 - Схожая ситуация, исключаем русский. 
+```js
+let tracks = Source.getPlaylistTracks('', '37i9dQZEVXbL8l7ra5vVdB');
+Filter.detectLanguage(tracks, {
+  isRemoveUnknown: true,
+  exclude: ['ru'],
+});
+```
+
+Пример 3 - Узнать какие языки есть в массиве.
+```js
+let tracks = Source.getPlaylistTracks('', '37i9dQZEVXbL8l7ra5vVdB');
+Filter.detectLanguage(tracks, { isRemoveUnknown: true });
+console.log(Array.from(new Set(tracks.map(t => t.lyrics.lang))).join('\n'));
+```
+
+?> Для набора треков на разных языках подойдет функция поиска [mineTracks](/func?id=minetracks).
+
 ### getLastOutRange
 
 Получить новый массив с треками, которые не прошли последнюю проверку функции [rangeTracks](/func?id=rangetracks).

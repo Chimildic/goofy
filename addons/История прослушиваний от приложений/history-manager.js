@@ -1,6 +1,5 @@
 const HistoryManager = (function () {
     const FILES = ['SpotifyHistoryPC', 'SpotifyHistoryPhone'];
-    const rootFolder = DriveApp.getFoldersByName(User.id).next();
     return {
         getTracks: getTracks,
         removeTracks: removeTracks,
@@ -53,7 +52,7 @@ const HistoryManager = (function () {
     }
 
     function getFile(filename) {
-        let files = rootFolder.getFilesByName(filename);
+        let files = Cache.UserFolder.getFilesByName(filename);
         if (files.hasNext()) {
             return files.next();
         }
