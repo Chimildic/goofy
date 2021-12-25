@@ -1141,7 +1141,6 @@ const Filter = (function () {
         let urls = [];
         copyTracks.forEach((t) => {
             if (!features[t.id] || !features[t.id].danceability) {
-                Admin.printInfo(`У трека ${t.artists[0].name} ${t.name} нет features`);
                 return;
             }
             let params = {
@@ -1646,6 +1645,7 @@ const Order = (function () {
         }
 
         function compareNumber(x, y) {
+            if (!x[_key] || !y[_key]) return 0;
             return _direction == 'asc' ? x[_key] - y[_key] : y[_key] - x[_key];
         }
 
@@ -2747,8 +2747,12 @@ const getCachedTracks = (function () {
             // limit = 100, но UrlFetchApp.fetch выдает ошибку о превышении длины URL
             // При limit 85, длина URL для этого запроса 2001 символ
             let features = SpotifyRequest.getFullObjByIds('audio-features', uncachedTracks.features, 85);
-            features.forEach((item) => {
-                if (item != null) {
+            features.forEach((item, i) => {
+                if (item == null) {
+                    let id = uncachedTracks.features[i];
+                    cachedTracks.features[id] = {};
+                    Admin.printInfo(`У трека нет features, id: ${id}`);
+                } else {
                     item.anger = item.energy * (1 - item.valence);
                     item.happiness = item.energy * item.valence;
                     item.sadness = (1 - item.energy) * (1 - item.valence);
