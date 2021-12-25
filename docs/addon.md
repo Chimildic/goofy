@@ -36,10 +36,6 @@
 
 ?> Для получения релизов отслеживаемых исполнителей, воспользуйтесь функцией [getArtistsTracks](/func?id=getartiststracks) с параметром `release_date`
 
-### Фильтрация по языку
-
-[Алгоритм](https://github.com/Chimildic/goofy/discussions/123) позволит узнать на каком языке исполняется трек и выполнить фильтрацию. 
-
 ### Прочее
 
 Ещё больше возможностей описано [на форуме](https://github.com/Chimildic/goofy/discussions) под категорией `личный опыт`
