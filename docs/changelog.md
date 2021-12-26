@@ -7,6 +7,7 @@
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
 ## Версия 1.6.3
+- Модуль Yandex полностью удален. Яндекс перестал отвечать на запросы. Многие функции может заменить расширение [YaMuTools](https://github.com/Chimildic/YaMuTools). Но у него нет работы по расписанию.
 - [#155](https://github.com/Chimildic/goofy/issues/155) Новая функция [Source.getReleasesByArtists](/func?id=getreleasesbyartists). Собирает релизы исполнителей значительно быстрее прямого перебора, использовавшегося ранее при комбинации разных функций.
 - [#162](https://github.com/Chimildic/goofy/issues/162) Аддон определения и фильтрации основного языка трека перенесен в основной код [Filter.detectLanguage](/func?id=detectlanguage). При первом запуске из редактора потребует разрешить доступ к Google Таблицам.
 

@@ -37,9 +37,9 @@ Cache.append('myfile.json', tracks);
 
 Пример 1 - Сжать данные о исполнителях и сохранить в файл
 ```js
-let artists = Yandex.getArtists('login');
+let artists = Source.getArtists({ followed_include: true });
 Cache.compressArtists(artists);
-Cache.write('yandex-artists.json', artists);
+Cache.write('artists.json', artists);
 ```
 
 ### compressTracks
@@ -55,6 +55,7 @@ let tracks = Source.getPlaylistTracks('playlist name', 'id');
 Cache.compressTracks(tracks);
 Cache.write('myfile.json', tracks);
 ```
+
 ### copy
 
 Создает копию файла в той же папке. Возвращает путь до созданной копии.
@@ -1072,7 +1073,6 @@ Library.deleteFavoriteTracks(savedTracks);
 Аргументы
 - (массив) `artists` - перечень исполнителей. Значимо только `id`.
 
-Пример в [Yandex.getArtists](/func?id=getartists)
 
 ### followPlaylists
 
@@ -1102,7 +1102,6 @@ Library.deleteFavoriteTracks(savedTracks);
 Аргументы
 - (массив) `artists` - перечень исполнителей. Значимо только `id`.
 
-Пример аналогичен [Yandex.getArtists](/func?id=getartists). Только использовать `unfollowArtists`.
 
 ### unfollowPlaylists
 
@@ -2573,25 +2572,3 @@ let tracks = Source.mineTracks({
 });
 ```
 
-## Yandex
-
-Модуль по работе с Яндекс.Музыкой
-
-> Функции `getTracks` и `getAlbums` удалены. Поскольку Яндекс перестал отвечать на такие запросы от Apps Script.
-
-### getArtists
-
-Возвращает массив исполнителей из подписок Яндекс.Музыки указанного пользователя. Поиск аналога в базе Spotify по имени исполнителя. Внимание на [ограничения](/overview?id=Ограничения). Один исполнитель = один запрос поиска. Указанный пользователь должен иметь публично доступную библиотеку. Настройка находится [здесь](https://music.yandex.ru/settings/other).
-
-!> Поиск осуществляется по наилучшему первому совпадению. Поэтому могут появляться "артефакты". Например, вместо исполнителя [Shura](https://open.spotify.com/artist/1qpR5mURxk3d8f6mww6uKT) найдется [Шура](https://open.spotify.com/artist/03JHGoUoM1LQmuXqknBi5P).
-
-Аргументы
-- (строка) `owner` - логин пользователя Яндекс.Музыки
-- (число) `limit` - количество выбираемых исполнителей. Если не указано, все.
-- (число) `offset` - смещение от первого исполнителя. Например, `limit` = 50 и `offset` = 50 вернут исполнителей от 50-го до 100-го.
-
-Пример 1 - Подписаться на 50 последних исполнителей с Яндекса в Spotify. Можно запускать через триггер. Таким образом получить одностороннюю синхронизацию.
-```js
-let artists = Yandex.getArtists('owner', 50);
-Library.followArtists(artists);
-```

@@ -2607,37 +2607,6 @@ const Lastfm = (function () {
     }
 })();
 
-const Yandex = (function () {
-    const YANDEX_LIBRARY = 'https://music.mts.ru/handlers/library.jsx?';
-
-    return {
-        getArtists: getArtists,
-    };
-
-    function getArtists(owner, limit, offset) {
-        let responseLibrary = getLibrary({ owner: owner, filter: 'artists' });
-        let artistItems = slice(responseLibrary.artists, limit, offset);
-        return Search.multisearchArtists(artistItems, getArtistNameYandex);
-    }
-
-    function getLibrary(queryObj) {
-        let url = YANDEX_LIBRARY + CustomUrlFetchApp.parseQuery(queryObj);
-        return CustomUrlFetchApp.fetch(url) || {};
-    }
-
-    function getArtistNameYandex(item) {
-        return item && item.name ? item.name.formatName() : '';
-    }
-
-    function slice(array, limit, offset) {
-        if (array && limit) {
-            offset = offset ? offset : 0;
-            return array.slice(offset, offset + limit);
-        }
-        return array;
-    }
-})();
-
 const Search = (function () {
     const TEMPLATE = API_BASE_URL + '/search?%s';
 
