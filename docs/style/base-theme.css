@@ -1315,6 +1315,10 @@ body:not([data-platform^='Mac']) .sidebar::-webkit-scrollbar-thumb {
     background-image: var(--sidebar-nav-pagelink-background-image);
     background-position: var(--sidebar-nav-pagelink-background-position);
 }
+.sidebar-nav li:not(.open) > a[href^='#/']:not([href*='?id=']):not(:only-child) {
+    background-image: var(--sidebar-nav-pagelink-background-image, var(--sidebar-nav-pagelink-background-image));
+    background-position: var(--sidebar-nav-pagelink-background-position, var(--sidebar-nav-pagelink-background-image));
+}
 .sidebar-nav li > a[href^='#/']:not([href*='?id=']):not(:only-child) {
     background-image: var(--sidebar-nav-pagelink-background-image--loaded, var(--sidebar-nav-pagelink-background-image));
     background-position: var(--sidebar-nav-pagelink-background-position--loaded, var(--sidebar-nav-pagelink-background-image));
