@@ -11,6 +11,7 @@
   - [Cache](/reference/cache.md)
   - [Combiner](/reference/combiner.md)
   - [Filter](/reference/filter.md)
+  - [Lastfm](/reference/lastfm.md)
 - [Решение ошибок](/errors.md)
 - [Дополнительно](/guide.md)
 - **Поддержать**

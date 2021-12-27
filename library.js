@@ -2515,11 +2515,11 @@ const Lastfm = (function () {
         return track['@attr'] && track['@attr'].nowplaying === 'true';
     }
 
-    function rangeTags(spotifyTracks, args) {
+    function rangeTags(spotifyTracks, params) {
         spotifyTracks.forEach(t => {
             let queryObj = {
                 method: 'track.gettoptags',
-                user: validUser(args.user),
+                user: validUser(params.user),
                 artist: t.artists[0].name.formatName(),
                 track: t.name.formatName(),
                 autocorrect: 1,
@@ -2539,9 +2539,9 @@ const Lastfm = (function () {
 
         Combiner.replace(spotifyTracks, spotifyTracks.filter(t => {
             if (!t.hasOwnProperty('tags') || t.tags.length == 0) {
-                return !args.isRemoveUnknown;
+                return !params.isRemoveUnknown;
             }
-            return isSomeBelong(t, args.include, true) && !isSomeBelong(t, args.exclude, false);
+            return isSomeBelong(t, params.include, true) && !isSomeBelong(t, params.exclude, false);
         }));
 
         function isSomeBelong(track, inputTags, defaultResult) {

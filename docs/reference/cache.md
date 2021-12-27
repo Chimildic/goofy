@@ -34,14 +34,14 @@
 
 ### Примеры :id=append-examples {docsify-ignore}
 
-1) Присоединить треки плейлиста в начало файла. Ограничить массив 5 тысячами треков после присоединения.
+1. Присоединить треки плейлиста в начало файла. Ограничить массив 5 тысячами треков после присоединения.
 
 ```js
 let tracks = Source.getPlaylistTracks('playlist name', 'id');
 Cache.append('filename.json', tracks, 'begin', 5000);
 ```
 
-2) Присоединить треки плейлиста в конец файла. Лимит 100 тысяч. Значения по умолчанию.
+2. Присоединить треки плейлиста в конец файла. Лимит 100 тысяч. Значения по умолчанию.
 
 ```js
 let tracks = Source.getPlaylistTracks('playlist name', 'id');
@@ -64,7 +64,7 @@ Cache.append('filename.json', tracks);
 
 ### Примеры :id=compressartists-examples {docsify-ignore}
 
-1) Уменьшить размер файла с массивом исполнителей.
+1. Уменьшить размер файла с массивом исполнителей.
 
 ```js
 let filename = 'artists.json';
