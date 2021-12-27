@@ -10,6 +10,7 @@
 - [Список модулей](/reference)
   - [Cache](/reference/cache.md)
   - [Combiner](/reference/combiner.md)
+  - [Filter](/reference/filter.md)
 - [Решение ошибок](/errors.md)
 - [Дополнительно](/guide.md)
 - **Поддержать**
