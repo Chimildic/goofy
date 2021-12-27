@@ -9,6 +9,7 @@
 - **Документация**
 - [Список модулей](/reference)
   - [Cache](/reference/cache.md)
+  - [Combiner](/reference/combiner.md)
 - [Решение ошибок](/errors.md)
 - [Дополнительно](/guide.md)
 - **Поддержать**
