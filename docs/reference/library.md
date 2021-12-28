@@ -1,83 +1,162 @@
 # Library
 
-Методы по управлению лайками и подписка.
+Методы по управлению лайками и подписками.
 
-### checkFavoriteTracks
+| Метод | Тип результата | Краткое описание |
+|-------|----------------|------------------|
+| [checkFavoriteTracks](/reference/library?id=checkfavoritetracks) | - | Проверить каждый трек на наличие в любимых (лайках). |
+| [deleteAlbums](/reference/library?id=deletealbums) | - | Удалить альбомы из библиотеки (лайки на альбомах). |
+| [deleteFavoriteTracks](/reference/library?id=deletefavoritetracks) | - | Удалить треки из любимых (убрать лайки). |
+| [followArtists](/reference/library?id=followartists) | - | Подписаться на исполнителей. |
+| [followPlaylists](/reference/library?id=followplaylists) | - | Подписаться на плейлисты. |
+| [saveAlbums](/reference/library?id=savealbums) | - | Сохранить альбомы в библиотеку. |
+| [saveFavoriteTracks](/reference/library?id=savefavoritetracks) | - | Добавить треки в любимые (поставить лайк). |
+| [unfollowArtists](/reference/library?id=unfollowartists) | - | Отписаться от исполнителей. |
+| [unfollowPlaylists](/reference/library?id=unfollowplaylists) | - | Отписаться от плейлистов. |
 
-Проверяет каждый трек на наличие в любимых (лайках). К трекам добавляется ключ `isFavorite` с булевым значением.
+## checkFavoriteTracks
 
-Аргументы
-- (массив) `tracks` - массив проверяемых треков.
+Проверить каждый трек на наличие в любимых (лайках).
 
-Пример 1 - Оставить только отсутствующие в любимых треки
+### Аргументы :id=checkfavoritetracks-arguments {docsify-ignore}
+
+| Имя | Тип | Описание |
+|-----|-----|----------|
+| `tracks` | Массив | Проверяемы треки. Значимо только _id_. |
+
+### Возврат :id=checkfavoritetracks-return {docsify-ignore}
+
+Нет возвращаемого значения.
+
+К трекам добавляется булево значение `isFavorite`, обозначающим наличие или отсутствие трека в любимых.
+
+### Примеры :id=checkfavoritetracks-examples {docsify-ignore}
+
+1. Оставить только треки плейлиста без лайков.
+
 ```js
 let tracks = Source.getPlaylistTracks('', 'id')
 Library.checkFavoriteTracks(tracks);
 tracks = tracks.filter(t => !t.isFavorite);
 ```
 
-### deleteAlbums
+## deleteAlbums
 
-Удалить альбомы из библиотеки.
+Удалить альбомы из библиотеки (лайки на альбомах).
 
-Аргументы
-- (массив) `albums` - перечень альбомов для удаления. Значимо только `id`.
+### Аргументы :id=deletealbums-arguments {docsify-ignore}
 
-### deleteFavoriteTracks
+| Имя | Тип | Описание |
+|-----|-----|----------|
+| `albums` | Массив | Альбомы для удаления. Значимо только _id_. |
 
-Удалить треки из любимых (снять лайки)
+### Возврат :id=deletealbums-return {docsify-ignore}
 
-Аргументы
-- (массив) `tracks` - перечень треков. Значимо только `id`.
+Нет возвращаемого значения.
 
-Пример 1 - Очистить все лайки Spotify
+## deleteFavoriteTracks
+
+Удалить треки из любимых (убрать лайки).
+
+### Аргументы :id=deletefavoritetracks-arguments {docsify-ignore}
+
+| Имя | Тип | Описание |
+|-----|-----|----------|
+| `tracks` | Массив | Треки для удаления. Значимо только _id_. |
+
+### Возврат :id=deletefavoritetracks-return {docsify-ignore}
+
+Нет возвращаемого значения.
+
+### Примеры :id=deletefavoritetracks-examples {docsify-ignore}
+
+1. Очистить все лайки
+
 ```js
 let savedTracks = Source.getSavedTracks();
 Library.deleteFavoriteTracks(savedTracks);
 ```
 
-### followArtists
+## followArtists
 
-Подписаться на исполнителей
+Подписаться на исполнителей.
 
-Аргументы
-- (массив) `artists` - перечень исполнителей. Значимо только `id`.
+### Аргументы :id=followartists-arguments {docsify-ignore}
 
-Пример в [Yandex.getArtists](/func?id=getartists)
+| Имя | Тип | Описание |
+|-----|-----|----------|
+| `artists` | Массив | Исполнители для подписки. Значимо только _id_. |
 
-### followPlaylists
+### Возврат :id=followartists-return {docsify-ignore}
 
-Подписаться на плейлисты
+Нет возвращаемого значения.
 
-Аргумент
-- (массив/строка) `playlists` - перечень плейлистов (значимо только _id_) или строка с _id_, разделенными запятой.
+## followPlaylists
 
-### saveAlbums
+Подписаться на плейлисты.
 
-Добавить альбомы в библиотеку.
+### Аргументы :id=followplaylists-arguments {docsify-ignore}
 
-Аргументы
-- (массив) `albums` - перечень альбомов для добавления. Значимо только `id`.
+| Имя | Тип | Описание |
+|-----|-----|----------|
+| `playlists` | Массив/Строка | Плейлисты (значимо только _id_) или строка с _id_, разделенные запятыми. |
 
-### saveFavoriteTracks
+### Возврат :id=followplaylists-return {docsify-ignore}
 
-Добавить треки в любимые (поставить лайк)
+Нет возвращаемого значения.
 
-Аргументы
-- (массив) `tracks` - перечень треков. Значимо только `id`.
+## saveAlbums
 
-### unfollowArtists
+Сохранить альбомы в библиотеку.
 
-Отписаться от исполнителей
+### Аргументы :id=savealbums-arguments {docsify-ignore}
 
-Аргументы
-- (массив) `artists` - перечень исполнителей. Значимо только `id`.
+| Имя | Тип | Описание |
+|-----|-----|----------|
+| `albums` | Массив | Альбомы для добавления. Значимо только _id_. |
 
-Пример аналогичен [Yandex.getArtists](/func?id=getartists). Только использовать `unfollowArtists`.
+### Возврат :id=savealbums-return {docsify-ignore}
 
-### unfollowPlaylists
+Нет возвращаемого значения.
 
-Отписаться от плейлистов
+## saveFavoriteTracks
 
-Аргумент
-- (массив/строка) `playlists` - перечень плейлистов (объекты с _id_) или строка с _id_, разделенными запятой.
+Добавить треки в любимые (поставить лайк).
+
+### Аргументы :id=savefavoritetracks-arguments {docsify-ignore}
+
+| Имя | Тип | Описание |
+|-----|-----|----------|
+| `tracks` | Массив | Треки для добавления. Значимо только _id_. |
+
+### Возврат :id=savefavoritetracks-return {docsify-ignore}
+
+Нет возвращаемого значения.
+
+## unfollowArtists
+
+Отписаться от исполнителей.
+
+### Аргументы :id=unfollowartists-arguments {docsify-ignore}
+
+| Имя | Тип | Описание |
+|-----|-----|----------|
+| `artists` | Массив | Исполнители для отписки. Значимо только _id_. |
+
+### Возврат :id=unfollowartists-return {docsify-ignore}
+
+Нет возвращаемого значения.
+
+## unfollowPlaylists
+
+Отписаться от плейлистов.
+
+### Аргументы :id=unfollowplaylists-arguments {docsify-ignore}
+
+| Имя | Тип | Описание |
+|-----|-----|----------|
+| `playlists` | Массив/Строка | Плейлисты (значимо только _id_) или строка с _id_, разделенные запятыми. |
+
+### Возврат :id=unfollowplaylists-return {docsify-ignore}
+
+Нет возвращаемого значения.
