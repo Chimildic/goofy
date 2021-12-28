@@ -87,7 +87,7 @@
 
 ## Настройка last.fm
 
-Необходимо для модуля [Last.fm](/func?id=lastfm). Если не используется, выполнять не нужно. 
+Необходимо для модуля [Last.fm](/reference/lastfm). Если не используется, выполнять не нужно.
 
 1. Подключите Spotify к Last.fm [здесь](https://www.last.fm/settings/applications)
 2. Создайте точку входа [здесь](https://www.last.fm/api/account/create). Заполните название и описание произвольно. Остальное пропустить, оставить пустым.
@@ -98,7 +98,7 @@
 
 ## Настройка musicmatch
 
-Необходимо для функции [detectLanguage](/func?id=detectlanguage). Если не используется, выполнять не нужно. 
+Необходимо для функции [detectLanguage](/reference/filter?id=detectlanguage). Если не используется, выполнять не нужно. 
 
 1. Зайдите на сайт [developer.musixmatch.com](https://developer.musixmatch.com/signup), чтобы зарегистрироваться и получить API ключ. Телефон и адрес заполните произвольно (123 и World, к примеру). Почта реальная, попросит подтвердить.  
 2. После подтверждения почты зайдите в [дэшборд приложений](https://developer.musixmatch.com/admin/applications). Скопируйте ключ.  

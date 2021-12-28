@@ -12,7 +12,7 @@
 
 Пример 1 - Найти 100 плейлистов по слову `rain`
 
-?> Лучшим способом будет функция [mineTracks](/func?id=minetracks). Прямое использование модуля Search нужно для решений, которые не реализованы по умолчанию. Например, при [импорте треков с FM-радио](https://github.com/Chimildic/goofy/discussions/35).
+?> Лучшим способом будет функция [mineTracks](/reference/source?id=minetracks). Прямое использование модуля Search нужно для решений, которые не реализованы по умолчанию. Например, при [импорте треков с FM-радио](https://github.com/Chimildic/goofy/discussions/35).
 
 ```js
 let keywords = ['rain'];
@@ -53,7 +53,7 @@ let tracks = Search.multisearchTracks(items, (item) => {
 
 ### sendMusicRequest
 
-Заполняет форму [music request](https://docs.google.com/forms/d/e/1FAIpQLScMGwTBnCz8nOPkM5g9IwwbpKolEWOXkhpAUSl8JjlkKcBGKw/viewform) данными из [getNoFound](/func?id=getnofound). То есть отправляет запрос на добавление исполнителей или треков, которых не удалось найти в Spotify.
+Заполняет форму [music request](https://docs.google.com/forms/d/e/1FAIpQLScMGwTBnCz8nOPkM5g9IwwbpKolEWOXkhpAUSl8JjlkKcBGKw/viewform) данными из [getNoFound](/reference/search?id=getnofound). То есть отправляет запрос на добавление исполнителей или треков, которых не удалось найти в Spotify.
 
 ?> Эксперимент. Используйте после запросов к lastfm, например `getCustomTop`, в конце функции.
 
