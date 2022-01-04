@@ -38,4 +38,4 @@
 
 ### Прочее
 
-Ещё больше возможностей описано [на форуме](https://github.com/Chimildic/goofy/discussions) под категорией `личный опыт`
+Ещё больше примеров описано [на форуме](https://github.com/Chimildic/goofy/discussions) под категорией _личный опыт_.
