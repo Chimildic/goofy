@@ -1,5 +1,5 @@
 - [На главную](/)
-- [Список модулей](/reference)
+- [Список модулей](/reference/index.md)
   - [Cache](/reference/cache.md)
   - [Combiner](/reference/combiner.md)
   - [Filter](/reference/filter.md)
