@@ -921,7 +921,7 @@ const Combiner = (function () {
 
 const RangeTracks = (function () {
     const BAN_KEYS = ['genres', 'ban_genres', 'release_date', 'followed_include', 'include', 'exclude', 'groups', 'artist_limit', 'album_limit', 'track_limit'];
-    let _cachedTracks, _lastOutRange, _args;
+    let _cachedTracks, _lastOutRange, _params;
     return {
         rangeTracks: rangeTracks,
         getLastOutRange: getLastOutRange,
@@ -935,10 +935,10 @@ const RangeTracks = (function () {
         return _lastOutRange ? _lastOutRange.slice() : [];
     }
 
-    function rangeTracks(tracks, args) {
-        _args = args;
+    function rangeTracks(tracks, params) {
+        _params = params;
         _lastOutRange = [];
-        _cachedTracks = getCachedTracks(tracks, args);
+        _cachedTracks = getCachedTracks(tracks, params);
 
         let filteredTracks = tracks.filter((track) => {
             if (isBelongMeta(track) && isBelongFeatures(track) && isBelongArtist(track) && isBelongAlbum(track)) {
@@ -953,25 +953,25 @@ const RangeTracks = (function () {
     }
 
     function isBelongMeta(track) {
-        if (!_args.meta) {
+        if (!_params.meta) {
             return true;
         }
 
         let trackMeta = _cachedTracks.meta[track.id] ? _cachedTracks.meta[track.id] : track;
-        return _args.meta ? isBelong(trackMeta, _args.meta) : true;
+        return _params.meta ? isBelong(trackMeta, _params.meta) : true;
     }
 
     function isBelongFeatures(track) {
-        if (!_args.features) {
+        if (!_params.features) {
             return true;
         }
 
         let trackFeatures = _cachedTracks.features[track.id];
-        return isBelong(trackFeatures, _args.features);
+        return isBelong(trackFeatures, _params.features);
     }
 
     function isBelongArtist(track) {
-        if (!_args.artist) {
+        if (!_params.artist) {
             return true;
         }
 
@@ -986,14 +986,14 @@ const RangeTracks = (function () {
             trackArtist.followers = trackArtist.followers.total;
         }
         return (
-            isBelong(trackArtist, _args.artist) &&
-            isBelongGenres(trackArtist.genres, _args.artist.genres) &&
-            !isBelongBanGenres(trackArtist.genres, _args.artist.ban_genres)
+            isBelong(trackArtist, _params.artist) &&
+            isBelongGenres(trackArtist.genres, _params.artist.genres) &&
+            !isBelongBanGenres(trackArtist.genres, _params.artist.ban_genres)
         );
     }
 
     function isBelongAlbum(track) {
-        if (!_args.album) {
+        if (!_params.album) {
             return true;
         }
 
@@ -1005,10 +1005,10 @@ const RangeTracks = (function () {
         }
 
         return (
-            isBelong(trackAlbum, _args.album) &&
-            isBelongGenres(trackAlbum.genres, _args.album.genres) &&
-            !isBelongBanGenres(trackAlbum.genres, _args.album.ban_genres) &&
-            isBelongReleaseDate(trackAlbum.release_date, _args.album.release_date)
+            isBelong(trackAlbum, _params.album) &&
+            isBelongGenres(trackAlbum.genres, _params.album.genres) &&
+            !isBelongBanGenres(trackAlbum.genres, _params.album.ban_genres) &&
+            isBelongReleaseDate(trackAlbum.release_date, _params.album.release_date)
         );
     }
 
@@ -2515,11 +2515,11 @@ const Lastfm = (function () {
         return track['@attr'] && track['@attr'].nowplaying === 'true';
     }
 
-    function rangeTags(spotifyTracks, args) {
+    function rangeTags(spotifyTracks, params) {
         spotifyTracks.forEach(t => {
             let queryObj = {
                 method: 'track.gettoptags',
-                user: validUser(args.user),
+                user: validUser(params.user),
                 artist: t.artists[0].name.formatName(),
                 track: t.name.formatName(),
                 autocorrect: 1,
@@ -2539,9 +2539,9 @@ const Lastfm = (function () {
 
         Combiner.replace(spotifyTracks, spotifyTracks.filter(t => {
             if (!t.hasOwnProperty('tags') || t.tags.length == 0) {
-                return !args.isRemoveUnknown;
+                return !params.isRemoveUnknown;
             }
-            return isSomeBelong(t, args.include, true) && !isSomeBelong(t, args.exclude, false);
+            return isSomeBelong(t, params.include, true) && !isSomeBelong(t, params.exclude, false);
         }));
 
         function isSomeBelong(track, inputTags, defaultResult) {

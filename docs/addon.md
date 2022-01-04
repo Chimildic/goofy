@@ -24,7 +24,7 @@
 
 ### Рекомендации из прошлого
 
-Для пользователей Last.fm. [Тема](https://github.com/Chimildic/goofy/discussions/91) описывает пример использования функции [getCustomTop](/func?id=getcustomtop), с помощью которой создается плейлист `Омут памяти`, состоящий из хороших, но забытых треков.
+Для пользователей Last.fm. [Тема](https://github.com/Chimildic/goofy/discussions/91) описывает пример использования функции [getCustomTop](/reference/lastfm?id=getcustomtop), с помощью которой создается плейлист `Омут памяти`, состоящий из хороших, но забытых треков.
 
 ### Скипы прослушиваний
 
@@ -34,8 +34,8 @@
 
 Импортирует треки выбранного жанра с сайта [Every Noise](https://everynoise.com/new_releases_by_genre.cgi). Описание [в теме](https://github.com/Chimildic/goofy/discussions/36).
 
-?> Для получения релизов отслеживаемых исполнителей, воспользуйтесь функцией [getArtistsTracks](/func?id=getartiststracks) с параметром `release_date`
+?> Для получения релизов отслеживаемых исполнителей, воспользуйтесь функцией [getArtistsTracks](/reference/source?id=getartiststracks) с параметром `release_date`
 
 ### Прочее
 
-Ещё больше возможностей описано [на форуме](https://github.com/Chimildic/goofy/discussions) под категорией `личный опыт`
+Ещё больше примеров описано [на форуме](https://github.com/Chimildic/goofy/discussions) под категорией _личный опыт_.

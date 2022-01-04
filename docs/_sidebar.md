@@ -3,12 +3,24 @@
 - [Установка](/install.md)
 - [Первый плейлист](/first-playlist.md)
 - **Использование**
-- [Полезный опыт](/best-practices.md) 
+- [Полезный опыт](/best-practices.md)
 - [Шаблоны](/template.md)
 - [Аддоны](/addon.md)
 - **Документация**
-- [Список функций](/func.md)
+- [Список модулей](/reference)
+  - [Cache](/reference/cache.md)
+  - [Combiner](/reference/combiner.md)
+  - [Filter](/reference/filter.md)
+  - [Lastfm](/reference/lastfm.md)
+  - [Library](/reference/library.md)
+  - [Order](/reference/order.md)
+  - [Player](/reference/player.md)
+  - [Playlist](/reference/playlist.md)
+  - [RecentTracks](/reference/recenttracks.md)
+  - [Search](/reference/search.md)
+  - [Selector](/reference/selector.md)
+  - [Source](/reference/source.md)
 - [Решение ошибок](/errors.md)
-- [Дополнительно](/guide.md) 
+- [Дополнительно](/guide.md)
 - **Поддержать**
 - <div style="display: flex; flex-direction: row; align-items: center;"><iframe src="https://ghbtns.com/github-btn.html?user=chimildic&repo=goofy&type=star&count=true" frameborder="0" scrolling="0" width="85" height="20" title="GitHub"></iframe> <a style="margin: 0 1.0em; padding: 0;" href="https://yoomoney.ru/to/410014208620686" target="_blank"><img style="margin: 0;" src="img/sp-mc.png" width="55" /></a> <a style="margin: 0; padding: 0;" href="https://ko-fi.com/chimildic" target="_blank"><img style="margin: 0;" src="img/sp-kf.png" width="55" /></a></div>
