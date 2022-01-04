@@ -1,6 +1,6 @@
 // Документация: https://chimildic.github.io/goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.6.2';
+const VERSION = '1.6.3';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -108,7 +108,7 @@ const CustomUrlFetchApp = (function () {
         function onSuccess() {
             let type = response.getHeaders()['Content-Type'] || '';
             if (type.includes('json')) {
-                return parseJSON(response);
+                return JSON.parseFromResponse(response) || [];
             }
             return response;
         }
@@ -147,11 +147,6 @@ const CustomUrlFetchApp = (function () {
         return 1 + (parseInt(response.getHeaders()['Retry-After']) || 2);
     }
 
-    function parseJSON(response) {
-        let content = response.getContentText();
-        return content.length > 0 ? tryParseJSON(content) : { msg: 'Пустое тело ответа', status: response.getResponseCode() };
-    }
-
     function tryFetch(url, params) {
         return tryCallback(() => {
             countRequest++;
@@ -168,15 +163,6 @@ const CustomUrlFetchApp = (function () {
                 Admin.pause(5);
                 return tryCallback(callback, attempt);
             }
-        }
-    }
-
-    function tryParseJSON(content) {
-        try {
-            return JSON.parse(content);
-        } catch (error) {
-            Admin.printError('Не удалось преобразовать строку JSON из ответа на запрос в объект JavaScript\n', error.stack, '\n', content);
-            return [];
         }
     }
 
@@ -214,6 +200,7 @@ const Source = (function () {
         craftTracks: craftTracks,
         extractTracks: extractTracks,
         createUrlForRecomTracks: createUrlForRecomTracks,
+        getReleasesByArtists: getReleasesByArtists,
     };
 
     function getTopTracks(timeRange) {
@@ -376,6 +363,35 @@ const Source = (function () {
             playlistArray = playlistArray.filter((item) => !ids.includes(item.id));
         }
         return playlistArray;
+    }
+
+    function getReleasesByArtists(params) {
+        let years = parseYears(params.date);
+        let period = years.join('-');
+        let requestCount = years[1] - years[0] + 1;
+        let keywords = params.artists.map(artist => `"${artist.name}" AND year:${period}`);
+        let responses = Search.findAlbums(keywords, requestCount).reduce((responses, albums) => {
+            if (albums.length > 0) {
+                Filter.dedupAlbums(albums);
+                Filter.removeArtists(albums, params.artists, true);
+                albums = albums.filter(album =>
+                    RangeTracks.isBelongReleaseDate(album.release_date, params.date)
+                    && params.type.includes(album.album_type))
+                albums.length > 0 && responses.push(Source.getAlbumsTracks(albums));
+            }
+            return responses;
+        }, []);
+        return !params.hasOwnProperty('isFlat') || params.isFlat ? responses.flat(1) : responses;
+
+        function parseYears(releaseDate) {
+            let years = Object.keys(releaseDate).map(key => {
+                let bound = ['since', 'start'].some(str => key.includes(str)) ? 'startDay' : 'endDay';
+                let date = releaseDate[key] instanceof Date ? releaseDate[key] : Filter.getDateRel(releaseDate[key], bound);
+                return date.getFullYear();
+            }, []);
+            years.sort((x, y) => x - y);
+            return years;
+        }
     }
 
     function mineTracks(params) {
@@ -1221,6 +1237,94 @@ const Filter = (function () {
         Combiner.replace(items, filteredTracks);
     }
 
+    function detectLanguage(tracks, params) {
+        if (!KeyValue.MUSIXMATCH_API_KEY) {
+            throw 'Задайте параметр MUSIXMATCH_API_KEY для работы с функцией detectLanguage';
+        }
+
+        let isError = getLyrics();
+        if (!isError) {
+            detectLanguage();
+            match();
+        }
+
+        function match() {
+            Combiner.replace(tracks, tracks.filter(track => {
+                if (![undefined, 'und', '#ERROR!'].includes(track.lyrics.lang)) {
+                    return RangeTracks.isBelongGenres([track.lyrics.lang], params.include)
+                        && !RangeTracks.isBelongBanGenres([track.lyrics.lang], params.exclude)
+                }
+                return !params.isRemoveUnknown;
+            }));
+        }
+
+        function getLyrics() {
+            const url = 'https://api.musixmatch.com/ws/1.1/matcher.lyrics.get?';
+            let unknownLyrics = tracks.filter(t => !t.lyrics || !t.lyrics.lang);
+            let urls = unknownLyrics.reduce((urls, track) => {
+                let queryObj = {
+                    q_track: track.name.formatName(),
+                    q_artist: track.artists[0].name.formatName(),
+                    apikey: KeyValue.MUSIXMATCH_API_KEY,
+                }
+                urls.push(url + CustomUrlFetchApp.parseQuery(queryObj));
+                return urls;
+            }, []);
+
+            return CustomUrlFetchApp.fetchAll(urls).some((response, i) => {
+                let json = JSON.parseFromResponse(response);
+                let text = json.message.body.lyrics
+                    ? json.message.body.lyrics.lyrics_body.split(' ').slice(10, 25).join(' ')
+                    : '';
+                unknownLyrics[i].lyrics = {
+                    text: text.formatName().replace(/["']/g, '').replace(/\n/g, ' ')
+                }
+
+                if (json.message.header.status_code == 404) {
+                    Admin.printInfo('Не найден текст для', `${unknownLyrics[i].artists[0].name} - ${unknownLyrics[i].name}`)
+                    unknownLyrics[i].lyrics.lang = 'und';
+                } else if (json.message.header.status_code != 200) {
+                    Admin.printError('Ошибка при получении текста',
+                        'Возможно превышен лимит от musixmatch.',
+                        'Код:', json.message.header.status_code);
+                    return true;
+                }
+            });
+        }
+
+        function detectLanguage() {
+            const FILENAME = 'DetectLanguage';
+            let unknownLang = tracks.filter(t => !t.lyrics.lang);
+            let row = unknownLang.map(t => `=DETECTLANGUAGE("${t.lyrics.text}")`);
+            if (!row || row.length == 0) {
+                Admin.printInfo('Ноль треков для распознавания языка среди', tracks.length, 'треков');
+                return;
+            }
+
+            let spreadsheet;
+            let files = Cache.UserFolder.getFilesByName(FILENAME);
+            if (files.hasNext()) {
+                spreadsheet = SpreadsheetApp.open(files.next());
+            } else {
+                spreadsheet = SpreadsheetApp.create(FILENAME);
+                let file = DriveApp.getFileById(spreadsheet.getId());
+                file.moveTo(Cache.UserFolder);
+            }
+
+            let sheet = spreadsheet.getActiveSheet();
+            sheet.clear();
+            sheet.appendRow(row);
+            SpreadsheetApp.flush();
+            sheet.getDataRange().getValues()[0].forEach((c, i) => {
+                if (c == '#ERROR!') {
+                    Admin.printError('Ошибка при попытки идентификации языка:', unknownLang[i].lyrics.text);
+                }
+                unknownLang[i].lyrics.lang = c;
+            });
+        }
+    }
+
+
     function rangeDateRel(items, sinceDays, beforeDays) {
         extractItemsRel(items, sinceDays, beforeDays);
     }
@@ -1411,6 +1515,7 @@ const Filter = (function () {
         matchLatinOnly: matchLatinOnly,
         matchOriginalOnly: matchOriginalOnly,
         separateArtistsDuplicated: Deduplicator.separateArtistsDuplicated,
+        detectLanguage: detectLanguage,
     };
 })();
 
@@ -2502,37 +2607,6 @@ const Lastfm = (function () {
     }
 })();
 
-const Yandex = (function () {
-    const YANDEX_LIBRARY = 'https://music.mts.ru/handlers/library.jsx?';
-
-    return {
-        getArtists: getArtists,
-    };
-
-    function getArtists(owner, limit, offset) {
-        let responseLibrary = getLibrary({ owner: owner, filter: 'artists' });
-        let artistItems = slice(responseLibrary.artists, limit, offset);
-        return Search.multisearchArtists(artistItems, getArtistNameYandex);
-    }
-
-    function getLibrary(queryObj) {
-        let url = YANDEX_LIBRARY + CustomUrlFetchApp.parseQuery(queryObj);
-        return CustomUrlFetchApp.fetch(url) || {};
-    }
-
-    function getArtistNameYandex(item) {
-        return item && item.name ? item.name.formatName() : '';
-    }
-
-    function slice(array, limit, offset) {
-        if (array && limit) {
-            offset = offset ? offset : 0;
-            return array.slice(offset, offset + limit);
-        }
-        return array;
-    }
-})();
-
 const Search = (function () {
     const TEMPLATE = API_BASE_URL + '/search?%s';
 
@@ -2894,7 +2968,7 @@ const SpotifyRequest = (function () {
     function urlStringToObj(str) {
         try {
             str = '{"' + decodeURI(str).replace(/"/g, '\\"').replace(/&/g, '","').replace(/=/g, '":"') + '"}';
-            return JSON.parse(str);
+            return JSON.parseFromString(str);
         } catch (error) {
             Admin.printError(`Не удалось преобразовать строку в объект JavaScript\nСтрока: ${str}\n`, error.stack);
             return {};
@@ -3069,6 +3143,8 @@ const Cache = (function () {
         }
     }
     return {
+        get RootFolder() { return ROOT_FOLDER; },
+        get UserFolder() { return USER_FOLDER; },
         read: read,
         write: write,
         append: append,
@@ -3084,7 +3160,12 @@ const Cache = (function () {
         if (!content) {
             let file = findFile(filepath);
             let ext = obtainFileExtension(filepath);
-            content = ext == 'json' ? tryParseJSON(file) : tryGetBlob(file);
+            if (file) {
+                let blob = tryGetBlob(file);
+                content = ext == 'json' ? (JSON.parseFromString(blob) || []) : blob;
+            } else {
+                content = ext == 'json' ? [] : '';
+            }
             Storage.setContent(filepath, content);
         }
         return Selector.sliceCopy(content);
@@ -3281,17 +3362,6 @@ const Cache = (function () {
         return ext.length == 2 ? ext[1] : 'json';
     }
 
-    function tryParseJSON(file) {
-        if (!file) return [];
-        let content = tryGetBlob(file);
-        try {
-            return JSON.parse(content);
-        } catch (error) {
-            Admin.printError(error.stack);
-            throw `Не удалось преобразовать строку JSON из файла в объект JavaScript\nДлина: ${content.length}\nКонтент: ${content}`;
-        }
-    }
-
     function tryGetBlob(file) {
         if (!file) return '';
         try {
@@ -3389,4 +3459,21 @@ Object.prototype.isEmpty = function () {
 
 Array.prototype.toObject = function (parseMethod) {
     return this.reduce((accumulator, element, i) => (accumulator[parseMethod(element)] = i, accumulator), {});
+}
+
+JSON.parseFromString = function (content) {
+    try {
+        return JSON.parse(content);
+    } catch (error) {
+        Admin.printError('Не удалось преобразовать строку JSON в объект JavaScript\n', error.stack, '\n', content);
+        return undefined;
+    }
+}
+
+JSON.parseFromResponse = function (response) {
+    let content = response.getContentText();
+    if (content.length == 0) {
+        return { msg: 'Пустое тело ответа', status: response.getResponseCode() };
+    }
+    return JSON.parseFromString(content);
 }

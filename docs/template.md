@@ -54,6 +54,25 @@ function updateUnknownSet() {
 }
 ```
 
+## Новый релизы
+```js
+/**
+ * Сбор новых релизов от отслеживаемых исполнителей
+ */
+function updateNewReleases() {
+  let newReleases = Source.getReleasesByArtists({
+    artists: Source.getArtists({ followed_include: true, }),
+    date: { sinceDays: 7, beforeDays: 0 }, // за неделю, измените по необходимости
+    type: ['album', 'single'],
+    isFlat: true,
+  });
+  Playlist.saveWithReplace({
+    name: 'Новые релизы',
+    tracks: newReleases,
+  })
+}
+```
+
 ## Открытия с альбомов
 ```js
 /**
