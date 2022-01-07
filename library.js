@@ -1,6 +1,6 @@
 // Документация: https://chimildic.github.io/goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.6.4';
+const VERSION = '1.7.0';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -14,8 +14,19 @@ function displayAuthResult_(request) {
     return Auth.displayAuthResult(request);
 }
 
-function updateRecentTracks_() {
+function runTasks_() {
     RecentTracks.update();
+    let isUpdatedSavedTracks = Clerk.runOnceAWeek('monday', '01:00', 'updateSavedTracks',
+        Cache.write('SavedTracks.json', Source.getSavedTracks()));
+    !isUpdatedSavedTracks && Clerk.runOnceAfter('01:00', 'appendSavedTracks', () => {
+        const filename = 'SavedTracks.json';
+        let cacheSavedTracks = Cache.read(filename);
+        let remoteSavedTracks = Source.getSavedTracks(50);
+        Filter.removeTracks(remoteSavedTracks, cacheSavedTracks);
+        if (remoteSavedTracks > 0) {
+            Cache.write(filename, Combiner.push(remoteSavedTracks, cacheSavedTracks));
+        }
+    });
 }
 
 function displayLaunchPage_() {
@@ -670,15 +681,7 @@ const RecentTracks = (function () {
     const SPOTIFY_FILENAME = 'SpotifyRecentTracks.json';
     const LASTFM_FILENAME = 'LastfmRecentTracks.json';
     const BOTH_SOURCE_FILENAME = 'BothRecentTracks.json';
-    const TRIGGER_FUNCTION_NAME = 'updateRecentTracks_';
-    const MINUTES = 15;
     const ITEMS_LIMIT = parseInt(KeyValue.COUNT_RECENT_TRACKS) || 20000;
-
-    if (!ON_SPOTIFY_RECENT_TRACKS && !ON_LASTFM_RECENT_TRACKS) {
-        deleteTrigger(TRIGGER_FUNCTION_NAME);
-    } else if (!getTrigger(TRIGGER_FUNCTION_NAME)) {
-        createTrigger(TRIGGER_FUNCTION_NAME);
-    }
 
     return {
         get: getRecentTracks,
@@ -686,26 +689,6 @@ const RecentTracks = (function () {
         compress: compress,
         appendTracks: appendTracks,
     };
-
-    function deleteTrigger(name) {
-        let trigger = getTrigger(name);
-        if (trigger) {
-            ScriptApp.deleteTrigger(trigger);
-        }
-    }
-
-    function createTrigger(name) {
-        ScriptApp.newTrigger(name).timeBased().everyMinutes(MINUTES).create();
-    }
-
-    function getTrigger(name) {
-        let triggers = ScriptApp.getProjectTriggers();
-        for (let i = 0; i < triggers.length; i++) {
-            if (name === triggers[i].getHandlerFunction()) {
-                return triggers[i];
-            }
-        }
-    }
 
     function getRecentTracks(limit) {
         let tracks = [];
@@ -3375,55 +3358,86 @@ const Cache = (function () {
 })();
 
 const Clerk = (function () {
+    const TRIGGER_FUNCTION_NAME = 'runTasks_';
+    const MINUTES = 15;
     let tasks;
+
+    if (getTrigger('updateRecentTracks_')) {
+        // Удаляет триггер предыдущих версий библиотеки
+        deleteTrigger('updateRecentTracks_');
+    }
+    if (!getTrigger(TRIGGER_FUNCTION_NAME)) {
+        createTrigger(TRIGGER_FUNCTION_NAME);
+    }
+
     return {
-      runOnceAfter: runOnceAfter,
-      runOnceAWeek: runOnceAWeek,
+        runOnceAfter: runOnceAfter,
+        runOnceAWeek: runOnceAWeek,
     }
-  
+
     function runOnceAfter(timeStr, taskName, callback) {
-      if (isTimeToRun(taskName, timeStr)) {
-        callback();
-        updateLastRunDate(taskName, new Date());
-        return true;
-      }
+        if (isTimeToRun(taskName, timeStr)) {
+            callback();
+            updateLastRunDate(taskName, new Date());
+            return true;
+        }
     }
-  
+
     function runOnceAWeek(dayStr, timeStr, taskName, callback) {
-      if (Selector.isDayOfWeek(dayStr)) {
-        runOnceAfter(timeStr, taskName, callback);
-        return true;
-      }
+        if (Selector.isDayOfWeek(dayStr)) {
+            runOnceAfter(timeStr, taskName, callback);
+            return true;
+        }
     }
-  
+
     function isTimeToRun(name, timeStr) {
-      let [hours, min] = timeStr.split(':');
-      let comparable = readDate(name);
-      comparable.setHours(parseInt(hours), parseInt(min));
-      let now = new Date();
-      let diffDays = Math.abs(now - comparable) / (1000 * 60 * 60 * 24);
-      return diffDays > 1;
+        let [hours, min] = timeStr.split(':');
+        let comparable = readDate(name);
+        comparable.setHours(parseInt(hours), parseInt(min));
+        let now = new Date();
+        let diffDays = Math.abs(now - comparable) / (1000 * 60 * 60 * 24);
+        return diffDays > 1;
     }
-  
+
     function readDate(name) {
-      let dateStr = getTasks()[name];
-      return dateStr ? new Date(dateStr) : new Date('1970');
+        let dateStr = getTasks()[name];
+        return dateStr ? new Date(dateStr) : new Date('1970');
     }
-  
+
     function updateLastRunDate(name, date) {
-      let tasks = getTasks();
-      tasks[name] = date.toISOString();
-      UserProperties.setProperty('ClerkTasks', JSON.stringify(tasks));
+        let tasks = getTasks();
+        tasks[name] = date.toISOString();
+        UserProperties.setProperty('ClerkTasks', JSON.stringify(tasks));
     }
-  
+
     function getTasks() {
-      if (!tasks) {
-        tasks = KeyValue.ClerkTasks ? JSON.parse(KeyValue.ClerkTasks) : {};
-      }
-      return tasks;
+        if (!tasks) {
+            tasks = KeyValue.ClerkTasks ? JSON.parse(KeyValue.ClerkTasks) : {};
+        }
+        return tasks;
     }
-  })();
-  
+
+    function deleteTrigger(name) {
+        let trigger = getTrigger(name);
+        if (trigger) {
+            ScriptApp.deleteTrigger(trigger);
+        }
+    }
+
+    function createTrigger(name) {
+        ScriptApp.newTrigger(name).timeBased().everyMinutes(MINUTES).create();
+    }
+
+    function getTrigger(name) {
+        let triggers = ScriptApp.getProjectTriggers();
+        for (let i = 0; i < triggers.length; i++) {
+            if (name === triggers[i].getHandlerFunction()) {
+                return triggers[i];
+            }
+        }
+    }
+})();
+
 const Admin = (function () {
     let isInfoLvl, isErrorLvl;
     setLogLevelOnce(KeyValue.LOG_LEVEL);
