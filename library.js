@@ -37,7 +37,9 @@ function runTasks_() {
         let cacheSavedTracks = Cache.read('SavedTracks.json');
         let remoteSavedTracks = Source.getSavedTracks(50);
         Filter.removeTracks(remoteSavedTracks, cacheSavedTracks);
-        if (remoteSavedTracks > 0) {
+        if (remoteSavedTracks.length == 50) {
+            updateSavedTracks();
+        } else if (remoteSavedTracks.length > 0) {
             Cache.write('SavedTracks.json', Combiner.push(remoteSavedTracks, cacheSavedTracks));
         }
     }
