@@ -46,9 +46,7 @@ function runTasks_() {
 const CustomUrlFetchApp = (function () {
     let countRequest = 0;
     return {
-        fetch: fetch,
-        fetchAll: fetchAll,
-        parseQuery: parseQuery,
+        fetch, fetchAll, parseQuery,
         getCountRequest: () => countRequest,
     };
 
@@ -192,30 +190,10 @@ const CustomUrlFetchApp = (function () {
 
 const Source = (function () {
     return {
-        getTracks: getTracks,
-        getTracksRandom: getTracksRandom,
-        getPlaylistTracks: getPlaylistTracks,
-        getTopTracks: getTopTracks,
-        getTopArtists: getTopArtists,
-        getFollowedTracks: getFollowedTracks,
-        getSavedTracks: getSavedTracks,
-        getSavedAlbumTracks: getSavedAlbumTracks,
-        getSavedAlbums: getSavedAlbums,
-        getRecomTracks: getRecomTracks,
-        getArtists: getArtists,
-        getArtistsAlbums: getArtistsAlbums,
-        getArtistsTracks: getArtistsTracks,
-        getAlbumTracks: getAlbumTracks,
-        getAlbumsTracks: getAlbumsTracks,
-        getArtistsTopTracks: getArtistsTopTracks,
-        getRelatedArtists: getRelatedArtists,
-        getCategoryTracks: getCategoryTracks,
-        getListCategory: getListCategory,
-        mineTracks: mineTracks,
-        craftTracks: craftTracks,
-        extractTracks: extractTracks,
-        createUrlForRecomTracks: createUrlForRecomTracks,
-        getReleasesByArtists: getReleasesByArtists,
+        getTracks, getTracksRandom, getPlaylistTracks, getTopTracks, getTopArtists, getFollowedTracks, getSavedTracks,
+        getSavedAlbumTracks, getSavedAlbums, getRecomTracks, getArtists, getArtistsAlbums, getArtistsTracks,
+        getAlbumTracks, getAlbumsTracks, getArtistsTopTracks, getRelatedArtists, getCategoryTracks,
+        getListCategory, mineTracks, craftTracks, extractTracks, createUrlForRecomTracks, getReleasesByArtists,
     };
 
     function getTopTracks(timeRange) {
@@ -608,17 +586,8 @@ const Source = (function () {
 
 const Player = (function () {
     return {
-        getPlayback: getPlayback,
-        transferPlayback: transferPlayback,
-        getAvailableDevices: getAvailableDevices,
-        next: next,
-        previous: previous,
-        pause: pause,
-        resume: resume,
-        toggleShuffle: toggleShuffle,
-        setRepeatMode: setRepeatMode,
-        addToQueue: addToQueue,
-    }
+        getPlayback, transferPlayback, getAvailableDevices, next, previous, pause, resume, toggleShuffle, setRepeatMode, addToQueue,
+    };
 
     function getPlayback() {
         return SpotifyRequest.get(`${API_BASE_URL}/me/player`) || {};
@@ -686,15 +655,11 @@ const RecentTracks = (function () {
     const LASTFM_FILENAME = 'LastfmRecentTracks.json';
     const BOTH_SOURCE_FILENAME = 'BothRecentTracks.json';
     const ITEMS_LIMIT = parseInt(KeyValue.COUNT_RECENT_TRACKS) || 20000;
-
     return {
-        get: getRecentTracks,
-        update: update,
-        compress: compress,
-        appendTracks: appendTracks,
+        get, update, compress, appendTracks,
     };
 
-    function getRecentTracks(limit) {
+    function get(limit) {
         let tracks = [];
         if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
             tracks = Cache.read(BOTH_SOURCE_FILENAME);
@@ -809,11 +774,7 @@ const RecentTracks = (function () {
 
 const Combiner = (function () {
     return {
-        alternate: alternate,
-        mixinMulti: mixinMulti,
-        mixin: mixin,
-        replace: replace,
-        push: push,
+        alternate, mixinMulti, mixin, replace, push,
     };
 
     function replace(oldArray, newArray) {
@@ -910,12 +871,7 @@ const RangeTracks = (function () {
     const BAN_KEYS = ['genres', 'ban_genres', 'release_date', 'followed_include', 'include', 'exclude', 'groups', 'artist_limit', 'album_limit', 'track_limit'];
     let _cachedTracks, _lastOutRange, _params;
     return {
-        rangeTracks: rangeTracks,
-        getLastOutRange: getLastOutRange,
-        isBelong: isBelong,
-        isBelongGenres: isBelongGenres,
-        isBelongBanGenres: isBelongBanGenres,
-        isBelongReleaseDate: isBelongReleaseDate,
+        rangeTracks, getLastOutRange, isBelong, isBelongGenres, isBelongBanGenres, isBelongReleaseDate,
     };
 
     function getLastOutRange() {
@@ -1483,30 +1439,23 @@ const Filter = (function () {
     })();
 
     return {
-        removeTracks: removeTracks,
-        removeArtists: removeArtists,
-        removeUnavailable: removeUnavailable,
+        removeTracks, removeArtists, removeUnavailable, getDateRel, rangeDateRel, rangeDateAbs, replaceWithSimilar,
+        match, matchExcept, matchExceptRu, matchExceptMix, matchLatinOnly, matchOriginalOnly, detectLanguage,
         dedupTracks: Deduplicator.dedupTracks,
         dedupArtists: Deduplicator.dedupArtists,
         dedupAlbums: Deduplicator.dedupAlbums,
-        getDateRel: getDateRel,
-        rangeDateRel: rangeDateRel,
-        rangeDateAbs: rangeDateAbs,
+        separateArtistsDuplicated: Deduplicator.separateArtistsDuplicated,
         rangeTracks: RangeTracks.rangeTracks,
         getLastOutRange: RangeTracks.getLastOutRange,
-        replaceWithSimilar: replaceWithSimilar,
-        match: match,
-        matchExcept: matchExcept,
-        matchExceptRu: matchExceptRu,
-        matchExceptMix: matchExceptMix,
-        matchLatinOnly: matchLatinOnly,
-        matchOriginalOnly: matchOriginalOnly,
-        separateArtistsDuplicated: Deduplicator.separateArtistsDuplicated,
-        detectLanguage: detectLanguage,
     };
 })();
 
 const Selector = (function () {
+    return {
+        keepFirst, keepLast, keepAllExceptFirst, keepAllExceptLast, keepRandom, keepNoLongerThan, sliceFirst, sliceLast, sliceAllExceptFirst,
+        sliceAllExceptLast, sliceRandom, sliceNoLongerThan, sliceCopy, pickYear, isWeekend, isDayOfWeekRu, isDayOfWeek,
+    };
+
     function keepFirst(array, count) {
         Combiner.replace(array, sliceFirst(array, count));
     }
@@ -1612,26 +1561,6 @@ const Selector = (function () {
         Admin.printInfo(`При смещении ${offset}, ближайший год не найден`);
         return [];
     }
-
-    return {
-        keepFirst: keepFirst,
-        keepLast: keepLast,
-        keepAllExceptFirst: keepAllExceptFirst,
-        keepAllExceptLast: keepAllExceptLast,
-        keepRandom: keepRandom,
-        keepNoLongerThan: keepNoLongerThan,
-        sliceFirst: sliceFirst,
-        sliceLast: sliceLast,
-        sliceAllExceptFirst: sliceAllExceptFirst,
-        sliceAllExceptLast: sliceAllExceptLast,
-        sliceRandom: sliceRandom,
-        sliceNoLongerThan: sliceNoLongerThan,
-        sliceCopy: sliceCopy,
-        pickYear: pickYear,
-        isWeekend: isWeekend,
-        isDayOfWeekRu: isDayOfWeekRu,
-        isDayOfWeek: isDayOfWeek,
-    };
 })();
 
 const Order = (function () {
@@ -1806,11 +1735,7 @@ const Order = (function () {
     }
 
     return {
-        shuffle: shuffle,
-        reverse: reverse,
-        sort: sort,
-        separateArtists: separateArtists,
-        separateYears: separateYears,
+        shuffle, reverse, sort, separateArtists, separateYears,
     };
 })();
 
@@ -1835,14 +1760,7 @@ const Playlist = (function () {
     })();
 
     return {
-        getById: getById,
-        getByName: getByName,
-        getDescription: getDescription,
-        getPlaylistArray: getPlaylistArray,
-        saveAsNew: saveAsNew,
-        saveWithReplace: saveWithReplace,
-        saveWithAppend: saveWithAppend,
-        saveWithUpdate: saveWithUpdate,
+        getById, getByName, getDescription, getPlaylistArray, saveAsNew, saveWithReplace, saveWithAppend, saveWithUpdate,
         removeTracks: removeNonExistingTracks,
     };
 
@@ -2056,15 +1974,7 @@ const Playlist = (function () {
 
 const Library = (function () {
     return {
-        checkFavoriteTracks: checkFavoriteTracks,
-        deleteAlbums: deleteAlbums,
-        deleteFavoriteTracks: deleteFavoriteTracks,
-        followArtists: followArtists,
-        followPlaylists: followPlaylists,
-        saveAlbums: saveAlbums,
-        saveFavoriteTracks: saveFavoriteTracks,
-        unfollowArtists: unfollowArtists,
-        unfollowPlaylists: unfollowPlaylists,
+        checkFavoriteTracks, deleteAlbums, deleteFavoriteTracks, followArtists, followPlaylists, saveAlbums, saveFavoriteTracks, unfollowArtists, unfollowPlaylists,
     };
 
     function checkFavoriteTracks(tracks) {
@@ -2142,27 +2052,9 @@ const Lastfm = (function () {
     const LASTFM_API_BASE_URL = 'http://ws.audioscrobbler.com/2.0/?';
     const LASTFM_STATION = 'https://www.last.fm/player/station/user';
     return {
-        rangeTags: rangeTags,
-        removeRecentTracks: removeRecentTracks,
-        removeRecentArtists: removeRecentArtists,
-        getLovedTracks: getLovedTracks,
-        getRecentTracks: getRecentTracks,
-        getLastfmRecentTracks: getLastfmRecentTracks,
-        findNewPlayed: findNewPlayed,
-        getTopTracks: getTopTracks,
-        getTopTracksByTag: getTopTracksByTag,
-        getTopArtists: getTopArtists,
-        getTopArtistsByTag: getTopArtistsByTag,
-        getTopAlbums: getTopAlbums,
-        getTopAlbumsByTag: getTopAlbumsByTag,
-        getMixStation: getMixStation,
-        getLibraryStation: getLibraryStation,
-        getRecomStation: getRecomStation,
-        getNeighboursStation: getNeighboursStation,
-        getSimilarTracks: getSimilarTracks,
-        getSimilarArtists: getSimilarArtists,
-        getCustomTop: getCustomTop,
-        convertToSpotify: convertToSpotify,
+        rangeTags, removeRecentTracks, removeRecentArtists, getLovedTracks, getRecentTracks, getLastfmRecentTracks, findNewPlayed, getTopTracks,
+        getTopTracksByTag, getTopArtists, getTopArtistsByTag, getTopAlbums, getTopAlbumsByTag, getMixStation, getLibraryStation,
+        getRecomStation, getNeighboursStation, getSimilarTracks, getSimilarArtists, getCustomTop, convertToSpotify,
     };
 
     function getSimilarTracks(tracks, match, limit, isFlat = true) {
@@ -2596,19 +2488,10 @@ const Lastfm = (function () {
 
 const Search = (function () {
     const TEMPLATE = API_BASE_URL + '/search?%s';
-
     let noFound = [];
-
     return {
-        multisearchTracks: multisearchTracks,
-        multisearchArtists: multisearchArtists,
-        multisearchAlbums: multisearchAlbums,
-        findPlaylists: findPlaylists,
-        findAlbums: findAlbums,
-        findTracks: findTracks,
-        findArtists: findArtists,
+        multisearchTracks, multisearchArtists, multisearchAlbums, findPlaylists, findAlbums, findTracks, findArtists, sendMusicRequest,
         getNoFound: () => noFound,
-        sendMusicRequest: sendMusicRequest,
     };
 
     function sendMusicRequest(context) {
@@ -2749,7 +2632,6 @@ const getCachedTracks = (function () {
     let cachedTracks = { meta: {}, artists: {}, albums: {}, features: {} };
     let uncachedTracks;
     let _tracks, _args;
-
     return function getCache(tracks, args) {
         cache(tracks, args);
         return cachedTracks;
@@ -2839,11 +2721,7 @@ const Auth = (function () {
     const service = createService();
 
     return {
-        reset: reset,
-        hasAccess: hasAccess,
-        getAccessToken: getAccessToken,
-        displayAuthPage: displayAuthPage,
-        displayAuthResult: displayAuthResult,
+        reset, hasAccess, getAccessToken, displayAuthPage, displayAuthResult,
     };
 
     function createService() {
@@ -2890,17 +2768,7 @@ const Auth = (function () {
 
 const SpotifyRequest = (function () {
     return {
-        get: get,
-        getAll: getAll,
-        getItemsByPath: getItemsByPath,
-        getItemsByNext: getItemsByNext,
-        getFullObjByIds: getFullObjByIds,
-        post: post,
-        put: put,
-        putImage: putImage,
-        putItems: putItems,
-        deleteItems: deleteItems,
-        deleteRequest: deleteRequest,
+        get, getAll, getItemsByPath, getItemsByNext, getFullObjByIds, post, put, putImage, putItems, deleteItems, deleteRequest,
     };
 
     function getItemsByPath(urlPath, limitRequestCount) {
@@ -3132,14 +3000,7 @@ const Cache = (function () {
     return {
         get RootFolder() { return ROOT_FOLDER; },
         get UserFolder() { return USER_FOLDER; },
-        read: read,
-        write: write,
-        append: append,
-        copy: copy,
-        remove: remove,
-        rename: rename,
-        compressTracks: compressTracks,
-        compressArtists: compressArtists,
+        read, write, append, copy, remove, rename, compressTracks, compressArtists,
     };
 
     function read(filepath) {
@@ -3365,7 +3226,6 @@ const Clerk = (function () {
     const TRIGGER_FUNCTION_NAME = 'runTasks_';
     const MINUTES = 15;
     let tasks;
-
     if (getTrigger('updateRecentTracks_')) {
         // Удаляет триггер предыдущих версий библиотеки
         deleteTrigger('updateRecentTracks_');
@@ -3373,10 +3233,8 @@ const Clerk = (function () {
     if (!getTrigger(TRIGGER_FUNCTION_NAME)) {
         createTrigger(TRIGGER_FUNCTION_NAME);
     }
-
     return {
-        runOnceAfter: runOnceAfter,
-        runOnceAWeek: runOnceAWeek,
+        runOnceAfter, runOnceAWeek,
     }
 
     function runOnceAfter(timeStr, callback) {
@@ -3450,11 +3308,7 @@ const Admin = (function () {
     }
 
     return {
-        reset: reset,
-        setLogLevelOnce: setLogLevelOnce,
-        printInfo: printInfo,
-        printError: printError,
-        pause: pause,
+        reset, setLogLevelOnce, printInfo, printError, pause,
     };
 
     function setLogLevelOnce(level = 'info') {
