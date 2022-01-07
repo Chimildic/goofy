@@ -1,6 +1,6 @@
 // Документация: https://chimildic.github.io/goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.6.3';
+const VERSION = '1.6.4';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -3374,6 +3374,56 @@ const Cache = (function () {
     }
 })();
 
+const Clerk = (function () {
+    let tasks;
+    return {
+      runOnceAfter: runOnceAfter,
+      runOnceAWeek: runOnceAWeek,
+    }
+  
+    function runOnceAfter(timeStr, taskName, callback) {
+      if (isTimeToRun(taskName, timeStr)) {
+        callback();
+        updateLastRunDate(taskName, new Date());
+        return true;
+      }
+    }
+  
+    function runOnceAWeek(dayStr, timeStr, taskName, callback) {
+      if (Selector.isDayOfWeek(dayStr)) {
+        runOnceAfter(timeStr, taskName, callback);
+        return true;
+      }
+    }
+  
+    function isTimeToRun(name, timeStr) {
+      let [hours, min] = timeStr.split(':');
+      let comparable = readDate(name);
+      comparable.setHours(parseInt(hours), parseInt(min));
+      let now = new Date();
+      let diffDays = Math.abs(now - comparable) / (1000 * 60 * 60 * 24);
+      return diffDays > 1;
+    }
+  
+    function readDate(name) {
+      let dateStr = getTasks()[name];
+      return dateStr ? new Date(dateStr) : new Date('1970');
+    }
+  
+    function updateLastRunDate(name, date) {
+      let tasks = getTasks();
+      tasks[name] = date.toISOString();
+      UserProperties.setProperty('ClerkTasks', JSON.stringify(tasks));
+    }
+  
+    function getTasks() {
+      if (!tasks) {
+        tasks = KeyValue.ClerkTasks ? JSON.parse(KeyValue.ClerkTasks) : {};
+      }
+      return tasks;
+    }
+  })();
+  
 const Admin = (function () {
     let isInfoLvl, isErrorLvl;
     setLogLevelOnce(KeyValue.LOG_LEVEL);
