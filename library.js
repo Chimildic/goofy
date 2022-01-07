@@ -14,21 +14,6 @@ function displayAuthResult_(request) {
     return Auth.displayAuthResult(request);
 }
 
-function runTasks_() {
-    RecentTracks.update();
-    let isUpdatedSavedTracks = Clerk.runOnceAWeek('monday', '01:00', 'updateSavedTracks',
-        Cache.write('SavedTracks.json', Source.getSavedTracks()));
-    !isUpdatedSavedTracks && Clerk.runOnceAfter('01:00', 'appendSavedTracks', () => {
-        const filename = 'SavedTracks.json';
-        let cacheSavedTracks = Cache.read(filename);
-        let remoteSavedTracks = Source.getSavedTracks(50);
-        Filter.removeTracks(remoteSavedTracks, cacheSavedTracks);
-        if (remoteSavedTracks > 0) {
-            Cache.write(filename, Combiner.push(remoteSavedTracks, cacheSavedTracks));
-        }
-    });
-}
-
 function displayLaunchPage_() {
     try {
         return HtmlService.createHtmlOutputFromFile('launch.html')
@@ -36,6 +21,25 @@ function displayLaunchPage_() {
             .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
     } catch {
         return HtmlService.createHtmlOutput('Авторизация прошла успешно');
+    }
+}
+
+function runTasks_() {
+    RecentTracks.update();
+    let isUpdatedSavedTracks = Clerk.runOnceAWeek('monday', '01:00', updateSavedTracks);
+    !isUpdatedSavedTracks && Clerk.runOnceAfter('01:00', appendSavedTracks);
+
+    function updateSavedTracks() {
+        Cache.write('SavedTracks.json', Source.getSavedTracks());
+    }
+
+    function appendSavedTracks() {
+        let cacheSavedTracks = Cache.read('SavedTracks.json');
+        let remoteSavedTracks = Source.getSavedTracks(50);
+        Filter.removeTracks(remoteSavedTracks, cacheSavedTracks);
+        if (remoteSavedTracks > 0) {
+            Cache.write('SavedTracks.json', Combiner.push(remoteSavedTracks, cacheSavedTracks));
+        }
     }
 }
 
@@ -3375,18 +3379,17 @@ const Clerk = (function () {
         runOnceAWeek: runOnceAWeek,
     }
 
-    function runOnceAfter(timeStr, taskName, callback) {
-        if (isTimeToRun(taskName, timeStr)) {
+    function runOnceAfter(timeStr, callback) {
+        if (isTimeToRun(callback.name, timeStr)) {
             callback();
-            updateLastRunDate(taskName, new Date());
+            updateLastRunDate(callback.name, new Date());
             return true;
         }
     }
 
-    function runOnceAWeek(dayStr, timeStr, taskName, callback) {
+    function runOnceAWeek(dayStr, timeStr, callback) {
         if (Selector.isDayOfWeek(dayStr)) {
-            runOnceAfter(timeStr, taskName, callback);
-            return true;
+            return runOnceAfter(timeStr, callback);
         }
     }
 
