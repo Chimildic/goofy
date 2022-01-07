@@ -28,6 +28,52 @@ function displayLaunchPage_() {
     }
 }
 
+String.prototype.formatName = function () {
+    return this.toLowerCase()
+        .replace(/['`,?!@#$%^&*()+-./\\]/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .replace(/ё/g, 'е')
+        .trim();
+};
+
+Date.prototype.setBound = function (value) {
+    if (value == 'startDay') {
+        this.setHours(0, 0, 0, 0);
+    } else if (value == 'endDay') {
+        this.setHours(23, 59, 59, 999);
+    }
+    return this;
+};
+
+Date.prototype.getTimestampUNIX = function (bound) {
+    return Math.trunc(this.setBound(bound).getTime() / 1000);
+};
+
+Object.prototype.isEmpty = function () {
+    return Object.keys(this).length == 0;
+}
+
+Array.prototype.toObject = function (parseMethod) {
+    return this.reduce((accumulator, element, i) => (accumulator[parseMethod(element)] = i, accumulator), {});
+}
+
+JSON.parseFromString = function (content) {
+    try {
+        return JSON.parse(content);
+    } catch (error) {
+        Admin.printError('Не удалось преобразовать строку JSON в объект JavaScript\n', error.stack, '\n', content);
+        return undefined;
+    }
+}
+
+JSON.parseFromResponse = function (response) {
+    let content = response.getContentText();
+    if (content.length == 0) {
+        return { msg: 'Пустое тело ответа', status: response.getResponseCode() };
+    }
+    return JSON.parseFromString(content);
+}
+
 const CustomUrlFetchApp = (function () {
     let countRequest = 0;
     return {
@@ -3431,49 +3477,3 @@ const Admin = (function () {
         UserProperties.deleteAllProperties();
     }
 })();
-
-String.prototype.formatName = function () {
-    return this.toLowerCase()
-        .replace(/['`,?!@#$%^&*()+-./\\]/g, ' ')
-        .replace(/\s{2,}/g, ' ')
-        .replace(/ё/g, 'е')
-        .trim();
-};
-
-Date.prototype.setBound = function (value) {
-    if (value == 'startDay') {
-        this.setHours(0, 0, 0, 0);
-    } else if (value == 'endDay') {
-        this.setHours(23, 59, 59, 999);
-    }
-    return this;
-};
-
-Date.prototype.getTimestampUNIX = function (bound) {
-    return Math.trunc(this.setBound(bound).getTime() / 1000);
-};
-
-Object.prototype.isEmpty = function () {
-    return Object.keys(this).length == 0;
-}
-
-Array.prototype.toObject = function (parseMethod) {
-    return this.reduce((accumulator, element, i) => (accumulator[parseMethod(element)] = i, accumulator), {});
-}
-
-JSON.parseFromString = function (content) {
-    try {
-        return JSON.parse(content);
-    } catch (error) {
-        Admin.printError('Не удалось преобразовать строку JSON в объект JavaScript\n', error.stack, '\n', content);
-        return undefined;
-    }
-}
-
-JSON.parseFromResponse = function (response) {
-    let content = response.getContentText();
-    if (content.length == 0) {
-        return { msg: 'Пустое тело ответа', status: response.getResponseCode() };
-    }
-    return JSON.parseFromString(content);
-}
