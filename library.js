@@ -33,12 +33,13 @@ function runTasks_() {
         Cache.write('SavedTracks.json', Source.getSavedTracks());
     }
 
-    function appendSavedTracks() {
+    function appendSavedTracks(limit) {
         let cacheSavedTracks = Cache.read('SavedTracks.json');
-        let remoteSavedTracks = Source.getSavedTracks(50);
+        let remoteSavedTracks = Source.getSavedTracks(limit || 50);
         Filter.removeTracks(remoteSavedTracks, cacheSavedTracks);
-        if (remoteSavedTracks.length == 50) {
-            updateSavedTracks();
+        if (remoteSavedTracks.length == 50 && !limit) {
+            appendSavedTracks(250);
+            return;
         } else if (remoteSavedTracks.length > 0) {
             Cache.write('SavedTracks.json', Combiner.push(remoteSavedTracks, cacheSavedTracks));
         }
