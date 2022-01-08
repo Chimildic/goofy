@@ -7,6 +7,8 @@
 | Метод | Тип результата | Краткое описание |
 |-------|----------------|------------------|
 | [convertToSpotify](/reference/lastfm?id=converttospotify) | Массив | Найти Spotify элементы по данным из Last.fm. |
+| [getAlbumsByTag](/reference/lastfm?id=getalbumsbytag) | Массив | Получить альбомы по тегу. |
+| [getArtistsByTag](/reference/lastfm?id=getartistsbytag) | Массив | Получить исполнителей по тегу. |
 | [getCustomTop](/reference/lastfm?id=getcustomtop) | Массив | Получить произвольный топ пользователя. |
 | [getLibraryStation](/reference/lastfm?id=getlibrarystation) | Массив | Получить треки с радиостанции _библиотека_. |
 | [getLovedTracks](/reference/lastfm?id=getlovedtracks) | Массив | Получить _лайки_ Last.fm. |
@@ -22,6 +24,7 @@
 | [getTopArtistsByTag](/reference/lastfm?id=getTopArtistsByTag) | Массив | Получить топ исполнителей по тегу. |
 | [getTopTracks](/reference/lastfm?id=gettoptracks) | Массив | Получить топ треков пользователя. |
 | [getTopTracksByTag](/reference/lastfm?id=gettoptracksbytag) | Массив | Получить топ треков по тегу. |
+| [getTracksByTag](/reference/lastfm?id=gettracksbytag) | Массив | Получить треки по тегу. |
 | [rangeTags](/reference/lastfm?id=rangetags) | - | Отобрать треки по тегам. |
 | [removeRecentArtists](/reference/lastfm?id=removerecentartists) | - | Удалить исполнителей по данным истории прослушиваний Last.fm. |
 | [removeRecentTracks](/reference/lastfm?id=removerecenttracks) | - | Удалить треки по данным истории прослушиваний Last.fm. |
@@ -40,6 +43,52 @@
 ### Возврат :id=converttospotify-return {docsify-ignore}
 
 `items` (массив) - результат поиска.
+
+## getAlbumsByTag
+
+Получить альбомы по тегу. Парсит названия со страницы тега, [например](https://www.last.fm/tag/indie/albums).
+
+### Аргументы :id=getalbumsbytag-arguments {docsify-ignore}
+
+| Имя | Тип | Описание |
+|-----|-----|----------|
+| `tag` | Строка | Название тега. |
+| `limit` | Число | Предельное количество альбомов. |
+
+### Возврат :id=getalbumsbytag-return {docsify-ignore}
+
+`albums` (массив) - результат поиска альбомов в Spotify.
+
+### Примеры :id=getalbumsbytag-examples {docsify-ignore}
+
+1. Получить альбомы по тегу.
+
+```js
+let albums = Lastfm.getAlbumsByTag('indie', 40);
+```
+
+## getArtistsByTag
+
+Получить исполнителей по тегу. Парсит имена со страницы тега, [например](https://www.last.fm/tag/pixie/artists).
+
+### Аргументы :id=getartistsbytag-arguments {docsify-ignore}
+
+| Имя | Тип | Описание |
+|-----|-----|----------|
+| `tag` | Строка | Название тега. |
+| `limit` | Число | Предельное количество исполнителей. |
+
+### Возврат :id=getartistsbytag-return {docsify-ignore}
+
+`artists` (массив) - результат поиска исполнителей в Spotify.
+
+### Примеры :id=getartistsbytag-examples {docsify-ignore}
+
+1. Получить исполнителей по тегу.
+
+```js
+let artists = Lastfm.getArtistsByTag('pixie', 40);
+```
 
 ## getCustomTop
 
@@ -455,6 +504,36 @@ let tracks = Lastfm.getTopTracksByTag({
 })
 ```
 
+## getTracksByTag
+
+Получить треки по тегу. Парсит названия со страницы тега, [например](https://www.last.fm/ru/tag/vocal/tracks?page=1).
+
+### Аргументы :id=gettracksbytag-arguments {docsify-ignore}
+
+| Имя | Тип | Описание |
+|-----|-----|----------|
+| `tag` | Строка | Название тега. |
+| `limit` | Число | Предельное количество треков. |
+
+### Возврат :id=gettracksbytag-return {docsify-ignore}
+
+`tracks` (массив) - результат поиска треков в Spotify.
+
+### Примеры :id=gettracksbytag-examples {docsify-ignore}
+
+1. Получить треки по тегу.
+
+```js
+let tracks = Lastfm.getTracksByTag('vocal', 40);
+```
+
+2. Получить треки по нескольким тегам.
+
+```js
+let tracks = ['rock', 'indie', 'pixie'].reduce((tracks, tag) => 
+    Combiner.push(tracks, Lastfm.getTracksByTag(tag, 100)), []);
+```
+
 ## rangeTags
 
 Отобрать треки по тегам.
@@ -544,7 +623,7 @@ Lastfm.rangeTags(tracks, {
 
 ```js
 let savedTracks = Source.getSavedTracks();
-Lastfm.removeRecentTracks(savedTracks, 'login', 5000)
+Lastfm.removeRecentTracks(savedTracks, 'login', 1000)
 Playlist.saveAsNew({
   name: 'Давно не слушал',
   tracks: savedTracks,

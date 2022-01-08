@@ -45,6 +45,62 @@ function runTasks_() {
     }
 }
 
+String.prototype.formatName = function () {
+    return this.toLowerCase()
+        .replace(/['`,?!@#$%^&*()+-./\\]/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .replace(/ё/g, 'е')
+        .trim();
+};
+
+Date.prototype.setBound = function (value) {
+    if (value == 'startDay') {
+        this.setHours(0, 0, 0, 0);
+    } else if (value == 'endDay') {
+        this.setHours(23, 59, 59, 999);
+    }
+    return this;
+};
+
+Date.prototype.getTimestampUNIX = function (bound) {
+    return Math.trunc(this.setBound(bound).getTime() / 1000);
+};
+
+Object.prototype.isEmpty = function () {
+    return Object.keys(this).length == 0;
+}
+
+Array.prototype.toObject = function (parseMethod) {
+    return this.reduce((accumulator, element, i) => (accumulator[parseMethod(element)] = i, accumulator), {});
+}
+
+JSON.parseFromString = function (content) {
+    try {
+        return JSON.parse(content);
+    } catch (error) {
+        Admin.printError('Не удалось преобразовать строку JSON в объект JavaScript\n', error.stack, '\n', content);
+        return undefined;
+    }
+}
+
+JSON.parseFromResponse = function (response) {
+    let content = response.getContentText();
+    if (content.length == 0) {
+        return { msg: 'Пустое тело ответа', status: response.getResponseCode() };
+    }
+    return JSON.parseFromString(content);
+}
+
+if (Cheerio) {
+    Cheerio.create = function (url) {
+        try {
+            return Cheerio.load(CustomUrlFetchApp.fetch(url).getContentText());
+        } catch (error) {
+            Admin.printInfo('Не удалось загрузить страницу. Возможно ее не существует. URL: ', url);
+        }
+    }
+}
+
 const CustomUrlFetchApp = (function () {
     let countRequest = 0;
     return {
@@ -2056,7 +2112,7 @@ const Lastfm = (function () {
     return {
         rangeTags, removeRecentTracks, removeRecentArtists, getLovedTracks, getRecentTracks, getLastfmRecentTracks, findNewPlayed, getTopTracks,
         getTopTracksByTag, getTopArtists, getTopArtistsByTag, getTopAlbums, getTopAlbumsByTag, getMixStation, getLibraryStation,
-        getRecomStation, getNeighboursStation, getSimilarTracks, getSimilarArtists, getCustomTop, convertToSpotify,
+        getRecomStation, getNeighboursStation, getSimilarTracks, getSimilarArtists, getCustomTop, convertToSpotify, getTracksByTag, getArtistsByTag, getAlbumsByTag,
     };
 
     function getSimilarTracks(tracks, match, limit, isFlat = true) {
@@ -2349,6 +2405,77 @@ const Lastfm = (function () {
         }
     }
 
+    function getAlbumsByTag(tag, limit) {
+        return getItemsFromTagPage({
+            tag: tag,
+            limit: limit,
+            type: 'album',
+            countPerPage: 20,
+            callback: (cheerio) => {
+                let names = [];
+                cheerio('.resource-list--release-list-item', '', cheerio('.col-main')).each((index, node) => {
+                    let album = cheerio(node).children('.resource-list--release-list-item-name').text().trim();
+                    let artist = cheerio(node).children('.resource-list--release-list-item-artist').text().trim();
+                    names.push(`${artist} ${album}`.formatName());
+                });
+                return names;
+            }
+        })
+    }
+
+    function getArtistsByTag(tag, limit) {
+        return getItemsFromTagPage({
+            tag: tag,
+            limit: limit,
+            type: 'artist',
+            countPerPage: 21,
+            callback: (cheerio) => {
+                let names = [];
+                cheerio('.big-artist-list-title', '', cheerio('.big-artist-list')).each((index, node) => {
+                    names.push(cheerio(node).text().formatName());
+                });
+                return names;
+            }
+        })
+    }
+
+    function getTracksByTag(tag, limit) {
+        return getItemsFromTagPage({
+            tag: tag,
+            limit: limit,
+            type: 'track',
+            countPerPage: 50,
+            callback: (cheerio) => {
+                let names = [];
+                cheerio('.chartlist-row', '', cheerio('.chartlist')).each((index, node) => {
+                    let name = cheerio(node).children('.chartlist-name').text().trim();
+                    let artist = cheerio(node).children('.chartlist-artist').text().trim();
+                    names.push(`${artist} ${name}`.formatName());
+                });
+                return names;
+            }
+        })
+    }
+
+    function getItemsFromTagPage(params) {
+        if (!Cheerio) throw 'Установите библиотеку Cheerio. Инструкция во втором пункте: https://github.com/Chimildic/goofy/discussions/35';
+        let names = Selector.sliceFirst(parseNames(), params.limit);
+        let [formatMethod, searchMethod] = obtainMethodNamesByType(params.type);
+        return searchMethod(names);
+
+        function parseNames() {
+            let names = [];
+            let pageCount = Math.ceil(params.limit / params.countPerPage);
+            for (let i = 0; i < pageCount; i++) {
+                let url = `https://www.last.fm/tag/${params.tag}/${params.type}s?page=${i + 1}`;
+                let cheerio = Cheerio.create(url);
+                cheerio && names.push(...params.callback(cheerio));
+                if (names.length >= params.limit || !cheerio) break;
+            }
+            return names;
+        }
+    }
+
     function getTopTracksByTag(params) {
         params.method = 'tag.gettoptracks';
         return getTopByTag(params, 'track');
@@ -2365,11 +2492,10 @@ const Lastfm = (function () {
     }
 
     function getTopByTag(queryObj, type) {
-        let [formatMethod, searchMethod] = obtainMethodNamesByType(type);
         let url = createUrl(queryObj);
         let response = CustomUrlFetchApp.fetch(url);
         let key = Object.keys(response)[0];
-        return searchMethod(response[key][type], formatMethod);
+        return convertToSpotify(response[key][type], type)
     }
 
     function obtainMethodNamesByType(type = 'track') {
@@ -2534,7 +2660,7 @@ const Search = (function () {
         if (!items || items.length == 0) {
             return [];
         }
-        let originKeyword = items.map((item) => parseNameMethod(item));
+        let originKeyword = parseNameMethod ? items.map((item) => parseNameMethod(item)) : items;
         let uniqueItems = findUniqueItems(originKeyword);
         return restoreOrigin();
 
@@ -3354,49 +3480,3 @@ const Admin = (function () {
         UserProperties.deleteAllProperties();
     }
 })();
-
-String.prototype.formatName = function () {
-    return this.toLowerCase()
-        .replace(/['`,?!@#$%^&*()+-./\\]/g, ' ')
-        .replace(/\s{2,}/g, ' ')
-        .replace(/ё/g, 'е')
-        .trim();
-};
-
-Date.prototype.setBound = function (value) {
-    if (value == 'startDay') {
-        this.setHours(0, 0, 0, 0);
-    } else if (value == 'endDay') {
-        this.setHours(23, 59, 59, 999);
-    }
-    return this;
-};
-
-Date.prototype.getTimestampUNIX = function (bound) {
-    return Math.trunc(this.setBound(bound).getTime() / 1000);
-};
-
-Object.prototype.isEmpty = function () {
-    return Object.keys(this).length == 0;
-}
-
-Array.prototype.toObject = function (parseMethod) {
-    return this.reduce((accumulator, element, i) => (accumulator[parseMethod(element)] = i, accumulator), {});
-}
-
-JSON.parseFromString = function (content) {
-    try {
-        return JSON.parse(content);
-    } catch (error) {
-        Admin.printError('Не удалось преобразовать строку JSON в объект JavaScript\n', error.stack, '\n', content);
-        return undefined;
-    }
-}
-
-JSON.parseFromResponse = function (response) {
-    let content = response.getContentText();
-    if (content.length == 0) {
-        return { msg: 'Пустое тело ответа', status: response.getResponseCode() };
-    }
-    return JSON.parseFromString(content);
-}

@@ -8,7 +8,8 @@
 
 ## Версия 1.7.0
 
-- [#153](https://github.com/Chimildic/goofy/issues/153) Добавлено кэширование лайков. Настройки [часовой пояс](/install?id=Часовой-пояс).
+- [#153](https://github.com/Chimildic/goofy/issues/153) Добавлено кэширование лайков. Настройте [часовой пояс](/install?id=Часовой-пояс).
+- [#159](https://github.com/Chimildic/goofy/issues/159) Добавлены функции парсинга элементов со страниц тега last.fm: [getTracksByTag](/reference?id=gettracksbytag), [getArtistsByTag](/reference?id=getartistsbytag), [getAlbumsByTag](/reference?id=getalbumsbytag). Нужна библиотека `Cheerio`.
 
 ## Версия 1.6.3
 - Модуль Yandex полностью удален. Яндекс перестал отвечать на запросы. Многие функции может заменить расширение [YaMuTools](https://github.com/Chimildic/YaMuTools). Но у него нет работы по расписанию.
