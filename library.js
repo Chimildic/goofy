@@ -92,15 +92,18 @@ JSON.parseFromResponse = function (response) {
     return JSON.parseFromString(content);
 }
 
-if (Cheerio) {
-    Cheerio.create = function (url) {
-        try {
-            return Cheerio.load(CustomUrlFetchApp.fetch(url).getContentText());
-        } catch (error) {
-            Admin.printInfo('Не удалось загрузить страницу. Возможно ее не существует. URL: ', url);
-        }
+const CheerioService = (function () {
+    return { create, }
+    function create(url) {
+        if (Cheerio) {
+            try {
+                return Cheerio.load(CustomUrlFetchApp.fetch(url).getContentText());
+            } catch (error) {
+                Admin.printInfo('Не удалось загрузить страницу. Возможно ее не существует. URL: ', url);
+            }
+        };
     }
-}
+})()
 
 const CustomUrlFetchApp = (function () {
     let countRequest = 0;
@@ -2459,7 +2462,6 @@ const Lastfm = (function () {
     }
 
     function getItemsFromTagPage(params) {
-        if (!Cheerio) throw 'Установите библиотеку Cheerio. Инструкция во втором пункте: https://github.com/Chimildic/goofy/discussions/35';
         let names = Selector.sliceFirst(parseNames(), params.limit);
         let [formatMethod, searchMethod] = obtainMethodNamesByType(params.type);
         return searchMethod(names);
@@ -2469,7 +2471,7 @@ const Lastfm = (function () {
             let pageCount = Math.ceil(params.limit / params.countPerPage);
             for (let i = 0; i < pageCount; i++) {
                 let url = `https://www.last.fm/tag/${params.tag}/${params.type}s?page=${i + 1}`;
-                let cheerio = Cheerio.create(url);
+                let cheerio = CheerioService.create(url);
                 cheerio && names.push(...params.callback(cheerio));
                 if (names.length >= params.limit || !cheerio) break;
             }
