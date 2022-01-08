@@ -92,18 +92,15 @@ JSON.parseFromResponse = function (response) {
     return JSON.parseFromString(content);
 }
 
-const CheerioService = (function () {
-    return { create, }
-    function create(url) {
-        if (Cheerio) {
-            try {
-                return Cheerio.load(CustomUrlFetchApp.fetch(url).getContentText());
-            } catch (error) {
-                Admin.printInfo('Не удалось загрузить страницу. Возможно ее не существует. URL: ', url);
-            }
-        };
-    }
-})()
+HtmlService.createCheerio = function (url) {
+    if (Cheerio) {
+        try {
+            return Cheerio.load(CustomUrlFetchApp.fetch(url).getContentText());
+        } catch (error) {
+            Admin.printInfo('Не удалось загрузить страницу. Возможно ее не существует. URL: ', url);
+        }
+    };
+}
 
 const CustomUrlFetchApp = (function () {
     let countRequest = 0;
@@ -2471,7 +2468,7 @@ const Lastfm = (function () {
             let pageCount = Math.ceil(params.limit / params.countPerPage);
             for (let i = 0; i < pageCount; i++) {
                 let url = `https://www.last.fm/tag/${params.tag}/${params.type}s?page=${i + 1}`;
-                let cheerio = CheerioService.create(url);
+                let cheerio = HtmlService.createCheerio(url);
                 cheerio && names.push(...params.callback(cheerio));
                 if (names.length >= params.limit || !cheerio) break;
             }
