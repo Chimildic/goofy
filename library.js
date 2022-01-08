@@ -1,6 +1,6 @@
 // Документация: https://chimildic.github.io/goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.6.3';
+const VERSION = '1.7.0';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -14,10 +14,6 @@ function displayAuthResult_(request) {
     return Auth.displayAuthResult(request);
 }
 
-function updateRecentTracks_() {
-    RecentTracks.update();
-}
-
 function displayLaunchPage_() {
     try {
         return HtmlService.createHtmlOutputFromFile('launch.html')
@@ -25,6 +21,28 @@ function displayLaunchPage_() {
             .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
     } catch {
         return HtmlService.createHtmlOutput('Авторизация прошла успешно');
+    }
+}
+
+function runTasks_() {
+    RecentTracks.update();
+    let isUpdatedSavedTracks = Clerk.runOnceAWeek('monday', '01:00', updateSavedTracks);
+    !isUpdatedSavedTracks && Clerk.runOnceAfter('01:00', appendSavedTracks);
+
+    function updateSavedTracks() {
+        Cache.write('SavedTracks.json', Source.getSavedTracks());
+    }
+
+    function appendSavedTracks(limit) {
+        let cacheSavedTracks = Cache.read('SavedTracks.json');
+        let remoteSavedTracks = Source.getSavedTracks(limit || 50);
+        Filter.removeTracks(remoteSavedTracks, cacheSavedTracks);
+        if (remoteSavedTracks.length == 50 && !limit) {
+            appendSavedTracks(250);
+            return;
+        } else if (remoteSavedTracks.length > 0) {
+            Cache.write('SavedTracks.json', Combiner.push(remoteSavedTracks, cacheSavedTracks));
+        }
     }
 }
 
@@ -74,12 +92,20 @@ JSON.parseFromResponse = function (response) {
     return JSON.parseFromString(content);
 }
 
+if (Cheerio) {
+    Cheerio.create = function (url) {
+        try {
+            return Cheerio.load(CustomUrlFetchApp.fetch(url).getContentText());
+        } catch (error) {
+            Admin.printInfo('Не удалось загрузить страницу. Возможно ее не существует. URL: ', url);
+        }
+    }
+}
+
 const CustomUrlFetchApp = (function () {
     let countRequest = 0;
     return {
-        fetch: fetch,
-        fetchAll: fetchAll,
-        parseQuery: parseQuery,
+        fetch, fetchAll, parseQuery,
         getCountRequest: () => countRequest,
     };
 
@@ -223,30 +249,10 @@ const CustomUrlFetchApp = (function () {
 
 const Source = (function () {
     return {
-        getTracks: getTracks,
-        getTracksRandom: getTracksRandom,
-        getPlaylistTracks: getPlaylistTracks,
-        getTopTracks: getTopTracks,
-        getTopArtists: getTopArtists,
-        getFollowedTracks: getFollowedTracks,
-        getSavedTracks: getSavedTracks,
-        getSavedAlbumTracks: getSavedAlbumTracks,
-        getSavedAlbums: getSavedAlbums,
-        getRecomTracks: getRecomTracks,
-        getArtists: getArtists,
-        getArtistsAlbums: getArtistsAlbums,
-        getArtistsTracks: getArtistsTracks,
-        getAlbumTracks: getAlbumTracks,
-        getAlbumsTracks: getAlbumsTracks,
-        getArtistsTopTracks: getArtistsTopTracks,
-        getRelatedArtists: getRelatedArtists,
-        getCategoryTracks: getCategoryTracks,
-        getListCategory: getListCategory,
-        mineTracks: mineTracks,
-        craftTracks: craftTracks,
-        extractTracks: extractTracks,
-        createUrlForRecomTracks: createUrlForRecomTracks,
-        getReleasesByArtists: getReleasesByArtists,
+        getTracks, getTracksRandom, getPlaylistTracks, getTopTracks, getTopArtists, getFollowedTracks, getSavedTracks,
+        getSavedAlbumTracks, getSavedAlbums, getRecomTracks, getArtists, getArtistsAlbums, getArtistsTracks,
+        getAlbumTracks, getAlbumsTracks, getArtistsTopTracks, getRelatedArtists, getCategoryTracks,
+        getListCategory, mineTracks, craftTracks, extractTracks, createUrlForRecomTracks, getReleasesByArtists,
     };
 
     function getTopTracks(timeRange) {
@@ -639,17 +645,8 @@ const Source = (function () {
 
 const Player = (function () {
     return {
-        getPlayback: getPlayback,
-        transferPlayback: transferPlayback,
-        getAvailableDevices: getAvailableDevices,
-        next: next,
-        previous: previous,
-        pause: pause,
-        resume: resume,
-        toggleShuffle: toggleShuffle,
-        setRepeatMode: setRepeatMode,
-        addToQueue: addToQueue,
-    }
+        getPlayback, transferPlayback, getAvailableDevices, next, previous, pause, resume, toggleShuffle, setRepeatMode, addToQueue,
+    };
 
     function getPlayback() {
         return SpotifyRequest.get(`${API_BASE_URL}/me/player`) || {};
@@ -716,44 +713,12 @@ const RecentTracks = (function () {
     const SPOTIFY_FILENAME = 'SpotifyRecentTracks.json';
     const LASTFM_FILENAME = 'LastfmRecentTracks.json';
     const BOTH_SOURCE_FILENAME = 'BothRecentTracks.json';
-    const TRIGGER_FUNCTION_NAME = 'updateRecentTracks_';
-    const MINUTES = 15;
     const ITEMS_LIMIT = parseInt(KeyValue.COUNT_RECENT_TRACKS) || 20000;
-
-    if (!ON_SPOTIFY_RECENT_TRACKS && !ON_LASTFM_RECENT_TRACKS) {
-        deleteTrigger(TRIGGER_FUNCTION_NAME);
-    } else if (!getTrigger(TRIGGER_FUNCTION_NAME)) {
-        createTrigger(TRIGGER_FUNCTION_NAME);
-    }
-
     return {
-        get: getRecentTracks,
-        update: update,
-        compress: compress,
-        appendTracks: appendTracks,
+        get, update, compress, appendTracks,
     };
 
-    function deleteTrigger(name) {
-        let trigger = getTrigger(name);
-        if (trigger) {
-            ScriptApp.deleteTrigger(trigger);
-        }
-    }
-
-    function createTrigger(name) {
-        ScriptApp.newTrigger(name).timeBased().everyMinutes(MINUTES).create();
-    }
-
-    function getTrigger(name) {
-        let triggers = ScriptApp.getProjectTriggers();
-        for (let i = 0; i < triggers.length; i++) {
-            if (name === triggers[i].getHandlerFunction()) {
-                return triggers[i];
-            }
-        }
-    }
-
-    function getRecentTracks(limit) {
+    function get(limit) {
         let tracks = [];
         if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
             tracks = Cache.read(BOTH_SOURCE_FILENAME);
@@ -868,11 +833,7 @@ const RecentTracks = (function () {
 
 const Combiner = (function () {
     return {
-        alternate: alternate,
-        mixinMulti: mixinMulti,
-        mixin: mixin,
-        replace: replace,
-        push: push,
+        alternate, mixinMulti, mixin, replace, push,
     };
 
     function replace(oldArray, newArray) {
@@ -969,12 +930,7 @@ const RangeTracks = (function () {
     const BAN_KEYS = ['genres', 'ban_genres', 'release_date', 'followed_include', 'include', 'exclude', 'groups', 'artist_limit', 'album_limit', 'track_limit'];
     let _cachedTracks, _lastOutRange, _params;
     return {
-        rangeTracks: rangeTracks,
-        getLastOutRange: getLastOutRange,
-        isBelong: isBelong,
-        isBelongGenres: isBelongGenres,
-        isBelongBanGenres: isBelongBanGenres,
-        isBelongReleaseDate: isBelongReleaseDate,
+        rangeTracks, getLastOutRange, isBelong, isBelongGenres, isBelongBanGenres, isBelongReleaseDate,
     };
 
     function getLastOutRange() {
@@ -1542,30 +1498,23 @@ const Filter = (function () {
     })();
 
     return {
-        removeTracks: removeTracks,
-        removeArtists: removeArtists,
-        removeUnavailable: removeUnavailable,
+        removeTracks, removeArtists, removeUnavailable, getDateRel, rangeDateRel, rangeDateAbs, replaceWithSimilar,
+        match, matchExcept, matchExceptRu, matchExceptMix, matchLatinOnly, matchOriginalOnly, detectLanguage,
         dedupTracks: Deduplicator.dedupTracks,
         dedupArtists: Deduplicator.dedupArtists,
         dedupAlbums: Deduplicator.dedupAlbums,
-        getDateRel: getDateRel,
-        rangeDateRel: rangeDateRel,
-        rangeDateAbs: rangeDateAbs,
+        separateArtistsDuplicated: Deduplicator.separateArtistsDuplicated,
         rangeTracks: RangeTracks.rangeTracks,
         getLastOutRange: RangeTracks.getLastOutRange,
-        replaceWithSimilar: replaceWithSimilar,
-        match: match,
-        matchExcept: matchExcept,
-        matchExceptRu: matchExceptRu,
-        matchExceptMix: matchExceptMix,
-        matchLatinOnly: matchLatinOnly,
-        matchOriginalOnly: matchOriginalOnly,
-        separateArtistsDuplicated: Deduplicator.separateArtistsDuplicated,
-        detectLanguage: detectLanguage,
     };
 })();
 
 const Selector = (function () {
+    return {
+        keepFirst, keepLast, keepAllExceptFirst, keepAllExceptLast, keepRandom, keepNoLongerThan, sliceFirst, sliceLast, sliceAllExceptFirst,
+        sliceAllExceptLast, sliceRandom, sliceNoLongerThan, sliceCopy, pickYear, isWeekend, isDayOfWeekRu, isDayOfWeek,
+    };
+
     function keepFirst(array, count) {
         Combiner.replace(array, sliceFirst(array, count));
     }
@@ -1671,26 +1620,6 @@ const Selector = (function () {
         Admin.printInfo(`При смещении ${offset}, ближайший год не найден`);
         return [];
     }
-
-    return {
-        keepFirst: keepFirst,
-        keepLast: keepLast,
-        keepAllExceptFirst: keepAllExceptFirst,
-        keepAllExceptLast: keepAllExceptLast,
-        keepRandom: keepRandom,
-        keepNoLongerThan: keepNoLongerThan,
-        sliceFirst: sliceFirst,
-        sliceLast: sliceLast,
-        sliceAllExceptFirst: sliceAllExceptFirst,
-        sliceAllExceptLast: sliceAllExceptLast,
-        sliceRandom: sliceRandom,
-        sliceNoLongerThan: sliceNoLongerThan,
-        sliceCopy: sliceCopy,
-        pickYear: pickYear,
-        isWeekend: isWeekend,
-        isDayOfWeekRu: isDayOfWeekRu,
-        isDayOfWeek: isDayOfWeek,
-    };
 })();
 
 const Order = (function () {
@@ -1865,11 +1794,7 @@ const Order = (function () {
     }
 
     return {
-        shuffle: shuffle,
-        reverse: reverse,
-        sort: sort,
-        separateArtists: separateArtists,
-        separateYears: separateYears,
+        shuffle, reverse, sort, separateArtists, separateYears,
     };
 })();
 
@@ -1894,14 +1819,7 @@ const Playlist = (function () {
     })();
 
     return {
-        getById: getById,
-        getByName: getByName,
-        getDescription: getDescription,
-        getPlaylistArray: getPlaylistArray,
-        saveAsNew: saveAsNew,
-        saveWithReplace: saveWithReplace,
-        saveWithAppend: saveWithAppend,
-        saveWithUpdate: saveWithUpdate,
+        getById, getByName, getDescription, getPlaylistArray, saveAsNew, saveWithReplace, saveWithAppend, saveWithUpdate,
         removeTracks: removeNonExistingTracks,
     };
 
@@ -2115,15 +2033,7 @@ const Playlist = (function () {
 
 const Library = (function () {
     return {
-        checkFavoriteTracks: checkFavoriteTracks,
-        deleteAlbums: deleteAlbums,
-        deleteFavoriteTracks: deleteFavoriteTracks,
-        followArtists: followArtists,
-        followPlaylists: followPlaylists,
-        saveAlbums: saveAlbums,
-        saveFavoriteTracks: saveFavoriteTracks,
-        unfollowArtists: unfollowArtists,
-        unfollowPlaylists: unfollowPlaylists,
+        checkFavoriteTracks, deleteAlbums, deleteFavoriteTracks, followArtists, followPlaylists, saveAlbums, saveFavoriteTracks, unfollowArtists, unfollowPlaylists,
     };
 
     function checkFavoriteTracks(tracks) {
@@ -2201,27 +2111,9 @@ const Lastfm = (function () {
     const LASTFM_API_BASE_URL = 'http://ws.audioscrobbler.com/2.0/?';
     const LASTFM_STATION = 'https://www.last.fm/player/station/user';
     return {
-        rangeTags: rangeTags,
-        removeRecentTracks: removeRecentTracks,
-        removeRecentArtists: removeRecentArtists,
-        getLovedTracks: getLovedTracks,
-        getRecentTracks: getRecentTracks,
-        getLastfmRecentTracks: getLastfmRecentTracks,
-        findNewPlayed: findNewPlayed,
-        getTopTracks: getTopTracks,
-        getTopTracksByTag: getTopTracksByTag,
-        getTopArtists: getTopArtists,
-        getTopArtistsByTag: getTopArtistsByTag,
-        getTopAlbums: getTopAlbums,
-        getTopAlbumsByTag: getTopAlbumsByTag,
-        getMixStation: getMixStation,
-        getLibraryStation: getLibraryStation,
-        getRecomStation: getRecomStation,
-        getNeighboursStation: getNeighboursStation,
-        getSimilarTracks: getSimilarTracks,
-        getSimilarArtists: getSimilarArtists,
-        getCustomTop: getCustomTop,
-        convertToSpotify: convertToSpotify,
+        rangeTags, removeRecentTracks, removeRecentArtists, getLovedTracks, getRecentTracks, getLastfmRecentTracks, findNewPlayed, getTopTracks,
+        getTopTracksByTag, getTopArtists, getTopArtistsByTag, getTopAlbums, getTopAlbumsByTag, getMixStation, getLibraryStation,
+        getRecomStation, getNeighboursStation, getSimilarTracks, getSimilarArtists, getCustomTop, convertToSpotify, getTracksByTag, getArtistsByTag, getAlbumsByTag,
     };
 
     function getSimilarTracks(tracks, match, limit, isFlat = true) {
@@ -2514,6 +2406,77 @@ const Lastfm = (function () {
         }
     }
 
+    function getAlbumsByTag(tag, limit) {
+        return getItemsFromTagPage({
+            tag: tag,
+            limit: limit,
+            type: 'album',
+            countPerPage: 20,
+            callback: (cheerio) => {
+                let names = [];
+                cheerio('.resource-list--release-list-item', '', cheerio('.col-main')).each((index, node) => {
+                    let album = cheerio(node).children('.resource-list--release-list-item-name').text().trim();
+                    let artist = cheerio(node).children('.resource-list--release-list-item-artist').text().trim();
+                    names.push(`${artist} ${album}`.formatName());
+                });
+                return names;
+            }
+        })
+    }
+
+    function getArtistsByTag(tag, limit) {
+        return getItemsFromTagPage({
+            tag: tag,
+            limit: limit,
+            type: 'artist',
+            countPerPage: 21,
+            callback: (cheerio) => {
+                let names = [];
+                cheerio('.big-artist-list-title', '', cheerio('.big-artist-list')).each((index, node) => {
+                    names.push(cheerio(node).text().formatName());
+                });
+                return names;
+            }
+        })
+    }
+
+    function getTracksByTag(tag, limit) {
+        return getItemsFromTagPage({
+            tag: tag,
+            limit: limit,
+            type: 'track',
+            countPerPage: 50,
+            callback: (cheerio) => {
+                let names = [];
+                cheerio('.chartlist-row', '', cheerio('.chartlist')).each((index, node) => {
+                    let name = cheerio(node).children('.chartlist-name').text().trim();
+                    let artist = cheerio(node).children('.chartlist-artist').text().trim();
+                    names.push(`${artist} ${name}`.formatName());
+                });
+                return names;
+            }
+        })
+    }
+
+    function getItemsFromTagPage(params) {
+        if (!Cheerio) throw 'Установите библиотеку Cheerio. Инструкция во втором пункте: https://github.com/Chimildic/goofy/discussions/35';
+        let names = Selector.sliceFirst(parseNames(), params.limit);
+        let [formatMethod, searchMethod] = obtainMethodNamesByType(params.type);
+        return searchMethod(names);
+
+        function parseNames() {
+            let names = [];
+            let pageCount = Math.ceil(params.limit / params.countPerPage);
+            for (let i = 0; i < pageCount; i++) {
+                let url = `https://www.last.fm/tag/${params.tag}/${params.type}s?page=${i + 1}`;
+                let cheerio = Cheerio.create(url);
+                cheerio && names.push(...params.callback(cheerio));
+                if (names.length >= params.limit || !cheerio) break;
+            }
+            return names;
+        }
+    }
+
     function getTopTracksByTag(params) {
         params.method = 'tag.gettoptracks';
         return getTopByTag(params, 'track');
@@ -2530,11 +2493,10 @@ const Lastfm = (function () {
     }
 
     function getTopByTag(queryObj, type) {
-        let [formatMethod, searchMethod] = obtainMethodNamesByType(type);
         let url = createUrl(queryObj);
         let response = CustomUrlFetchApp.fetch(url);
         let key = Object.keys(response)[0];
-        return searchMethod(response[key][type], formatMethod);
+        return convertToSpotify(response[key][type], type)
     }
 
     function obtainMethodNamesByType(type = 'track') {
@@ -2655,19 +2617,10 @@ const Lastfm = (function () {
 
 const Search = (function () {
     const TEMPLATE = API_BASE_URL + '/search?%s';
-
     let noFound = [];
-
     return {
-        multisearchTracks: multisearchTracks,
-        multisearchArtists: multisearchArtists,
-        multisearchAlbums: multisearchAlbums,
-        findPlaylists: findPlaylists,
-        findAlbums: findAlbums,
-        findTracks: findTracks,
-        findArtists: findArtists,
+        multisearchTracks, multisearchArtists, multisearchAlbums, findPlaylists, findAlbums, findTracks, findArtists, sendMusicRequest,
         getNoFound: () => noFound,
-        sendMusicRequest: sendMusicRequest,
     };
 
     function sendMusicRequest(context) {
@@ -2708,7 +2661,7 @@ const Search = (function () {
         if (!items || items.length == 0) {
             return [];
         }
-        let originKeyword = items.map((item) => parseNameMethod(item));
+        let originKeyword = parseNameMethod ? items.map((item) => parseNameMethod(item)) : items;
         let uniqueItems = findUniqueItems(originKeyword);
         return restoreOrigin();
 
@@ -2808,7 +2761,6 @@ const getCachedTracks = (function () {
     let cachedTracks = { meta: {}, artists: {}, albums: {}, features: {} };
     let uncachedTracks;
     let _tracks, _args;
-
     return function getCache(tracks, args) {
         cache(tracks, args);
         return cachedTracks;
@@ -2898,11 +2850,7 @@ const Auth = (function () {
     const service = createService();
 
     return {
-        reset: reset,
-        hasAccess: hasAccess,
-        getAccessToken: getAccessToken,
-        displayAuthPage: displayAuthPage,
-        displayAuthResult: displayAuthResult,
+        reset, hasAccess, getAccessToken, displayAuthPage, displayAuthResult,
     };
 
     function createService() {
@@ -2949,17 +2897,7 @@ const Auth = (function () {
 
 const SpotifyRequest = (function () {
     return {
-        get: get,
-        getAll: getAll,
-        getItemsByPath: getItemsByPath,
-        getItemsByNext: getItemsByNext,
-        getFullObjByIds: getFullObjByIds,
-        post: post,
-        put: put,
-        putImage: putImage,
-        putItems: putItems,
-        deleteItems: deleteItems,
-        deleteRequest: deleteRequest,
+        get, getAll, getItemsByPath, getItemsByNext, getFullObjByIds, post, put, putImage, putItems, deleteItems, deleteRequest,
     };
 
     function getItemsByPath(urlPath, limitRequestCount) {
@@ -3191,14 +3129,7 @@ const Cache = (function () {
     return {
         get RootFolder() { return ROOT_FOLDER; },
         get UserFolder() { return USER_FOLDER; },
-        read: read,
-        write: write,
-        append: append,
-        copy: copy,
-        remove: remove,
-        rename: rename,
-        compressTracks: compressTracks,
-        compressArtists: compressArtists,
+        read, write, append, copy, remove, rename, compressTracks, compressArtists,
     };
 
     function read(filepath) {
@@ -3420,6 +3351,83 @@ const Cache = (function () {
     }
 })();
 
+const Clerk = (function () {
+    const TRIGGER_FUNCTION_NAME = 'runTasks_';
+    const MINUTES = 15;
+    let tasks;
+    if (getTrigger('updateRecentTracks_')) {
+        // Удаляет триггер предыдущих версий библиотеки
+        deleteTrigger('updateRecentTracks_');
+    }
+    if (!getTrigger(TRIGGER_FUNCTION_NAME)) {
+        createTrigger(TRIGGER_FUNCTION_NAME);
+    }
+    return {
+        runOnceAfter, runOnceAWeek,
+    }
+
+    function runOnceAfter(timeStr, callback) {
+        if (isTimeToRun(callback.name, timeStr)) {
+            callback();
+            updateLastRunDate(callback.name, new Date());
+            return true;
+        }
+    }
+
+    function runOnceAWeek(dayStr, timeStr, callback) {
+        if (Selector.isDayOfWeek(dayStr)) {
+            return runOnceAfter(timeStr, callback);
+        }
+    }
+
+    function isTimeToRun(name, timeStr) {
+        let [hours, min] = timeStr.split(':');
+        let comparable = readDate(name);
+        comparable.setHours(parseInt(hours), parseInt(min));
+        let now = new Date();
+        let diffDays = Math.abs(now - comparable) / (1000 * 60 * 60 * 24);
+        return diffDays > 1;
+    }
+
+    function readDate(name) {
+        let dateStr = getTasks()[name];
+        return dateStr ? new Date(dateStr) : new Date('1970');
+    }
+
+    function updateLastRunDate(name, date) {
+        let tasks = getTasks();
+        tasks[name] = date.toISOString();
+        UserProperties.setProperty('ClerkTasks', JSON.stringify(tasks));
+    }
+
+    function getTasks() {
+        if (!tasks) {
+            tasks = KeyValue.ClerkTasks ? JSON.parse(KeyValue.ClerkTasks) : {};
+        }
+        return tasks;
+    }
+
+    function deleteTrigger(name) {
+        let trigger = getTrigger(name);
+        if (trigger) {
+            ScriptApp.deleteTrigger(trigger);
+        }
+    }
+
+    function createTrigger(name) {
+        ScriptApp.newTrigger(name).timeBased().everyMinutes(MINUTES).create();
+    }
+
+    function getTrigger(name) {
+        let triggers = ScriptApp.getProjectTriggers();
+        for (let i = 0; i < triggers.length; i++) {
+            if (name === triggers[i].getHandlerFunction()) {
+                return triggers[i];
+            }
+        }
+    }
+})();
+
 const Admin = (function () {
     let isInfoLvl, isErrorLvl;
     setLogLevelOnce(KeyValue.LOG_LEVEL);
@@ -3429,11 +3437,7 @@ const Admin = (function () {
     }
 
     return {
-        reset: reset,
-        setLogLevelOnce: setLogLevelOnce,
-        printInfo: printInfo,
-        printError: printError,
-        pause: pause,
+        reset, setLogLevelOnce, printInfo, printError, pause,
     };
 
     function setLogLevelOnce(level = 'info') {
