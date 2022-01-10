@@ -92,14 +92,12 @@ JSON.parseFromResponse = function (response) {
     return JSON.parseFromString(content);
 }
 
-HtmlService.createCheerio = function (url) {
-    if (Cheerio) {
-        try {
-            return Cheerio.load(CustomUrlFetchApp.fetch(url).getContentText());
-        } catch (error) {
-            Admin.printInfo('Не удалось загрузить страницу. Возможно ее не существует. URL: ', url);
-        }
-    };
+HtmlService.createCheerio = function (response) {
+    try {
+        return Cheerio.load(response.getContentText());
+    } catch (error) {
+        Admin.printInfo(error);
+    }
 }
 
 const CustomUrlFetchApp = (function () {
@@ -419,13 +417,16 @@ const Source = (function () {
 
     function getReleasesByArtists(params) {
         let years = parseYears(params.date);
-        let period = years.join('-');
         let requestCount = years[1] - years[0] + 1;
-        let keywords = params.artists.map(artist => `"${artist.name}" AND year:${period}`);
-        let responses = Search.findAlbums(keywords, requestCount).reduce((responses, albums) => {
+        let keywords = params.artists.map(artist => `"${artist.name}" AND year:${years.join('-')}`);
+        let artistsWithoutRelease = [];
+        let responses = Search.findAlbums(keywords, requestCount).reduce((responses, albums, i) => {
             if (albums.length > 0) {
                 Filter.dedupAlbums(albums);
                 Filter.removeArtists(albums, params.artists, true);
+                if (albums.length == 0) {
+                    artistsWithoutRelease.push(params.artists[i]);
+                }
                 albums = albums.filter(album =>
                     RangeTracks.isBelongReleaseDate(album.release_date, params.date)
                     && params.type.includes(album.album_type))
@@ -433,7 +434,18 @@ const Source = (function () {
             }
             return responses;
         }, []);
-        return !params.hasOwnProperty('isFlat') || params.isFlat ? responses.flat(1) : responses;
+        let everyNoiseReleases = [];
+        if (artistsWithoutRelease.length > 0) {
+            everyNoiseReleases = EveryNoise.getReleasesByArtists({
+                artists: artistsWithoutRelease, date: params.date, type: params.type, isFlat: false,
+            });
+        }
+        let tracks = Combiner.push(responses, everyNoiseReleases);
+        if (!params.hasOwnProperty('isFlat') || params.isFlat) {
+            tracks = tracks.flat(1);
+            Order.sort(tracks, 'album.release_date', 'desc');
+        }
+        return tracks;
 
         function parseYears(releaseDate) {
             let years = Object.keys(releaseDate).map(key => {
@@ -642,6 +654,54 @@ const Source = (function () {
         }, []);
     }
 })();
+
+const EveryNoise = (function () {
+    return {
+        getReleasesByArtists,
+    }
+
+    function getReleasesByArtists(params) {
+        let fullItems = parseValidIds().reduce((fullItems, ids) =>
+            Combiner.push(fullItems, SpotifyRequest.getFullObjByIds('tracks', ids, 50)), []);
+        if (!params.hasOwnProperty('isFlat') || params.isFlat) {
+            fullItems = fullItems.flat(1);
+            Order.sort(fullItems, 'album.release_date', 'desc');
+        }
+        return fullItems;
+
+        function parseValidIds() {
+            return getResponses().reduce((ids, response) => {
+                let cheerio = HtmlService.createCheerio(response);
+                if (!cheerio) return ids;
+                let titles = [];
+                let albums = [];
+                cheerio('.albumbox', '', cheerio('.discocell')).each((index, node) => {
+                    let noteEl = cheerio(node).children('.note');
+                    if (noteEl.attr('class') != 'note') return;
+                    let release_date = new Date(noteEl.children('span').text().trim());
+                    let title = noteEl.children('.albumtitle').text().formatName();
+                    if (!titles.includes(title) && RangeTracks.isBelongReleaseDate(release_date, params.date)) {
+                        titles.push(title);
+                        let album = [];
+                        cheerio('.trackrow', '', node).each((index, row) => {
+                            album.push(cheerio(row).children('.play').attr('trackid'));
+                        });
+                        albums.push(album);
+                    }
+                });
+                ids.push(albums);
+                return ids
+            }, []);
+        }
+
+        function getResponses() {
+            let hideStr = ['compilation', 'appears_on', 'album', 'single']
+                .filter(item => !params.type.includes(item)).map(item => `&hide=${item}`).join('');
+            let urls = params.artists.map(artist => `https://everynoise.com/artistprofile.cgi?id=${artist.id}${hideStr}&country=${KeyValue.LOCALE || 'RU'}`);
+            return CustomUrlFetchApp.fetchAll(urls);
+        }
+    }
+})()
 
 const Player = (function () {
     return {
@@ -1325,7 +1385,6 @@ const Filter = (function () {
             });
         }
     }
-
 
     function rangeDateRel(items, sinceDays, beforeDays) {
         extractItemsRel(items, sinceDays, beforeDays);
@@ -2464,11 +2523,15 @@ const Lastfm = (function () {
         return searchMethod(names);
 
         function parseNames() {
-            let names = [];
+            let urls = [];
             let pageCount = Math.ceil(params.limit / params.countPerPage);
             for (let i = 0; i < pageCount; i++) {
-                let url = `https://www.last.fm/tag/${params.tag}/${params.type}s?page=${i + 1}`;
-                let cheerio = HtmlService.createCheerio(url);
+                urls.push(`https://www.last.fm/tag/${params.tag}/${params.type}s?page=${i + 1}`);
+            }
+            let names = [];
+            let responses = CustomUrlFetchApp.fetchAll(urls);
+            for (let i = 0; i < responses.length; i++) {
+                let cheerio = HtmlService.createCheerio(responses[i]);
                 cheerio && names.push(...params.callback(cheerio));
                 if (names.length >= params.limit || !cheerio) break;
             }

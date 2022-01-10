@@ -11,6 +11,7 @@
 - Добавьте библиотеку [Cheerio](https://github.com/Chimildic/goofy/discussions/91#discussioncomment-1931923).
 - [#153](https://github.com/Chimildic/goofy/issues/153) Добавлено кэширование лайков. Настройте [часовой пояс](/install?id=Часовой-пояс).
 - [#159](https://github.com/Chimildic/goofy/issues/159) Добавлены функции парсинга элементов со страниц тега last.fm: [getTracksByTag](/reference?id=gettracksbytag), [getArtistsByTag](/reference?id=getartistsbytag), [getAlbumsByTag](/reference?id=getalbumsbytag).
+- (10.01.22) [#155](https://github.com/Chimildic/goofy/issues/155#issuecomment-1008871981) Изменен алгоритм подбора релизов из-за возникшего недостатка у имен исполнителей из общепринятых слов. Обязательно наличие библиотеки Cheerio.
 
 ## Версия 1.6.3
 - Модуль Yandex полностью удален. Яндекс перестал отвечать на запросы. Многие функции может заменить расширение [YaMuTools](https://github.com/Chimildic/YaMuTools). Но у него нет работы по расписанию.
