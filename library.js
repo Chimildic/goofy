@@ -1,6 +1,6 @@
 // Документация: https://chimildic.github.io/goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.7.0';
+const VERSION = '1.7.1';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -3414,16 +3414,36 @@ const Cache = (function () {
     }
 })();
 
-const Clerk = (function () {
-    const TRIGGER_FUNCTION_NAME = 'runTasks_';
-    const MINUTES = 15;
-    let tasks;
-    if (getTrigger('updateRecentTracks_')) {
-        // Удаляет триггер предыдущих версий библиотеки
-        deleteTrigger('updateRecentTracks_');
+const Trigger = (function () {
+    return { remove, create, get }
+
+    function get(name) {
+        let triggers = ScriptApp.getProjectTriggers();
+        for (let i = 0; i < triggers.length; i++) {
+            if (name === triggers[i].getHandlerFunction()) {
+                return triggers[i];
+            }
+        }
     }
-    if (!getTrigger(TRIGGER_FUNCTION_NAME)) {
-        createTrigger(TRIGGER_FUNCTION_NAME);
+
+    function remove(trigger) {
+        trigger && ScriptApp.deleteTrigger(trigger);
+    }
+
+    function create(name, minutes) {
+        ScriptApp.newTrigger(name).timeBased().everyMinutes(minutes).create();
+    }
+})()
+
+const Clerk = (function () {
+    let functionName = 'runTasks_';
+    let taskTrigger = Trigger.get(functionName);
+    if (taskTrigger && taskTrigger.isDisabled()) {
+        Trigger.remove(taskTrigger);
+        taskTrigger = undefined;
+    }
+    if (!taskTrigger) {
+        Trigger.create(functionName, 15);
     }
     return {
         runOnceAfter, runOnceAWeek,
@@ -3470,25 +3490,6 @@ const Clerk = (function () {
         return tasks;
     }
 
-    function deleteTrigger(name) {
-        let trigger = getTrigger(name);
-        if (trigger) {
-            ScriptApp.deleteTrigger(trigger);
-        }
-    }
-
-    function createTrigger(name) {
-        ScriptApp.newTrigger(name).timeBased().everyMinutes(MINUTES).create();
-    }
-
-    function getTrigger(name) {
-        let triggers = ScriptApp.getProjectTriggers();
-        for (let i = 0; i < triggers.length; i++) {
-            if (name === triggers[i].getHandlerFunction()) {
-                return triggers[i];
-            }
-        }
-    }
 })();
 
 const Admin = (function () {
@@ -3497,8 +3498,8 @@ const Admin = (function () {
     if (VERSION != KeyValue.VERSION) {
         UserProperties.setProperty('VERSION', VERSION);
         sendVersion(VERSION);
+        ['updateSavedTracks', 'updateSavedTracks_'].forEach(name => Trigger.remove(Trigger.get(name)));
     }
-
     return {
         reset, setLogLevelOnce, printInfo, printError, pause,
     };
