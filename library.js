@@ -3436,6 +3436,7 @@ const Trigger = (function () {
 })()
 
 const Clerk = (function () {
+    let tasks;
     let functionName = 'runTasks_';
     let taskTrigger = Trigger.get(functionName);
     if (taskTrigger && taskTrigger.isDisabled()) {
@@ -3489,7 +3490,6 @@ const Clerk = (function () {
         }
         return tasks;
     }
-
 })();
 
 const Admin = (function () {
