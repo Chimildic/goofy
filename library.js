@@ -29,19 +29,20 @@ function runTasks_() {
     let isUpdatedSavedTracks = Clerk.runOnceAWeek('monday', '01:00', updateSavedTracks);
     !isUpdatedSavedTracks && Clerk.runOnceAfter('01:00', appendSavedTracks);
 
-    function updateSavedTracks() {
-        Cache.write('SavedTracks.json', Source.getSavedTracks());
+    function updateSavedTracks(tracks) {
+        tracks = tracks || Source.getSavedTracks();
+        Cache.compressTracks(tracks);
+        Cache.write('SavedTracks.json', tracks);
     }
 
-    function appendSavedTracks(limit) {
-        let cacheSavedTracks = Cache.read('SavedTracks.json');
-        let remoteSavedTracks = Source.getSavedTracks(limit || 50);
-        Filter.removeTracks(remoteSavedTracks, cacheSavedTracks);
-        if (remoteSavedTracks.length == 50 && !limit) {
-            appendSavedTracks(250);
-            return;
-        } else if (remoteSavedTracks.length > 0) {
-            Cache.write('SavedTracks.json', Combiner.push(remoteSavedTracks, cacheSavedTracks));
+    function appendSavedTracks() {
+        let cacheTracks = Cache.read('SavedTracks.json');
+        let remoteTracks = Source.getSavedTracks(50);
+        Filter.removeTracks(remoteTracks, cacheTracks);
+        if (remoteTracks.length == 50 || cacheTracks.length == 0) {
+            updateSavedTracks();
+        } else if (remoteTracks.length > 0) {
+            updateSavedTracks(Combiner.push(remoteTracks, cacheTracks));
         }
     }
 }
