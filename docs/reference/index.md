@@ -8,8 +8,8 @@
 | [Lastfm](/reference/lastfm.md) | Методы взаимодействия с Last.fm. |
 | [Library](/reference/library.md) | Методы по управлению лайками и подписками. |
 | [Order](/reference/order.md) | Методы сортировки. |
-| [Player](/reference/order.md) | Методы управления плеером. |
-| [Playlist](/reference/order.md) | Методы по созданию и управлению плейлистами. |
+| [Player](/reference/player.md) | Методы управления плеером. |
+| [Playlist](/reference/playlist.md) | Методы по созданию и управлению плейлистами. |
 | [RecentTracks](/reference/recenttracks.md) | Методы работы с историей прослушиваний. |
 | [Search](/reference/search.md) | Методы поиска. |
 | [Selector](/reference/selector.md) | Методы отбора и ветвления. |
