@@ -1093,7 +1093,7 @@ const RangeTracks = (function () {
     function isBelongGenres(objGeners, selectedGenres, isRemoveUnknown = true) {
         if (!selectedGenres || selectedGenres.length == 0) {
             return true;
-        } else if (objGeners.length == 0) {
+        } else if (!objGeners || objGeners.length == 0) {
             return !isRemoveUnknown;
         }
         return isSomeIncludes(objGeners, selectedGenres);
@@ -1102,7 +1102,7 @@ const RangeTracks = (function () {
     function isBelongBanGenres(objGeners, banGenres, isRemoveUnknown = true) {
         if (!banGenres || banGenres.length == 0) {
             return false;
-        } else if (objGeners.length == 0) {
+        } else if (!objGeners || objGeners.length == 0) {
             return isRemoveUnknown;
         }
         return isSomeIncludes(objGeners, banGenres);
