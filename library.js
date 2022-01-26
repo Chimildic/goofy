@@ -988,11 +988,9 @@ const Combiner = (function () {
 })();
 
 const RangeTracks = (function () {
-    const BAN_KEYS = ['genres', 'ban_genres', 'release_date', 'followed_include', 'include', 'exclude', 'groups', 'artist_limit', 'album_limit', 'track_limit'];
+    const BAN_KEYS = ['genres', 'ban_genres', 'release_date', 'followed_include', 'include', 'exclude', 'groups', 'artist_limit', 'album_limit', 'track_limit', 'isRemoveUnknownGenre'];
     let _cachedTracks, _lastOutRange, _params;
-    return {
-        rangeTracks, getLastOutRange, isBelong, isBelongGenres, isBelongBanGenres, isBelongReleaseDate,
-    };
+    return { rangeTracks, getLastOutRange, isBelong, isBelongGenres, isBelongBanGenres, isBelongReleaseDate, };
 
     function getLastOutRange() {
         return _lastOutRange ? _lastOutRange.slice() : [];
@@ -1050,8 +1048,8 @@ const RangeTracks = (function () {
         }
         return (
             isBelong(trackArtist, _params.artist) &&
-            isBelongGenres(trackArtist.genres, _params.artist.genres) &&
-            !isBelongBanGenres(trackArtist.genres, _params.artist.ban_genres)
+            isBelongGenres(trackArtist.genres, _params.artist.genres, _params.artist.isRemoveUnknownGenre) &&
+            !isBelongBanGenres(trackArtist.genres, _params.artist.ban_genres, _params.artist.isRemoveUnknownGenre)
         );
     }
 
@@ -1069,8 +1067,6 @@ const RangeTracks = (function () {
 
         return (
             isBelong(trackAlbum, _params.album) &&
-            isBelongGenres(trackAlbum.genres, _params.album.genres) &&
-            !isBelongBanGenres(trackAlbum.genres, _params.album.ban_genres) &&
             isBelongReleaseDate(trackAlbum.release_date, _params.album.release_date)
         );
     }
@@ -1079,7 +1075,6 @@ const RangeTracks = (function () {
         if (!targetPeriod) {
             return true;
         }
-
         let releaseDateTime = new Date(albumReleaseDate).getTime();
         let startDate, endDate;
         if (targetPeriod.sinceDays) {
@@ -1095,16 +1090,20 @@ const RangeTracks = (function () {
         return true;
     }
 
-    function isBelongGenres(objGeners, selectedGenres) {
+    function isBelongGenres(objGeners, selectedGenres, isRemoveUnknown = true) {
         if (!selectedGenres || selectedGenres.length == 0) {
             return true;
+        } else if (objGeners.length == 0) {
+            return !isRemoveUnknown;
         }
         return isSomeIncludes(objGeners, selectedGenres);
     }
 
-    function isBelongBanGenres(objGeners, banGenres) {
+    function isBelongBanGenres(objGeners, banGenres, isRemoveUnknown = true) {
         if (!banGenres || banGenres.length == 0) {
             return false;
+        } else if (objGeners.length == 0) {
+            return isRemoveUnknown;
         }
         return isSomeIncludes(objGeners, banGenres);
     }
@@ -2876,7 +2875,7 @@ const getCachedTracks = (function () {
         }
         if (uncachedTracks.albums.length > 0) {
             let fullAlbums = SpotifyRequest.getFullObjByIds('albums', uncachedTracks.albums, 20);
-            fullAlbums.forEach((album, i) =>  isNull(album, uncachedTracks.albums[i], 'album') ? false : (cachedTracks.albums[album.id] = album));
+            fullAlbums.forEach((album, i) => isNull(album, uncachedTracks.albums[i], 'album') ? false : (cachedTracks.albums[album.id] = album));
         }
         if (uncachedTracks.features.length > 0) {
             // limit = 100, но UrlFetchApp.fetch выдает ошибку о превышении длины URL

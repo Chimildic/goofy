@@ -460,6 +460,7 @@ let params = {
         followers: { min: 0, max: 100000 },
         genres: ['indie'],
         ban_genres: ['rap', 'pop'],
+        isRemoveUnknownGenre: false,
     },
     features: {
         acousticness: { min: 0.0, max: 1.0 },
@@ -488,7 +489,6 @@ let params = {
         album_type: ['single', 'album'],
         release_date: { sinceDays: 6, beforeDays: 0 },
         // или release_date: { startDate: new Date('2020.11.30'), endDate: new Date('2020.12.30') },
-        // genres: [], // Тесты показывают, что у альбомов список жанров всегда пуст
     },
 };
 ```
