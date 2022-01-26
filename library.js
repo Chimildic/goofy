@@ -2868,7 +2868,7 @@ const getCachedTracks = (function () {
     function cacheToFullObj() {
         if (uncachedTracks.meta.length > 0) {
             let fullTracks = SpotifyRequest.getFullObjByIds('tracks', uncachedTracks.meta, 50);
-            fullTracks.forEach((track) => isNull(track, uncachedTracks.meta[i], 'meta') ? false : (cachedTracks.meta[track.id] = track));
+            fullTracks.forEach((track, i) => isNull(track, uncachedTracks.meta[i], 'meta') ? false : (cachedTracks.meta[track.id] = track));
         }
         if (uncachedTracks.artists.length > 0) {
             let fullArtists = SpotifyRequest.getFullObjByIds('artists', uncachedTracks.artists, 50);
@@ -2876,7 +2876,7 @@ const getCachedTracks = (function () {
         }
         if (uncachedTracks.albums.length > 0) {
             let fullAlbums = SpotifyRequest.getFullObjByIds('albums', uncachedTracks.albums, 20);
-            fullAlbums.forEach((album) =>  isNull(album, uncachedTracks.albums[i], 'album') ? false : (cachedTracks.albums[album.id] = album));
+            fullAlbums.forEach((album, i) =>  isNull(album, uncachedTracks.albums[i], 'album') ? false : (cachedTracks.albums[album.id] = album));
         }
         if (uncachedTracks.features.length > 0) {
             // limit = 100, но UrlFetchApp.fetch выдает ошибку о превышении длины URL
