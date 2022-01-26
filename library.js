@@ -2868,15 +2868,15 @@ const getCachedTracks = (function () {
     function cacheToFullObj() {
         if (uncachedTracks.meta.length > 0) {
             let fullTracks = SpotifyRequest.getFullObjByIds('tracks', uncachedTracks.meta, 50);
-            fullTracks.forEach((track) => (cachedTracks.meta[track.id] = track));
+            fullTracks.forEach((track) => isNull(track, uncachedTracks.meta[i], 'meta') ? false : (cachedTracks.meta[track.id] = track));
         }
         if (uncachedTracks.artists.length > 0) {
             let fullArtists = SpotifyRequest.getFullObjByIds('artists', uncachedTracks.artists, 50);
-            fullArtists.forEach((artist) => (cachedTracks.artists[artist.id] = artist));
+            fullArtists.forEach((artist, i) => isNull(artist, uncachedTracks.artists[i], 'artist') ? false : (cachedTracks.artists[artist.id] = artist));
         }
         if (uncachedTracks.albums.length > 0) {
             let fullAlbums = SpotifyRequest.getFullObjByIds('albums', uncachedTracks.albums, 20);
-            fullAlbums.forEach((album) => (cachedTracks.albums[album.id] = album));
+            fullAlbums.forEach((album) =>  isNull(album, uncachedTracks.albums[i], 'album') ? false : (cachedTracks.albums[album.id] = album));
         }
         if (uncachedTracks.features.length > 0) {
             // limit = 100, но UrlFetchApp.fetch выдает ошибку о превышении длины URL
@@ -2900,6 +2900,11 @@ const getCachedTracks = (function () {
     // В объектах Track, Album, Artist Simplified нет ключа popularity
     function isSimplified(item) {
         return !item.popularity;
+    }
+
+    function isNull(item, sourceId, type) {
+        !item && Admin.printInfo(`По типу ${type} нет данных о ${sourceId}`);
+        return !item;
     }
 })();
 
@@ -3032,14 +3037,10 @@ const SpotifyRequest = (function () {
             urls.push(`${API_BASE_URL}/${objType}/?ids=${strIds}${market}`);
             offset += limit;
         }
-
-        let fullObj = [];
-        getAll(urls).forEach((response) => {
-            if (response) {
-                Combiner.push(fullObj, response);
-            }
-        });
-        return fullObj;
+        return getAll(urls).reduce((fullObj, response) => {
+            response && Combiner.push(fullObj, response);
+            return fullObj;
+        }, []);
     }
 
     function get(url) {
