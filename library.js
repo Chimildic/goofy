@@ -1784,7 +1784,7 @@ const Order = (function () {
         }
 
         function compareNumber(x, y) {
-            if (!Number.isInteger(x[_key]) || !Number.isInteger(y[_key])) return 0;
+            if (!Number.parseFloat(x[_key]) || !Number.parseFloat(y[_key])) return 0;
             return _direction == 'asc' ? x[_key] - y[_key] : y[_key] - x[_key];
         }
 
