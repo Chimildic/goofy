@@ -390,7 +390,10 @@ const Source = (function () {
     function getSavedAlbumTracks(limit) {
         let items = getSavedAlbums();
         Selector.keepRandom(items, limit);
-        return items.reduce((tracks, album) => Combiner.push(tracks, album.tracks.items), []);
+        return items.reduce((tracks, album) => {
+            let albumTracks = album.tracks.items.map(item => (item.album = album, item));
+            return Combiner.push(tracks, albumTracks)
+        }, []);
     }
 
     function getSavedAlbums() {
