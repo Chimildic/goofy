@@ -602,7 +602,7 @@ Filter.removeTracks(sourceArray, removedArray);
 | Имя | Тип | Описание |
 |-----|-----|----------|
 | `tracks` | Массив | Проверяемые треки. |
-| `market` | Строка | Страна, в которой проверяется доступность треков. По умолчанию Россия `RU`. |
+| `market` | Строка | Страна, в которой проверяется доступность треков. По умолчанию страна аккаунта. |
 
 ### Возврат :id=removeunavailable-return {docsify-ignore}
 
@@ -614,7 +614,7 @@ Filter.removeTracks(sourceArray, removedArray);
 
 ```js
 let tracks = Source.getPlaylistTracks('', 'id');
-Filter.removeUnavailable(tracks);
+Filter.removeUnavailable(tracks, 'RU');
 ```
 
 ## replaceWithSimilar

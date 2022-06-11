@@ -699,9 +699,10 @@ const EveryNoise = (function () {
         }
 
         function getResponses() {
+            let country = User.country;
             let hideStr = ['compilation', 'appears_on', 'album', 'single']
                 .filter(item => !params.type.includes(item)).map(item => `&hide=${item}`).join('');
-            let urls = params.artists.map(artist => `https://everynoise.com/artistprofile.cgi?id=${artist.id}${hideStr}&country=${KeyValue.LOCALE || 'RU'}`);
+            let urls = params.artists.map(artist => `https://everynoise.com/artistprofile.cgi?id=${artist.id}${hideStr}&country=${country || 'RU'}`);
             return CustomUrlFetchApp.fetchAll(urls);
         }
     }
@@ -1137,7 +1138,8 @@ const RangeTracks = (function () {
 })();
 
 const Filter = (function () {
-    function removeUnavailable(tracks, market = 'RU') {
+    function removeUnavailable(tracks, market) {
+        market = market || User.country;
         let availableState = [];
         let unavailableState = [];
         let unclearState = [];
@@ -3139,17 +3141,17 @@ const SpotifyRequest = (function () {
 })();
 
 const User = (function () {
-    const USER_ID = 'userId';
-    !KeyValue[USER_ID] && setProfile();
+    !KeyValue['userId'] && setProfile();
     return {
-        get id() { return KeyValue[USER_ID] },
+        get id() { return KeyValue['userId'] },
+        get country() { return getUser().country },
     };
 
     function setProfile() {
         let user = getUser();
         if (user) {
-            KeyValue[USER_ID] = user.id;
-            UserProperties.setProperty(USER_ID, KeyValue[USER_ID]);
+            KeyValue['userId'] = user.id;
+            UserProperties.setProperty('userId', KeyValue['userId']);
         }
     }
 
