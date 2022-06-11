@@ -1,6 +1,6 @@
 // Документация: https://chimildic.github.io/goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.7.1';
+const VERSION = '1.7.2';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -636,7 +636,7 @@ const Source = (function () {
         return items;
     }
 
-    function getSavedTracks(limit = 25000) {
+    function getSavedTracks(limit = 200000) {
         let requestCount = Math.ceil(limit / 50);
         let items = SpotifyRequest.getItemsByPath('me/tracks?limit=50', requestCount);
         return Selector.sliceFirst(extractTracks(items), limit);
@@ -777,7 +777,7 @@ const RecentTracks = (function () {
     const SPOTIFY_FILENAME = 'SpotifyRecentTracks.json';
     const LASTFM_FILENAME = 'LastfmRecentTracks.json';
     const BOTH_SOURCE_FILENAME = 'BothRecentTracks.json';
-    const ITEMS_LIMIT = parseInt(KeyValue.COUNT_RECENT_TRACKS) || 20000;
+    const ITEMS_LIMIT = parseInt(KeyValue.COUNT_RECENT_TRACKS) || 60000;
     return {
         get, update, compress, appendTracks,
     };
@@ -3214,7 +3214,7 @@ const Cache = (function () {
         return Selector.sliceCopy(content);
     }
 
-    function append(filepath, content, place = 'end', limit = 100000) {
+    function append(filepath, content, place = 'end', limit = 200000) {
         if (!content || content.length == 0) return;
         let currentContent = read(filepath);
         let ext = obtainFileExtension(filepath);

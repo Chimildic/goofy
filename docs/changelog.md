@@ -6,6 +6,10 @@
 
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+## Версия 1.7.2
+
+- Увеличены лимиты в разных местах
+
 ## Версия 1.7.0
 
 - Добавьте библиотеку [Cheerio](https://github.com/Chimildic/goofy/discussions/91#discussioncomment-1931923).
