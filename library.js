@@ -1081,10 +1081,10 @@ const RangeTracks = (function () {
         }
         let releaseDateTime = new Date(albumReleaseDate).getTime();
         let startDate, endDate;
-        if (targetPeriod.sinceDays) {
+        if (targetPeriod.hasOwnProperty('sinceDays')) {
             startDate = Filter.getDateRel(targetPeriod.sinceDays, 'startDay');
             endDate = Filter.getDateRel(targetPeriod.beforeDays, 'endDay');
-        } else if (targetPeriod.startDate) {
+        } else if (targetPeriod.hasOwnProperty('startDate')) {
             startDate = targetPeriod.startDate;
             endDate = targetPeriod.endDate;
         }
