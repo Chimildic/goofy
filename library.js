@@ -1,6 +1,6 @@
 // Документация: https://chimildic.github.io/goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.7.2';
+const VERSION = '1.8.0';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -2685,9 +2685,56 @@ const Lastfm = (function () {
 const Search = (function () {
     const TEMPLATE = API_BASE_URL + '/search?%s';
     let noFound = [];
+
+    // https://github.com/aceakash/string-similarity
+    const DicesCoefficient = (function () {
+        return { findBestMatch, compareTwoStrings, }
+
+        function findBestMatch(mainString, targetStrings) {
+            const ratings = [];
+            let bestMatchIndex = 0;
+            for (let i = 0; i < targetStrings.length; i++) {
+                const currentTargetString = targetStrings[i];
+                const currentRating = compareTwoStrings(mainString, currentTargetString);
+                ratings.push({ target: currentTargetString, rating: currentRating });
+                if (currentRating > ratings[bestMatchIndex].rating) {
+                    bestMatchIndex = i;
+                }
+            }
+            return { ratings: ratings, bestMatch: ratings[bestMatchIndex], bestMatchIndex: bestMatchIndex };
+        }
+
+        function compareTwoStrings(first, second) {
+            first = first.replace(/\s+/g, '');
+            second = second.replace(/\s+/g, '');
+
+            if (first === second) return 1; // identical or empty
+            if (first.length < 2 || second.length < 2) return 0; // if either is a 0-letter or 1-letter string
+
+            let firstBigrams = new Map();
+            for (let i = 0; i < first.length - 1; i++) {
+                const bigram = first.substring(i, i + 2);
+                const count = firstBigrams.has(bigram) ? firstBigrams.get(bigram) + 1 : 1;
+                firstBigrams.set(bigram, count);
+            }
+
+            let intersectionSize = 0;
+            for (let i = 0; i < second.length - 1; i++) {
+                const bigram = second.substring(i, i + 2);
+                const count = firstBigrams.has(bigram) ? firstBigrams.get(bigram) : 0;
+                if (count > 0) {
+                    firstBigrams.set(bigram, count - 1);
+                    intersectionSize++;
+                }
+            }
+
+            return (2.0 * intersectionSize) / (first.length + second.length - 2);
+        }
+    })();
+
     return {
-        multisearchTracks, multisearchArtists, multisearchAlbums, findPlaylists, findAlbums, findTracks, findArtists, sendMusicRequest,
-        getNoFound: () => noFound,
+        DicesCoefficient, multisearchTracks, multisearchArtists, multisearchAlbums, findPlaylists, findAlbums, findTracks, findArtists, 
+        sendMusicRequest, getNoFound: () => noFound,
     };
 
     function sendMusicRequest(context) {
@@ -2728,29 +2775,29 @@ const Search = (function () {
         if (!items || items.length == 0) {
             return [];
         }
-        let originKeyword = parseNameMethod ? items.map((item) => parseNameMethod(item)) : items;
-        let uniqueItems = findUniqueItems(originKeyword);
+        let originKeywords = parseNameMethod ? items.map((item) => parseNameMethod(item)) : items;
+        let uniqueItems = findUniqueItems(originKeywords);
         return restoreOrigin();
 
         function findUniqueItems() {
-            let uniqueKeyword = Array.from(new Set(originKeyword));
-            let searchResult = findBest(uniqueKeyword, type);
+            let uniqueKeywords = Array.from(new Set(originKeywords));
+            let searchResult = findBest(uniqueKeywords, type);
             let resultItems = [];
-            for (let i = 0; i < uniqueKeyword.length; i++) {
+            for (let i = 0; i < uniqueKeywords.length; i++) {
                 let item = searchResult[i];
                 if (item && item.id) {
-                    item.keyword = uniqueKeyword[i];
+                    item.keyword = uniqueKeywords[i];
                     resultItems.push(item);
                 } else {
-                    noFound.push({ type: type, keyword: uniqueKeyword[i], item: items[originKeyword.findIndex(item => item == uniqueKeyword[i])] });
-                    Admin.printInfo('Spotify по типу', type, 'не нашел:', uniqueKeyword[i]);
+                    noFound.push({ type: type, keyword: uniqueKeywords[i], item: items[originKeywords.findIndex(item => item == uniqueKeywords[i])] });
+                    Admin.printInfo('Spotify по типу', type, 'не нашел:', uniqueKeywords[i]);
                 }
             }
             return resultItems;
         }
 
         function restoreOrigin() {
-            return originKeyword
+            return originKeywords
                 .map((keyword, i) => {
                     let item = uniqueItems.find((item) => item.keyword == keyword);
                     if (item && items[i].hasOwnProperty('date')) {
@@ -2770,18 +2817,17 @@ const Search = (function () {
         }
     }
 
-    function findBest(textArray, type) {
-        let urls = textArray.map((text) => {
-            let queryObj = { q: text, type: type, limit: '20' };
+    function findBest(keywords, type) {
+        let urls = keywords.map((keyword) => {
+            let queryObj = { q: keyword, type: type, limit: 20 };
             return Utilities.formatString(TEMPLATE, CustomUrlFetchApp.parseQuery(queryObj));
         });
         return SpotifyRequest.getAll(urls).map((response, index) => {
             if (!response || !response.items) return {};
-            let foundItem = response.items.find(item => {
-                let foundName = type == 'track' ? `${item.artists[0].name} ${item.name}` : item.name;
-                return foundName.formatName() == textArray[index].formatName();
-            });
-            return foundItem || response.items[0];
+            let targetStrings = response.items.map(item =>
+                (type == 'track' ? `${item.artists[0].name} ${item.name}` : item.name).formatName());
+            let result = DicesCoefficient.findBestMatch(keywords[index], targetStrings);
+            return result.bestMatch.rating > 0.6005 ? response.items[result.bestMatchIndex] : {};
         });
     }
 
