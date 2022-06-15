@@ -2733,30 +2733,8 @@ const Search = (function () {
     })();
 
     return {
-        DicesCoefficient, multisearchTracks, multisearchArtists, multisearchAlbums, findPlaylists, findAlbums, findTracks, findArtists, 
-        sendMusicRequest, getNoFound: () => noFound,
-    };
-
-    function sendMusicRequest(context) {
-        if (noFound.length == 0) {
-            Admin.printInfo('sendMusicRequest: все элементы найдены, запрос не отправлен');
-            return;
-        }
-        let id = '1FAIpQLScMGwTBnCz8nOPkM5g9IwwbpKolEWOXkhpAUSl8JjlkKcBGKw';
-        let baseurl = `https://docs.google.com/forms/u/0/d/e/${id}/formResponse`;
-        CustomUrlFetchApp.fetchAll(noFound.map((data) => {
-            let request = {
-                url: baseurl,
-                method: 'post',
-                payload: { 'entry.802476445': data.item.artist ? data.item.artist['#text'] : data.keyword }
-            }
-            if (data.type == 'track') {
-                request.payload['entry.2097460120'] = data.item.name ? data.item.name : data.keyword;
-                request.payload['entry.840314673'] = data.item.album ? data.item.album['#text'] : '';
-            }
-            return request;
-        }));
-        Cache.append('NoFoundItems', { context: context, items: noFound });
+        DicesCoefficient, multisearchTracks, multisearchArtists, multisearchAlbums, 
+        findPlaylists, findAlbums, findTracks, findArtists, getNoFound: () => noFound,
     }
 
     function multisearchTracks(items, parseNameMethod) {
