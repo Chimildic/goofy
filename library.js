@@ -2684,10 +2684,11 @@ const Lastfm = (function () {
 
 const Search = (function () {
     const TEMPLATE = API_BASE_URL + '/search?%s';
+    const MIN_DICE_RATING = KeyValue.hasOwnProperty('MIN_DICE_RATING') ? parseFloat(KeyValue.MIN_DICE_RATING) : 0.6005;
     let noFound = [];
 
     // https://github.com/aceakash/string-similarity
-    const DicesCoefficient = (function () {
+    const DiceCoefficient = (function () {
         return { findBestMatch, compareTwoStrings, }
 
         function findBestMatch(mainString, targetStrings) {
@@ -2733,7 +2734,7 @@ const Search = (function () {
     })();
 
     return {
-        DicesCoefficient, multisearchTracks, multisearchArtists, multisearchAlbums, 
+        DicesCoefficient: DiceCoefficient, multisearchTracks, multisearchArtists, multisearchAlbums,
         findPlaylists, findAlbums, findTracks, findArtists, getNoFound: () => noFound,
     }
 
@@ -2804,8 +2805,8 @@ const Search = (function () {
             if (!response || !response.items) return {};
             let targetStrings = response.items.map(item =>
                 (type == 'track' ? `${item.artists[0].name} ${item.name}` : item.name).formatName());
-            let result = DicesCoefficient.findBestMatch(keywords[index], targetStrings);
-            return result.bestMatch.rating > 0.6005 ? response.items[result.bestMatchIndex] : {};
+            let result = DiceCoefficient.findBestMatch(keywords[index], targetStrings);
+            return result.bestMatch.rating >= MIN_DICE_RATING ? response.items[result.bestMatchIndex] : {};
         });
     }
 

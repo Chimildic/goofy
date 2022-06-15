@@ -15,6 +15,7 @@ function setProperties(){
     UserProperties.setProperty('LOG_LEVEL', 'info');
     UserProperties.setProperty('LOCALE', 'RU');
     UserProperties.setProperty('REQUESTS_IN_ROW', '40');
+    UserProperties.setProperty('MIN_DICE_RATING', '0.6005');
 }
 
 // Чтобы посмотреть текущие значения параметров
