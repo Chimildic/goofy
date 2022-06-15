@@ -1,45 +1,40 @@
+// Описание https://github.com/Chimildic/goofy/discussions/35
 const Radio = (function () {
-    const URL_BASE = 'https://top-radio.ru/';
+    const URL_BASE = 'http://the-radio.ru/';
     return {
-        getTracks: getTracks,
-        getTopTracks: getTopTracks,
+      getTracks: getTracks,
+      getTopTracks: getTopTracks,
     };
-
-    function getTracks(station, date) {
-        let url = `${URL_BASE}playlist/${station}`;
-        if (typeof date != 'undefined') {
-            url += `?date=${date}`;
-        }
-        return Search.multisearchTracks(parseTracks(url), parseNameTrack);
+  
+    function getTracks(station, limit) {
+      return start(station, 'tracklist', limit);
     }
-
-    function getTopTracks(station) {
-        let url = `${URL_BASE}tracks/${station}`;
-        return Search.multisearchTracks(parseTracks(url), parseNameTrack);
+  
+    function getTopTracks(station, limit) {
+      return start(station, 'top', limit);
     }
-
-    function parseNameTrack(item) {
-        let re = /( x | feat*\w+| vs*\W+|,|&|\/|[(])/gi;
-        let artist = item.artist.split(re)[0];
-        let song = item.song.split(re)[0];
-        return `${artist} ${song}`.formatName();
+  
+    function start(station, type, limit) {
+      let strTracks = Selector.sliceFirst(parseTracks(station, type), limit);
+      return Search.multisearchTracks(strTracks, parseNameTrack);
     }
-
-    function parseTracks(url) {
-        let cheerio = createCherio(url);
-        let songs = cheerio('.song');
-        let tracks = [];
-        cheerio('.artist').each((index, node) =>
-            tracks.push({
-                artist: cheerio(node).text(),
-                song: cheerio(songs[index]).text(),
-            })
-        );
-        return tracks;
+  
+    function parseTracks(station, type) {
+      let tracks = [];
+      let cheerio = createCherio(`${URL_BASE}playlist/${station}`);
+      let root = type == 'top' ? cheerio('#tophit-list') : cheerio('#track-list');
+      cheerio('.tkl-item', '', root).each((index, node) => {
+        tracks.push(cheerio(node).children('.tkl-title').text());
+      });
+      return tracks.slice(1);
     }
-
+  
     function createCherio(url) {
-        let content = CustomUrlFetchApp.fetch(url).getContentText();
-        return Cheerio.load(content);
+      return Cheerio.load(CustomUrlFetchApp.fetch(url).getContentText());
     }
-})();
+  
+    function parseNameTrack(item) {
+      let re = /( x | feat*\w+| vs*\W+)/gi;
+      return item.split(re)[0].formatName();
+    }
+  })();

@@ -1,3 +1,4 @@
+// Описание https://github.com/Chimildic/goofy/discussions/36
 const Release = (function () {
     const URL_BASE = 'http://everynoise.com/new_releases_by_genre.cgi';
     return {

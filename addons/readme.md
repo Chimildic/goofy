@@ -1,0 +1,1 @@
+Актуальное описание этих и других аддонов находится на [форуме в категории избранное](https://github.com/Chimildic/goofy/discussions/categories/избранное).
