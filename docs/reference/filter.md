@@ -392,7 +392,7 @@ Filter.rangeDateAbs(tracks, startDate, endDate);
 
 На схеме пример для `sinceDays = 7` и `beforeDays = 2`. То есть получить элементы, добавленные в плейлист с 3 сентября 00:00 по 8 сентября 23:59 относительно сегодня, 10 сентября.
 
-![Пример использования sinceDays и beforeDays](/img/DaysRel.png ':size=60%')
+![Пример использования sinceDays и beforeDays](../img/DaysRel.png ':size=60%')
 
 ?> Механизм получения даты начала отслеживания исполнителя описан [на форуме](https://github.com/Chimildic/goofy/discussions/98)
 
