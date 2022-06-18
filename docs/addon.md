@@ -15,7 +15,7 @@
 Позволяет импортировать треки с FM и интернет-радио.
 
 Несколько вариантов. Выбор зависит от того какая станция вам нужна:
-- [top-radio](https://github.com/Chimildic/goofy/discussions/35)
+- [the-radio](https://github.com/Chimildic/goofy/discussions/35)
 - [pcradio](https://github.com/Chimildic/goofy/discussions/60)
 - [AudioAddict](https://github.com/Chimildic/goofy/discussions/57) (di.fm и прочее)
 - [Radio Paradise](https://4pda.to/forum/index.php?s=&showtopic=715234&view=findpost&p=105313450)
