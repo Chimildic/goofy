@@ -1,5 +1,5 @@
 function setProperties(){
-    // Описание параметров: chimildic.github.io/goofy/#/guide?id=Параметры
+    // Описание параметров: chimildic.github.io/goofy/#/config
     UserProperties.setProperty('CLIENT_ID', 'вашеЗначение');
     UserProperties.setProperty('CLIENT_SECRET', 'вашеЗначение');
     UserProperties.setProperty('LASTFM_API_KEY', 'вашеЗначение');

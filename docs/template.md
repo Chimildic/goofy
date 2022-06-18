@@ -15,7 +15,7 @@ function updateUnknownSet() {
     Combiner.push(banTracks, savedTracks, recentTracks);
 
     // Вставьте id плейлистов, которые берутся из ссылки или URI
-    // Пример: https://chimildic.github.io/goofy/#/guide?id=Идентификатор
+    // Пример: https://chimildic.github.io/goofy/#/reference/desc?id=Идентификатор
     let onlyForYouTracks = Source.getTracks([
         { name: 'Микс дня 1', id: 'вашеId' },
         { name: 'Микс дня 2', id: 'вашеId' },

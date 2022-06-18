@@ -12,3 +12,4 @@
   - [Search](/reference/search.md)
   - [Selector](/reference/selector.md)
   - [Source](/reference/source.md)
+- [Вспомогательное описание](/reference/desc.md)
