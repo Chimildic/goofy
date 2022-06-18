@@ -2802,7 +2802,7 @@ const Search = (function () {
             return Utilities.formatString(TEMPLATE, CustomUrlFetchApp.parseQuery(queryObj));
         });
         return SpotifyRequest.getAll(urls).map((response, index) => {
-            if (!response || !response.items) return {};
+            if (response == undefined || response.items == undefined || response.items.length == 0) return {};
             let targetStrings = response.items.map(item =>
                 (type == 'track' ? `${item.artists[0].name} ${item.name}` : item.name).formatName());
             let result = DiceCoefficient.findBestMatch(keywords[index], targetStrings);
