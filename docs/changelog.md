@@ -16,7 +16,7 @@
 ## Версия 1.7.0
 
 - Добавьте библиотеку [Cheerio](https://github.com/Chimildic/goofy/discussions/91#discussioncomment-1931923).
-- [#153](https://github.com/Chimildic/goofy/issues/153) Добавлено кэширование лайков. Настройте [часовой пояс](/install?id=Часовой-пояс).
+- [#153](https://github.com/Chimildic/goofy/issues/153) Добавлено кэширование лайков. Настройте [часовой пояс](/tuning?id=Часовой-пояс).
 - [#159](https://github.com/Chimildic/goofy/issues/159) Добавлены функции парсинга элементов со страниц тега last.fm: [getTracksByTag](/reference?id=gettracksbytag), [getArtistsByTag](/reference?id=getartistsbytag), [getAlbumsByTag](/reference?id=getalbumsbytag).
 - (10.01.22) [#155](https://github.com/Chimildic/goofy/issues/155#issuecomment-1008871981) Изменен алгоритм подбора релизов из-за возникшего недостатка у имен исполнителей из общепринятых слов. Обязательно наличие библиотеки Cheerio.
 
@@ -68,7 +68,7 @@
 - Из модуля `Yandex` удалены функции `getTracks` и `getAlbums`. Поскольку Яндекс перестал отвечать на такие запросы от Apps Script.
 
 ## Версия 1.5.1
-- Новый модуль [Player](/reference/player). Нужно [обновить права доступа](/install?id=Обновить-права-доступа).
+- Новый модуль [Player](/reference/player). Нужно [обновить права доступа](/tuning?id=Обновить-права-доступа).
 - `getPlayback` перемещен в `Player`.
 - Добавлена функция [Player.transferPlayback](/reference/player?id=transferplayback)
 - `removeTracks` и `removeArtists` получили режим проверки только основного исполнителя трека.
@@ -85,7 +85,7 @@
 ## Версия 1.4.9
 - Эксперимент с функцией [sendMusicRequest](/reference/search?id=sendmusicrequest)
 - Новый параметр в [Lastfm.getCustomTop](/reference/lastfm?id=getcustomtop), новая функция [Lastfm.convertToSpotify](/reference/lastfm?id=converttospotify) и шаблон с их использованием - [исполнители одного хита](/template?id=Исполнители-одного-хита).
-- Удалена функция `getPlayingTrack`. Взамен добавлена [getPlayback](/reference/player?id=getplayback). Для использования нужно [обновить права доступа](/install?id=Обновить-права-доступа).
+- Удалена функция `getPlayingTrack`. Взамен добавлена [getPlayback](/reference/player?id=getplayback). Для использования нужно [обновить права доступа](/tuning?id=Обновить-права-доступа).
 - `doGet` адаптирован под открытие `launch.html`, больше не нужно заменять функцию для [управления с телефона](https://github.com/Chimildic/goofy/discussions/9)
 - Модифицирована функция `replaceWithSimilar`. Не должна создать дубликатов, запрашивает рекомендации с большим количеством данных от исходного трека.
 - Багфикс [Alisa #99](https://github.com/Chimildic/goofy/discussions/99#discussioncomment-973227)
@@ -111,7 +111,7 @@
   - [getTracks](/reference/source?id=gettracks) может выбирать ограниченное количество треков из плейлистов.
 
 ## Версия 1.4.6
-- Новая функция _getPlayingTrack_. Требуется [обновить права доступа](/install?id=Обновить-права-доступа).
+- Новая функция _getPlayingTrack_. Требуется [обновить права доступа](/tuning?id=Обновить-права-доступа).
 - При создании плейлиста можно указать статичную обложку через прямую ссылку на нее.
 
 ## Версия 1.4.5

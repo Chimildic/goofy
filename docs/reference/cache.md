@@ -176,7 +176,7 @@ Cache.remove('filepath.json');
 
 Переименовать файл.
 
-!> Не используйте имена `SpotifyRecentTracks`, `LastfmRecentTracks`, `BothRecentTracks`. Они нужны в механизме накопления [истории прослушиваний](/overview?id=История-прослушиваний).
+!> Не используйте имена `SpotifyRecentTracks`, `LastfmRecentTracks`, `BothRecentTracks`. Они нужны в механизме накопления [истории прослушиваний](/details?id=История-прослушиваний).
 
 ### Аргументы :id=rename-arguments {docsify-ignore}
 

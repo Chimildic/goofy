@@ -5,9 +5,9 @@
 ## API
 - `CLIENT_ID` и `CLIENT_SECRET` (строка) - ключи для доступа к Spotify Web API. Создаются при [первой установке](/install).
 
-- `LASTFM_API_KEY` (строка) - ключ для работы с API Last.fm. Создается [дополнительно](/install?id=Настройка-lastfm).
+- `LASTFM_API_KEY` (строка) - ключ для работы с API Last.fm. Создается [дополнительно](/tuning?id=Настройка-lastfm).
 
-- `MUSIXMATCH_API_KEY` (строка) - ключ от сервиса musixmatch для работы функции [detectLanguage](/reference/filter?id=detectlanguage). Создается [дополнительно](/install?id=Настройка-musicmatch).
+- `MUSIXMATCH_API_KEY` (строка) - ключ от сервиса musixmatch для работы функции [detectLanguage](/reference/filter?id=detectlanguage). Создается [дополнительно](/tuning?id=Настройка-musicmatch).
 
 ## История прослушиваний
 - `ON_SPOTIFY_RECENT_TRACKS` (булево) - при `true` отслеживание истории прослушиваний Spotify. При `false` отключается.
