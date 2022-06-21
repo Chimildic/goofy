@@ -16,19 +16,27 @@ const Radio = (function () {
 
   function start(station, type, limit) {
     let strTracks = Selector.sliceFirst(parseTracks(station, type), limit);
-    return Search.multisearchTracks(strTracks, parseNameTrack);
+    return Search.multisearchTracks(strTracks);
   }
 
   function parseTracks(station, type) {
-    let tracks = [];
+    let tracknames = [];
     let cheerio = createCherio(`${URL_BASE}playlist/${station}`);
     let root = type == 'top' ? cheerio('#tophit-list') : cheerio('#track-list');
-    cheerio('.tkl-title', '', root).each((index, node) => {
-      let artist = cheerio(node).children('.tkl-artist').text();
-      let track = parseNameTrack(cheerio(node).children('.tkl-clr').text());
-      tracks.push(`${artist} ${track}`.formatName());
+    cheerio('.tkl-title', '', root).each((i, titleNode) => {
+      let [artist, track] = loadRow(titleNode.children);
+      tracknames.push(`${artist} ${track ? parseNameTrack(track) : ''}`.formatName());
     });
-    return tracks.slice(1);
+    return tracknames.slice(1);
+
+    function loadRow(children) {
+      let row = [];
+      cheerio(children).each((j, childNode) => {
+        let col = cheerio(childNode).text().trim();
+        col.length > 0 && row.push(col);
+      })
+      return row;
+    }
   }
 
   function createCherio(url) {
@@ -37,6 +45,6 @@ const Radio = (function () {
 
   function parseNameTrack(item) {
     let re = /( x | feat*\w+| vs*\W+|,|\/|[(]| \+ id)/gi;
-    return item.split(re)[0].formatName();
+    return item.split(re)[0];
   }
 })();
