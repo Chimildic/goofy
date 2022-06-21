@@ -1,6 +1,6 @@
 // Документация: https://chimildic.github.io/goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.8.0';
+const VERSION = '1.8.1';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -394,7 +394,7 @@ const Source = (function () {
             let albumTracks = album.tracks.items.map(item => (item.album = album, item));
             // Фикс ошибки при использовании JSON.stringify
             // TypeError: Converting circular structure to JSON
-            delete album.tracks; 
+            delete album.tracks;
             return Combiner.push(tracks, albumTracks)
         }, []);
     }
@@ -2690,6 +2690,20 @@ const Search = (function () {
     const MIN_DICE_RATING = KeyValue.hasOwnProperty('MIN_DICE_RATING') ? parseFloat(KeyValue.MIN_DICE_RATING) : 0.6005;
     let noFound = [];
 
+    const Translit = (function () {
+        const TABLE = {
+            'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e', 'ж': 'zh', 'з': 'z',
+            'и': 'i', 'й': 'i', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p',
+            'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch',
+            'ш': 'sh', 'щ': 'shch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'iu', 'я': 'ia'
+        }
+        return { transform }
+
+        function transform(inputStr) {
+            return inputStr.split('').map(s => TABLE.hasOwnProperty(s) ? TABLE[s] : s).join('');
+        }
+    })();
+
     // https://github.com/aceakash/string-similarity
     const DiceCoefficient = (function () {
         return { findBestMatch, compareTwoStrings, }
@@ -2806,9 +2820,11 @@ const Search = (function () {
         });
         return SpotifyRequest.getAll(urls).map((response, index) => {
             if (response == undefined || response.items == undefined || response.items.length == 0) return {};
-            let targetStrings = response.items.map(item =>
-                (type == 'track' ? `${item.artists[0].name} ${item.name}` : item.name).formatName());
-            let result = DiceCoefficient.findBestMatch(keywords[index], targetStrings);
+            let targetStrings = response.items.map(item => {
+                let str = (type == 'track' ? `${item.artists[0].name} ${item.name}` : item.name).formatName();
+                return Translit.transform(str);
+            });
+            let result = DiceCoefficient.findBestMatch(Translit.transform(keywords[index]), targetStrings);
             return result.bestMatch.rating >= MIN_DICE_RATING ? response.items[result.bestMatchIndex] : {};
         });
     }
