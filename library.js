@@ -392,6 +392,9 @@ const Source = (function () {
         Selector.keepRandom(items, limit);
         return items.reduce((tracks, album) => {
             let albumTracks = album.tracks.items.map(item => (item.album = album, item));
+            // Фикс ошибки при использовании JSON.stringify
+            // TypeError: Converting circular structure to JSON
+            delete album.tracks; 
             return Combiner.push(tracks, albumTracks)
         }, []);
     }
