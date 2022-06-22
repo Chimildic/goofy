@@ -114,28 +114,6 @@ w: work-out, world-music
 
 Чтобы получить список доступных категорий для страны, запустите следующий код. Результаты в логах.
 ```js
-let listCategory = Source.getListCategory({ limit: 50, country: 'RU' });
-console.log(listCategory.map(c => c.id).join('\n'));
-```
-
-Ниже категории плейлистов для `country = RU`
-```
-a: alternative, anime, at_home
-b: blues
-c: caribbean, chill, classical, country
-d: decades, dinner
-e: edm_dance
-f: family, focus, funk
-g: gaming
-h: hiphop, holidays
-i: indie_alt, instrumental
-j: jazz
-k: kpop
-l: latin
-m: metal, mood
-p: party, pop, punk
-r: rnb, rock, romance, roots, russian_rap
-s: sessions, sleep, soul
-t: toplists, travel
-w: wellness, workout
+let listCategory = Source.getListCategory({ limit: 50, country: 'US' });
+console.log(listCategory.map(c => '\n' + c.name + '\n' + c.id).join('\n'));
 ```
