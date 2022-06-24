@@ -80,7 +80,7 @@ JSON.parseFromString = function (content) {
     try {
         return JSON.parse(content);
     } catch (error) {
-        Admin.printError('Не удалось преобразовать строку JSON в объект JavaScript\n', error.stack, '\n', content);
+        Admin.printError('Не удалось преобразовать строку JSON в объект JavaScript\n', error.stack, '\nКонтент:', `"${content}"`);
         return undefined;
     }
 }
@@ -3247,17 +3247,27 @@ const Cache = (function () {
     function read(filepath) {
         let content = Storage.getContent(filepath);
         if (!content) {
-            let file = findFile(filepath);
-            let ext = obtainFileExtension(filepath);
-            if (file) {
-                let blob = tryGetBlob(file);
-                content = ext == 'json' ? (JSON.parseFromString(blob) || []) : blob;
-            } else {
-                content = ext == 'json' ? [] : '';
-            }
+            content = getContentFromFile();
             Storage.setContent(filepath, content);
         }
         return Selector.sliceCopy(content);
+
+        function getContentFromFile(tryCount = 0) {
+            if (tryCount == 3)
+                throw new Error(`Неизвестная ошибка при чтении файла ${filepath}`);
+            let file = findFile(filepath);
+            let ext = obtainFileExtension(filepath);
+            if (!file) {
+                return ext == 'json' ? [] : '';
+            }
+            let str = tryGetBlobAsString(file);
+            if (str.length == 0) {
+                Admin.printInfo('Пустая строка из blob-объекта');
+                Admin.pause(2);
+                return getContentFromFile(++tryCount)
+            }
+            return ext == 'json' ? JSON.parseFromString(str) : str;
+        }
     }
 
     function append(filepath, content, place = 'end', limit = 200000) {
@@ -3451,14 +3461,13 @@ const Cache = (function () {
         return ext.length == 2 ? ext[1] : 'json';
     }
 
-    function tryGetBlob(file) {
-        if (!file) return '';
+    function tryGetBlobAsString(file) {
         try {
             return file.getBlob().getDataAsString();
         } catch (error) {
             Admin.printError('При получении данных из файла произошла ошибка\n', error.stack);
             Admin.pause(5);
-            return tryGetBlob(file);
+            return tryGetBlobAsString(file);
         }
     }
 })();
