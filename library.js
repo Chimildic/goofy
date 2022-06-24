@@ -1,6 +1,6 @@
 // Документация: https://chimildic.github.io/goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.8.1';
+const VERSION = '1.8.2';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -3514,17 +3514,20 @@ const Clerk = (function () {
     }
 
     function isTimeToRun(name, timeStr) {
-        let [hours, min] = timeStr.split(':');
-        let comparable = readDate(name);
-        comparable.setHours(parseInt(hours), parseInt(min));
         let now = new Date();
+        let [hours, minutes] = timeStr.split(':').map(value => parseInt(value));
+        let comparable = readDate(name);
+        if (comparable == undefined) {
+            return now.getHours() > hours || (now.getHours() == hours && now.getMinutes() >= minutes);
+        }
+        comparable.setHours(hours, minutes);
         let diffDays = Math.abs(now - comparable) / (1000 * 60 * 60 * 24);
-        return diffDays > 1;
+        return diffDays >= 1;
     }
 
     function readDate(name) {
         let dateStr = getTasks()[name];
-        return dateStr ? new Date(dateStr) : new Date('1970');
+        return dateStr ? new Date(dateStr) : undefined;
     }
 
     function updateLastRunDate(name, date) {
