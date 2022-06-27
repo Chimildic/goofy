@@ -1989,7 +1989,7 @@ const Playlist = (function () {
         Filter.removeTracks(newTracks, remoteTracks);
         Filter.removeTracks(remoteTracks, data.tracks);
         removeTracksRequest(data.id, remoteTracks);
-        addTracks({ id: data.id, tracks: newTracks, toEnd: data.toEnd });
+        addTracks({ id: data.id, tracks: newTracks, position: data.position });
     }
 
     function removeTracksRequest(id, tracks) {
@@ -2004,9 +2004,9 @@ const Playlist = (function () {
     }
 
     function modifyTracks(requestType, data) {
-        let size = 100;
+        const SIZE = 100;
         let uris = getTrackUris(data.tracks);
-        let count = Math.ceil(uris.length / size);
+        let count = Math.ceil(uris.length / SIZE);
         let url = `${API_BASE_URL}/playlists/${data.id}/tracks`;
         if (count == 0 && requestType == 'put') {
             // Удалить треки в плейлисте
@@ -2014,24 +2014,30 @@ const Playlist = (function () {
             return;
         }
 
+        let attempt = 0;
         for (let i = 0; i < count; i++) {
-            let begin = i * size;
-            let end = begin + size;
-            let payload = { uris: uris.slice(begin, end) };
-            if ((!data.hasOwnProperty('toEnd') || !data.toEnd) && requestType === 'post') {
-                // добавлять треки в начало плейлиста со смещением begin, чтобы сохранить оригинальную сортировку
+            let begin = i * SIZE;
+            let payload = { uris: uris.slice(begin, begin + SIZE) };
+            if (requestType == 'post' && data.position == 'begin') {
                 payload.position = begin;
             }
-
-            if (requestType === 'post') {
-                // post-запрос добавляет треки в плейлист
-                SpotifyRequest.post(url, payload);
-            } else if (requestType === 'put') {
-                // put-запрос заменяет все треки плейлиста
-                SpotifyRequest.put(url, payload);
-                // сменить тип запроса, чтобы добавлять остальные треки
-                requestType = 'post';
+            if (SpotifyRequest[requestType](url, payload) != undefined) {
+                requestType = 'post'; // сменить тип запроса, чтобы добавлять треки после первого put-запроса
+            } else if (attempt++ < 3) {
+                attempt == 1 && createTrackBackup();
+                i--; // повторить запрос
+                Admin.pause(5);
+            } else {
+                Admin.printInfo('Прервано добавление треков после 3 неудачных попыток');
+                break;
             }
+        }
+
+        function createTrackBackup() {
+            let filepath = `backup/playlists/${data.id}_${new Date().toISOString()}.json`;
+            Cache.compressTracks(data.tracks);
+            Cache.write(filepath, data.tracks);
+            Admin.printInfo(`Создана резервная копия треков: ${filepath}`);
         }
     }
 
@@ -3252,8 +3258,8 @@ const Cache = (function () {
         }
         return Selector.sliceCopy(content);
 
-        function getContentFromFile(tryCount = 0) {
-            if (tryCount == 3)
+        function getContentFromFile(attempt = 0) {
+            if (attempt == 3)
                 throw new Error(`Неизвестная ошибка при чтении файла ${filepath}`);
             let file = findFile(filepath);
             let ext = obtainFileExtension(filepath);
@@ -3264,7 +3270,7 @@ const Cache = (function () {
             if (str.length == 0) {
                 Admin.printInfo('Пустая строка из blob-объекта');
                 Admin.pause(2);
-                return getContentFromFile(++tryCount)
+                return getContentFromFile(++attempt)
             }
             return ext == 'json' ? JSON.parseFromString(str) : str;
         }

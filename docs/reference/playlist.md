@@ -78,7 +78,7 @@ Playlist.saveAsNew({
 
 Аргументы
 - (объект) `data` - данные о плейлисте. Формат данных о плейлисте согласно описанию [saveWithReplace](/reference/playlist?id=savewithreplace).
-- (булево) `toEnd` - если `true`, добавляет треки в конец списка. Если `false`, в начало. По умолчанию `false`.
+- (строка) `position` - место добавления треков: начало `begin` или конец `end`. По умолчанию `end`.
 
 Пример 1 - Добавить треки в начало плейлиста.
 ```js
@@ -98,7 +98,6 @@ Playlist.saveWithAppend({
     name: 'Новое название',
     description: 'Новое описание',
     tracks: tracks,
-    toEnd: true,
 });
 ```
 
@@ -154,4 +153,4 @@ Playlist.saveWithReplace({
 - (объект) `data` - данные о плейлисте, соответствует [saveWithReplace](/reference/playlist?id=savewithreplace).
 
 Дополнительный режим для `data`
-- (булево) `toEnd` - если `true`, добавляет треки в конец списка. Если `false`, в начало. По умолчанию `false`.
+- (строка) `position` - место добавления треков: начало `begin` или конец `end`. По умолчанию `end`.
