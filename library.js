@@ -1,6 +1,6 @@
 // Документация: https://chimildic.github.io/goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.8.2';
+const VERSION = '1.8.3';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -2826,7 +2826,7 @@ const Search = (function () {
 
     function findBest(keywords, type) {
         let urls = keywords.map((keyword) => {
-            let queryObj = { q: keyword, type: type, limit: 20 };
+            let queryObj = { q: keyword.slice(0, 100), type: type, limit: 20 };
             return Utilities.formatString(TEMPLATE, CustomUrlFetchApp.parseQuery(queryObj));
         });
         return SpotifyRequest.getAll(urls).map((response, index) => {
@@ -2871,7 +2871,7 @@ const Search = (function () {
         function createUrls(keyword) {
             let urls = [];
             for (let i = 0; i < requestCount; i++) {
-                let queryObj = { q: keyword, type: type, limit: limit, offset: i * limit };
+                let queryObj = { q: keyword.slice(0, 100), type: type, limit: limit, offset: i * limit };
                 urls.push(Utilities.formatString(TEMPLATE, CustomUrlFetchApp.parseQuery(queryObj)));
             }
             return urls;
