@@ -1542,9 +1542,14 @@ const Filter = (function () {
             }, []);
 
             function getAlbumId(item) {
-                return item.album
-                    ? `${item.artists[0].name} ${item.album.name}`.formatName() + ` ${item.album.release_date} ${item.album.total_tracks}`
-                    : `${item.artists[0].name} ${item.name}`.formatName() + ` ${item.release_date} ${item.total_tracks}`;
+                try {
+                    return item.album
+                        ? `${item.artists[0].name} ${item.album.name}`.formatName() + ` ${item.album.release_date} ${item.album.total_tracks}`
+                        : `${item.artists[0].name} ${item.name}`.formatName() + ` ${item.release_date} ${item.total_tracks}`;
+                } catch (error) {
+                    Admin.printError(error)
+                    return undefined
+                }
             }
         }
 
