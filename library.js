@@ -1702,10 +1702,10 @@ const Order = (function () {
         // 1.0 pure randomness (default)
 
         for (let i = array.length - 1; i > 0; i--) {
-          let r = Math.floor(Math.random() * (i + 1 ));
-          let j = Math.floor(r * factor + i * (1 - factor));
-          [array[i], array[j]] = [array[j], array[i]];
-          // Logger.log((i+1) + " <-> " + (j+1) + "   " + array)
+            let r = Math.floor(Math.random() * (i + 1 ));
+            let j = Math.floor(r * factor + i * (1 - factor));
+            [array[i], array[j]] = [array[j], array[i]];
+            // Logger.log((i+1) + " <-> " + (j+1) + "   " + array)
         }
     }
 
