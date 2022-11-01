@@ -1695,10 +1695,17 @@ const Selector = (function () {
 })();
 
 const Order = (function () {
-    function shuffle(array) {
+    function shuffle(array, factor = 1.0 ) {
+
+        // Weighted shuffle
+        // 0.0 pure order
+        // 1.0 pure randomness (default)
+
         for (let i = array.length - 1; i > 0; i--) {
-            let j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
+          let r = Math.floor(Math.random() * (i + 1 ));
+          let j = Math.floor(r * factor + i * (1 - factor));
+          [array[i], array[j]] = [array[j], array[i]];
+          // Logger.log((i+1) + " <-> " + (j+1) + "   " + array)
         }
     }
 
