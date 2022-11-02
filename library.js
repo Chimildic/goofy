@@ -1701,12 +1701,23 @@ const Order = (function () {
         // 0.0 pure order
         // 1.0 pure randomness (default)
 
-        for (let i = array.length - 1; i > 0; i--) {
-            let r = Math.floor(Math.random() * (i + 1));
-            let j = Math.floor(r * factor + i * (1 - factor));
-            [array[i], array[j]] = [array[j], array[i]];
-            // Logger.log((i+1) + " <-> " + (j+1) + "   " + array)
+        let length = array.length
+
+        // generate an array of random unique numbers from 0 to N
+        let indexArray = Array.from(Array(length).keys()).sort(_ => Math.random() - .5)
+
+        // Balanced Fisher-Yates with localised randomness factor
+        for (let i = 0; i < (length * factor); i++) {
+            let x = indexArray[i];
+            let r = Math.floor(Math.random() * (x + 1));
+            let y = Math.floor(r * factor + x * (1 - factor));
+            [array[x], array[y]] = [array[y], array[x]];
         }
+    }
+
+
+
+}
     }
 
     function reverse(array) {
