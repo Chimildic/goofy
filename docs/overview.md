@@ -5,6 +5,8 @@
 <center>Выполните <a target="_blank" href="https://chimildic.github.io/goofy/#/install">установку</a> и создайте свой <a target="_blank" href="https://chimildic.github.io/goofy/#/first-playlist">первый плейлист</a>.</center>
 </br>
 
+<p align="center"><a target="_blank" href="https://t.me/forum_goofy"><img alt="Чат" src="https://img.shields.io/badge/Telegram-Чат-blue?logo=telegram&logoColor=white"></a></p>
+
 ## Возможности
 
 - отслеживает историю прослушиваний
