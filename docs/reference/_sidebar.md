@@ -1,6 +1,7 @@
 - [На главную](/)
 - [Список модулей](/reference/index.md)
   - [Cache](/reference/cache.md)
+  - [Clerk](/reference/clerk.md)
   - [Combiner](/reference/combiner.md)
   - [Filter](/reference/filter.md)
   - [Lastfm](/reference/lastfm.md)
