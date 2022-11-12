@@ -2698,8 +2698,12 @@ const Lastfm = (function () {
 
 const Search = (function () {
     const TEMPLATE = API_BASE_URL + '/search?%s';
-    const MIN_DICE_RATING = KeyValue.hasOwnProperty('MIN_DICE_RATING') ? parseFloat(KeyValue.MIN_DICE_RATING) : 0.6005;
+    let minDiceRating = KeyValue.hasOwnProperty('MIN_DICE_RATING') ? parseFloat(KeyValue.MIN_DICE_RATING) : 0.6005;
     let noFound = [];
+
+    function setDiceRating(value) {
+        minDiceRating = value
+    }
 
     const Translit = (function () {
         const TABLE = {
@@ -2763,7 +2767,7 @@ const Search = (function () {
 
     return {
         DicesCoefficient: DiceCoefficient, multisearchTracks, multisearchArtists, multisearchAlbums,
-        findPlaylists, findAlbums, findTracks, findArtists, getNoFound: () => noFound,
+        findPlaylists, findAlbums, findTracks, findArtists, getNoFound: () => noFound, setDiceRating
     }
 
     function multisearchTracks(items, parseNameMethod) {
@@ -2836,7 +2840,7 @@ const Search = (function () {
                 return Translit.transform(str);
             });
             let result = DiceCoefficient.findBestMatch(Translit.transform(keywords[index]), targetStrings);
-            return result.bestMatch.rating >= MIN_DICE_RATING ? response.items[result.bestMatchIndex] : {};
+            return result.bestMatch.rating >= minDiceRating ? response.items[result.bestMatchIndex] : {};
         });
     }
 
