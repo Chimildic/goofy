@@ -1999,12 +1999,13 @@ const Playlist = (function () {
 
     function removeTracksRequest(id, tracks) {
         if (tracks.length > 0) {
-            SpotifyRequest.deleteItems({
+            let params = {
                 url: `${API_BASE_URL}/playlists/${id}/tracks`,
                 key: 'tracks',
                 limit: 100,
                 items: getTrackUris(tracks, 'object'),
-            });
+            }
+            SpotifyRequest.deleteItems(params, true);
         }
     }
 
@@ -3174,15 +3175,17 @@ const SpotifyRequest = (function () {
         pushRequestsWithItems(put, params);
     }
 
-    function deleteItems(params) {
-        pushRequestsWithItems(deleteRequest, params);
+    function deleteItems(params, isKeyInclude) {
+        pushRequestsWithItems(deleteRequest, params, isKeyInclude);
     }
 
-    function pushRequestsWithItems(method, params) {
+    function pushRequestsWithItems(method, params, isKeyInclude = false) {
         let count = Math.ceil(params.items.length / params.limit);
         for (let i = 0; i < count; i++) {
-            let payload = {};
-            payload[params.key] = params.items.splice(0, params.limit);
+            let payload = params.items.splice(0, params.limit)
+            if (isKeyInclude) {
+                payload = { [params.key]: payload }
+            }
             method(params.url, payload);
         }
     }
