@@ -3527,20 +3527,24 @@ const Clerk = (function () {
     }
 
     function runOnceAfter(timeStr, callback) {
-        if (isTimeToRun(callback.name, timeStr)) {
-            callback();
-            updateLastRunDate(callback.name, new Date());
-            return true;
+        if (isTimeToRun(callback.name, timeStr, 1)) {
+            return run(callback)
         }
     }
 
     function runOnceAWeek(dayStr, timeStr, callback) {
-        if (Selector.isDayOfWeek(dayStr)) {
-            return runOnceAfter(timeStr, callback);
+        if (Selector.isDayOfWeek(dayStr) && isTimeToRun(callback.name, timeStr, 7)) {
+            return run(callback)
         }
     }
 
-    function isTimeToRun(name, timeStr) {
+    function run(callback) {
+        callback()
+        updateLastRunDate(callback.name, new Date())
+        return true
+    }
+
+    function isTimeToRun(name, timeStr, targetDiffDays) {
         let now = new Date();
         let [hours, minutes] = timeStr.split(':').map(value => parseInt(value));
         let comparable = readDate(name);
@@ -3549,7 +3553,7 @@ const Clerk = (function () {
         }
         comparable.setHours(hours, minutes);
         let diffDays = Math.abs(now - comparable) / (1000 * 60 * 60 * 24);
-        return diffDays >= 1;
+        return diffDays >= targetDiffDays;
     }
 
     function readDate(name) {
