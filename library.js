@@ -1937,6 +1937,8 @@ const Playlist = (function () {
         } else if (data.hasOwnProperty('randomCover')) {
             setCover(playlist.id, getRandomCover());
         }
+        data.id = playlist.id
+        changeDetails(data)
         return playlist.id;
     }
 
