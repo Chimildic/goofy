@@ -252,7 +252,21 @@ const Source = (function () {
         getSavedAlbumTracks, getSavedAlbums, getRecomTracks, getArtists, getArtistsAlbums, getArtistsTracks,
         getAlbumTracks, getAlbumsTracks, getArtistsTopTracks, getRelatedArtists, getCategoryTracks,
         getListCategory, mineTracks, craftTracks, extractTracks, createUrlForRecomTracks, getReleasesByArtists,
+        getTrackFeatures, getTracksFeatures, createUrlForAudioFeaturesTracks
     };
+
+    function getTrackFeatures(trackid) {
+        console.log('Dirty implementation');
+          let url =  `${API_BASE_URL}/audio-features/${trackid}` ;//createUrlForAudioFeaturesTracks(queryObj);
+          return SpotifyRequest.get(url);
+    }
+    
+    function getTracksFeatures(trackIDs) {
+        console.log('getTracksAudioFeatures. dirty!!!');
+        let url = createUrlForAudioFeaturesTracks(trackIDs);
+        let response = SpotifyRequest.get(url);//.audio_features; 
+        return response;             
+    }
 
     function getTopTracks(timeRange) {
         return getTop(timeRange, 'tracks');
@@ -583,6 +597,16 @@ const Source = (function () {
         queryObj.market = queryObj.market || 'from_token';
         let query = CustomUrlFetchApp.parseQuery(queryObj);
         return `${API_BASE_URL}/recommendations?${query}`;
+    }
+
+    function createUrlForAudioFeaturesTracks(trackIDs) {
+        // TODO :: Make proper
+          // https://developer.spotify.com/documentation/web-api/reference/#/operations/get-several-audio-features
+          //queryObj.limit = queryObj.limit > 100 ? 100 : queryObj.limit || 100;
+          //queryObj.market = queryObj.market || 'from_token';
+          //let query = CustomUrlFetchApp.parseQuery(queryObj);
+          let query =  trackIDs.map(function(elem){return encodeURIComponent(elem.id);}).join(encodeURIComponent(','));
+          return `${API_BASE_URL}/audio-features?ids=${query}`;
     }
 
     function getTracksRandom(playlistArray, countPlaylist = 1) {
