@@ -1459,6 +1459,30 @@ const Filter = (function () {
         return date.setBound(bound);
     }
 
+    function separateByCriteria(inTracks, criteria){
+        /* criteria: {
+              byLikes  : Boolean,
+              listened : Boolean,
+           }
+        */
+  
+        let listened = unListened = likedTracks = notLikedTracks = [];
+        if (criteria.byLikes === true){
+            Library.checkFavoriteTracks(inTracks);
+            likedTracks    = inTracks.filter(t => t.isFavorite);
+            notLikedTracks = inTracks.filter(t => !t.isFavorite);
+        }
+  
+        if (criteria.listened === true){
+          let recentTracks = RecentTracks.get();
+          listened = Selector.sliceCopy(inTracks);
+          unListened = Selector.sliceCopy(inTracks);
+          Filter.removeTracks(listened, recentTracks, false, 'every');
+          Filter.removeTracks(unListened, recentTracks, true, 'every');
+        }
+        return {likedTracks, notLikedTracks, listened, unListened};
+      }
+
     const Deduplicator = (function () {
         let _items;
         let _duplicates;
@@ -1602,6 +1626,7 @@ const Filter = (function () {
         separateArtistsDuplicated: Deduplicator.separateArtistsDuplicated,
         rangeTracks: RangeTracks.rangeTracks,
         getLastOutRange: RangeTracks.getLastOutRange,
+        separateByCriteria
     };
 })();
 
