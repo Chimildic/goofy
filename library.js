@@ -2167,6 +2167,12 @@ const Library = (function () {
     };
 
     function checkFavoriteTracks(tracks) {
+        if(tracks === undefined){ 
+          Admin.printError('Ошибка - пустой или некорректный список треков', tracks);
+          throw new Error('incorrect param - tracks');
+          //
+          // or functional style return false
+        }
         let urls = [];
         let limit = 50;
         let offset = 50;
@@ -2178,6 +2184,7 @@ const Library = (function () {
         SpotifyRequest.getAll(urls).flat(1).map((value, i) => {
             tracks[i].isFavorite = value;
         })
+        // TODO :: Return true ? Check for successfull request ?
     }
 
     function followArtists(artists) {
