@@ -66,7 +66,7 @@ Playlist.saveAsNew({
 let tracks = RecentTracks.get(200);
 Playlist.saveAsNew({
   name: 'История прослушиваний',
-  description: '200 недавно прослушанных треков'
+  description: '200 недавно прослушанных треков',
   public: false,
   tracks: tracks,
 });
