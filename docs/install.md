@@ -3,15 +3,10 @@
 Вы создаете собственную копию библиотеки. Только вы имеете доступ ко всему, что происходит в этой копии. 
 
 Выполняется один раз. 
-> [Видео инструкция](https://drive.google.com/file/d/1yhI8sfBVAyhn5RUUtOxKLiYSgdIF9Ts9/view) с новым интерфейсом платформы Apps Script. 
-> 
-> [Видео инструкция](https://drive.google.com/file/d/13I_E9g5x_Gb-G-KANmzUxLgDv-bPkQsu/view) для старого интерфейса.
 
-1. Перейдите в [Spotify Dashboard](https://developer.spotify.com/dashboard/). Нажмите `Log in` и авторизуйтесь в Spotify. Примите условия использования.
+1. Перейдите в [Spotify Dashboard](https://developer.spotify.com/dashboard/) и нажмите `Log in`.
 
-   ![Условия использования](/img/install-step-dashboard-term.png ':size=40%')
-
-2. Нажмите кнопку `Create an app`. Введите произвольное имя и описание. Поставьте галочки. Нажмите кнопку `Create`.
+2. Нажмите кнопку `create app` и заполните форму как на скриншоте:
 
    ![Создание приложения](/img/install-step-create-app.png ':size=40%')
 
@@ -25,11 +20,11 @@
    
     ![Создать копию](/img/install-step-copy.png)
 
-5. Перейдите в файл `config.gs`. Вставьте `CLIENT_ID` и `CLIENT_SECRET` вместо слов `вашеЗначение`. Значения брать в созданном приложении Spotify на шаге 2.
-
-   Сохраните изменение <kbd>Ctrl</kbd><kbd>S</kbd> или иконка дискеты на панели действий
+5. Перейдите в файл `config.gs`. Вставьте `CLIENT_ID` и `CLIENT_SECRET` вместо слов `вашеЗначение`. Значения брать в созданном приложении Spotify на шаге 2 (кнопка settings).
 
    ![Client ID и Client Secret](/img/install-step-client-id2.png)
+
+   Сохраните изменение <kbd>Ctrl</kbd><kbd>S</kbd> или иконка дискеты на панели действий
 
 6. Запустите в редакторе выполнение функции `setProperties`. 
 
@@ -63,13 +58,11 @@
 
    ![Callback-ссылка](/img/install-step-callback-link.png)
 
-9. Вернитесь в [Spotify Dashboad](https://developer.spotify.com/dashboard/). Нажмите кнопку `EDIT SETTINGS` у вашего приложения.
+9. Вернитесь в [Spotify Dashboad](https://developer.spotify.com/dashboard/). В настройках вашего приложения `settings` спуститесь вниз и нажмите кнопку `edit`
     
-    Вставьте в поле `Redirect URIs` скопированную ссылку из шага 8. Нажмите кнопку `ADD`. Затем внизу кнопку `Save`.
-    
-    ![Добавить callback](/img/install-step-dashboard-redirect.png ':size=50%')
+    Вставьте в поле `Redirect URIs` скопированную ссылку из шага 8. Нажмите кнопку `ADD` справа, затем внизу кнопку `Save`.
 
-10. Перейдите на вкладку из шага 8 и обновите эту страницу (`F5`).
+10. Перейдите на вкладку из шага 8 и обновите страницу (`F5`).
 
     Нажмите кнопку `Выдать права доступа`.
 
@@ -78,7 +71,5 @@
     Разрешите доступ к аккаунту Spotify.
 
     ![Разрешения Spotify](/img/install-step-grant-spotify.png)
-
-    Должны появиться слова о успешном выполнении.
 
     Первая установка и настройка завершены. Переходите к [первому плейлисту](/first-playlist).
