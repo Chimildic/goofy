@@ -3127,7 +3127,7 @@ const SpotifyRequest = (function () {
 
     function appendLocale(url) {
         if (!url.includes('locale')) {
-            url += `${url.includes('?') ? '&' : '?'}locale=${KeyValue.LOCALE || "RU"}`;
+            url += `${url.includes('?') ? '&' : '?'}locale=${KeyValue.LOCALE || "US"}`;
         }
         return url;
     }
