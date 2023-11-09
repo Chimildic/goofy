@@ -13,7 +13,7 @@ function setProperties(){
     UserProperties.setProperty('LASTFM_RANGE_RECENT_TRACKS', '30');
 
     UserProperties.setProperty('LOG_LEVEL', 'info');
-    UserProperties.setProperty('LOCALE', 'RU');
+    UserProperties.setProperty('LOCALE', 'US');
     UserProperties.setProperty('REQUESTS_IN_ROW', '40');
     UserProperties.setProperty('MIN_DICE_RATING', '0.6005');
 }
