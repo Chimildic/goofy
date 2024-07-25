@@ -252,7 +252,21 @@ const Source = (function () {
         getSavedAlbumTracks, getSavedAlbums, getRecomTracks, getArtists, getArtistsAlbums, getArtistsTracks,
         getAlbumTracks, getAlbumsTracks, getArtistsTopTracks, getRelatedArtists, getCategoryTracks,
         getListCategory, mineTracks, craftTracks, extractTracks, createUrlForRecomTracks, getReleasesByArtists,
+        getTrackFeatures, getTracksFeatures, createUrlForAudioFeaturesTracks
     };
+
+    function getTrackFeatures(trackid) {
+        console.log('Dirty implementation');
+          let url =  `${API_BASE_URL}/audio-features/${trackid}` ;//createUrlForAudioFeaturesTracks(queryObj);
+          return SpotifyRequest.get(url);
+    }
+    
+    function getTracksFeatures(trackIDs) {
+        console.log('getTracksAudioFeatures. dirty!!!');
+        let url = createUrlForAudioFeaturesTracks(trackIDs);
+        let response = SpotifyRequest.get(url);//.audio_features; 
+        return response;             
+    }
 
     function getTopTracks(timeRange) {
         return getTop(timeRange, 'tracks');
@@ -583,6 +597,16 @@ const Source = (function () {
         queryObj.market = queryObj.market || 'from_token';
         let query = CustomUrlFetchApp.parseQuery(queryObj);
         return `${API_BASE_URL}/recommendations?${query}`;
+    }
+
+    function createUrlForAudioFeaturesTracks(trackIDs) {
+        // TODO :: Make proper
+          // https://developer.spotify.com/documentation/web-api/reference/#/operations/get-several-audio-features
+          //queryObj.limit = queryObj.limit > 100 ? 100 : queryObj.limit || 100;
+          //queryObj.market = queryObj.market || 'from_token';
+          //let query = CustomUrlFetchApp.parseQuery(queryObj);
+          let query =  trackIDs.map(function(elem){return encodeURIComponent(elem.id);}).join(encodeURIComponent(','));
+          return `${API_BASE_URL}/audio-features?ids=${query}`;
     }
 
     function getTracksRandom(playlistArray, countPlaylist = 1) {
@@ -1435,6 +1459,30 @@ const Filter = (function () {
         return date.setBound(bound);
     }
 
+    function separateByCriteria(inTracks, criteria){
+        /* criteria: {
+              byLikes  : Boolean,
+              listened : Boolean,
+           }
+        */
+  
+        let listened = unListened = likedTracks = notLikedTracks = [];
+        if (criteria.byLikes === true){
+            Library.checkFavoriteTracks(inTracks);
+            likedTracks    = inTracks.filter(t => t.isFavorite);
+            notLikedTracks = inTracks.filter(t => !t.isFavorite);
+        }
+  
+        if (criteria.listened === true){
+          let recentTracks = RecentTracks.get();
+          listened = Selector.sliceCopy(inTracks);
+          unListened = Selector.sliceCopy(inTracks);
+          Filter.removeTracks(listened, recentTracks, false, 'every');
+          Filter.removeTracks(unListened, recentTracks, true, 'every');
+        }
+        return {likedTracks, notLikedTracks, listened, unListened};
+      }
+
     const Deduplicator = (function () {
         let _items;
         let _duplicates;
@@ -1578,6 +1626,7 @@ const Filter = (function () {
         separateArtistsDuplicated: Deduplicator.separateArtistsDuplicated,
         rangeTracks: RangeTracks.rangeTracks,
         getLastOutRange: RangeTracks.getLastOutRange,
+        separateByCriteria
     };
 })();
 
@@ -2118,6 +2167,12 @@ const Library = (function () {
     };
 
     function checkFavoriteTracks(tracks) {
+        if(tracks === undefined){ 
+          Admin.printError('Ошибка - пустой или некорректный список треков', tracks);
+          throw new Error('incorrect param - tracks');
+          //
+          // or functional style return false
+        }
         let urls = [];
         let limit = 50;
         let offset = 50;
@@ -2129,6 +2184,7 @@ const Library = (function () {
         SpotifyRequest.getAll(urls).flat(1).map((value, i) => {
             tracks[i].isFavorite = value;
         })
+        // TODO :: Return true ? Check for successfull request ?
     }
 
     function followArtists(artists) {
