@@ -6,6 +6,9 @@
 
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+## Версяи 1.8.4
+- Функции `SpotifyRequest.get*` отфильтровывают нулевые элементы, чтобы избежать прерывание скриптов из-за неожиданных ответов Spotify.
+
 ## Версия 1.8.3
 - [12.09.22] Правка редко встречающихся багов
 

@@ -1,7 +1,7 @@
 // Документация: https://chimildic.github.io/goofy
 // Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.8.3';
+const VERSION = '1.8.4';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -3042,7 +3042,7 @@ const SpotifyRequest = (function () {
             let method = response.cursors ? getItemsByCursor : getItemsByNext;
             return method(response, limitRequestCount - 1);
         }
-        return response.items;
+        return response.items.filter(item => item != undefined);
     }
 
     function getItemsByCursor(response, limitRequestCount = 220) {
@@ -3053,7 +3053,7 @@ const SpotifyRequest = (function () {
             Combiner.push(items, response.items);
             count++;
         }
-        return items;
+        return items.filter(item => item != undefined);
     }
 
     function getItemsByNext(response, limitRequestCount = 220) {
@@ -3081,7 +3081,7 @@ const SpotifyRequest = (function () {
                 Combiner.push(items, responseItem.items);
             }
         });
-        return items;
+        return items.filter(item => item != undefined);
     }
 
     function urlStringToObj(str) {
