@@ -117,7 +117,7 @@ const CustomUrlFetchApp = (function () {
     function fetchAll(requests) {
         requests.forEach((request) => (request.muteHttpExceptions = true));
         let responses = [];
-        let limit = KeyValue.REQUESTS_IN_ROW || 40;
+        let limit = KeyValue.REQUESTS_IN_ROW || 20;
         let count = Math.ceil(requests.length / limit);
         for (let i = 0; i < count; i++) {
             let requestPack = requests.splice(0, limit);
@@ -3590,6 +3590,9 @@ const Admin = (function () {
     let isInfoLvl, isErrorLvl;
     setLogLevelOnce(KeyValue.LOG_LEVEL);
     if (VERSION != KeyValue.VERSION) {
+        if (KeyValue.REQUESTS_IN_ROW == 40) {
+            UserProperties.setProperty('REQUESTS_IN_ROW', '20')
+        }
         UserProperties.setProperty('VERSION', VERSION);
         sendVersion(VERSION);
         ['updateSavedTracks', 'updateSavedTracks_'].forEach(name => Trigger.remove(Trigger.get(name)));
