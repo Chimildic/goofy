@@ -215,7 +215,7 @@ const CustomUrlFetchApp = (function () {
             if (errorText.toLowerCase().includes('access not granted')) {
                 throw `Нет прав доступа. Для повторной авторизации:\n1) Нажмите "начать развертывание > пробные развертывания"\n2) Перейдите по ссылке "веб-приложение"\n3) Подтвердите права доступа\n\nОшибка может возникать при смене пароля от Spotify аккаунта.\n\nЕсли при переходе по ссылке веб-приложения страница не открывается, повторите шаги в режиме инкогнито\n(Google делает автоматический редирект на другой аккаунт, где ваш проект с goofy недоступен).`
             } else {
-                Admin.printError(`Номер: ${response.getResponseCode()}\nАдрес: ${url}\nТекст ответа: ${errorText}`);
+                Admin.printError(`Номер: ${response.getResponseCode()}\nАдрес: ${url}\nМетод: ${params.method}\nТекст ответа: ${errorText}`);
             }
         }
     }
@@ -3614,7 +3614,7 @@ const Admin = (function () {
     }
 
     function printError(...data) {
-        isErrorLvl && console.error(...data, `\n\nОписание и решение ошибок: https://chimildic.github.io/goofy/#/errors`);
+        isErrorLvl && console.error(...data, `\n\nОписание и решение ошибок: https://chimildic.github.io/goofy/#/errors\nТелеграм: https://t.me/forum_goofy`);
     }
 
     function pause(seconds) {
