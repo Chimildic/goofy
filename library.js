@@ -211,7 +211,12 @@ const CustomUrlFetchApp = (function () {
         }
 
         function writeErrorLog() {
-            Admin.printError(`Номер: ${response.getResponseCode()}\nАдрес: ${url}\nТекст ответа: ${response.getContentText().substring(0, 500)}`);
+            let errorText = response.getContentText().substring(0, 500)
+            if (errorText.toLowerCase().includes('access not granted')) {
+                throw `Нет прав доступа. Для повторной авторизации:\n1) Нажмите "начать развертывание > пробные развертывания"\n2) Перейдите по ссылке "веб-приложение"\n3) Подтвердите права доступа\n\nОшибка может возникать при смене пароля от Spotify аккаунта.\n\nЕсли при переходе по ссылке веб-приложения страница не открывается, повторите шаги в режиме инкогнито\n(Google делает автоматический редирект на другой аккаунт, где ваш проект с goofy недоступен).`
+            } else {
+                Admin.printError(`Номер: ${response.getResponseCode()}\nАдрес: ${url}\nТекст ответа: ${errorText}`);
+            }
         }
     }
 
