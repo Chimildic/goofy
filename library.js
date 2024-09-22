@@ -2043,7 +2043,7 @@ const Playlist = (function () {
         }
 
         function createTrackBackup() {
-            let filepath = `backup/playlists/${data.id}_${new Date().toISOString()}.json`;
+            let filepath = `backup/playlists/${data.id}.json`;
             Cache.compressTracks(data.tracks);
             Cache.write(filepath, data.tracks);
             Admin.printInfo(`Создана резервная копия треков: ${filepath}`);
