@@ -7,6 +7,7 @@
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
 ## Версяи 1.8.4
+- Функции [Order.shuffle](/reference/order?id=shuffle) добавлен аргумент `factor`.
 - Добавлено прерывание в случае сохранения треков в несуществующий плейлист (когда id строго зашит в аргументы функции `Playlist.save*`).
 - Добавлено описание действий при ошибке `Access not granted or expired`.
 - Значение параметра `REQUESTS_IN_ROW` принудительно снижено до 20, если текущее 40. Spotify стал часто давать теневой бан на сутки и больше когда это значение большое.

@@ -1701,11 +1701,16 @@ const Selector = (function () {
 })();
 
 const Order = (function () {
-    function shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            let j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
+
+    function shuffle(array, factor = 1.0) {
+        let indexArray = Array.from(Array(array.length).keys()).sort(_ => Math.random() - 0.5)
+        for (let i = 0; i < (array.length * factor); i++) {
+            let x = indexArray[i];
+            let r = Math.floor(Math.random() * (x + 1));
+            let y = Math.floor(r * factor + x * (1 - factor));
+            [array[x], array[y]] = [array[y], array[x]];
         }
+        return array
     }
 
     function reverse(array) {
@@ -2038,7 +2043,7 @@ const Playlist = (function () {
             if (SpotifyRequest[requestType](url, payload) != undefined) {
                 requestType = 'post'; // сменить тип запроса, чтобы добавлять треки после первого put-запроса
             } else if (attempt++ < 3) {
-                if (attempt == 1) { 
+                if (attempt == 1) {
                     createTrackBackup()
                     if (Playlist.getById(data.id) == undefined) {
                         throw `Невозможно добавить треки. Плейлиста с id ${data.id} не существует. Исправьте id у функции Playlist.save*`
