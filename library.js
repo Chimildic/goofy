@@ -2033,7 +2033,12 @@ const Playlist = (function () {
             if (SpotifyRequest[requestType](url, payload) != undefined) {
                 requestType = 'post'; // сменить тип запроса, чтобы добавлять треки после первого put-запроса
             } else if (attempt++ < 3) {
-                attempt == 1 && createTrackBackup();
+                if (attempt == 1) { 
+                    createTrackBackup()
+                    if (Playlist.getById(data.id) == undefined) {
+                        throw `Невозможно добавить треки. Плейлиста с id ${data.id} не существует. Исправьте id у функции Playlist.save*`
+                    }
+                }
                 i--; // повторить запрос
                 Admin.pause(5);
             } else {
