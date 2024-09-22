@@ -1,4 +1,5 @@
 // Документация: https://chimildic.github.io/goofy
+// Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
 const VERSION = '1.8.3';
 const UserProperties = PropertiesService.getUserProperties();
