@@ -6,6 +6,9 @@
 
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+## Версия 1.8.5
+- Удален модуль `EveryNoise`. Сайт перестал давать релизы сразу в HTML-странице. Теперь страница наполняется динамически, что в рамках Apps Script невозможно парсить.
+
 ## Версяи 1.8.4
 - Функции [Order.shuffle](/reference/order?id=shuffle) добавлен аргумент `factor`.
 - Добавлено прерывание в случае сохранения треков в несуществующий плейлист (когда id строго зашит в аргументы функции `Playlist.save*`).

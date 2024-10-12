@@ -1,7 +1,7 @@
 // Документация: https://chimildic.github.io/goofy
 // Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.8.4';
+const VERSION = '1.8.5';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -433,7 +433,7 @@ const Source = (function () {
         let requestCount = years[1] - years[0] + 1;
         let keywords = params.artists.map(artist => `"${artist.name}" AND year:${years.join('-')}`);
         let artistsWithoutRelease = [];
-        let responses = Search.findAlbums(keywords, requestCount).reduce((responses, albums, i) => {
+        let trackGroups = Search.findAlbums(keywords, requestCount).reduce((responses, albums, i) => {
             if (albums.length > 0) {
                 Filter.dedupAlbums(albums);
                 Filter.removeArtists(albums, params.artists, true);
@@ -446,19 +446,13 @@ const Source = (function () {
                 albums.length > 0 && responses.push(Source.getAlbumsTracks(albums));
             }
             return responses;
-        }, []);
-        let everyNoiseReleases = [];
-        if (artistsWithoutRelease.length > 0) {
-            everyNoiseReleases = EveryNoise.getReleasesByArtists({
-                artists: artistsWithoutRelease, date: params.date, type: params.type, isFlat: false,
-            });
-        }
-        let tracks = Combiner.push(responses, everyNoiseReleases);
+        }, [])
         if (!params.hasOwnProperty('isFlat') || params.isFlat) {
-            tracks = tracks.flat(1);
+            let tracks = trackGroups.flat(1);
             Order.sort(tracks, 'album.release_date', 'desc');
+            return tracks
         }
-        return tracks;
+        return trackGroups
 
         function parseYears(releaseDate) {
             let years = Object.keys(releaseDate).map(key => {
@@ -667,55 +661,6 @@ const Source = (function () {
         }, []);
     }
 })();
-
-const EveryNoise = (function () {
-    return {
-        getReleasesByArtists,
-    }
-
-    function getReleasesByArtists(params) {
-        let fullItems = parseValidIds().reduce((fullItems, ids) =>
-            Combiner.push(fullItems, SpotifyRequest.getFullObjByIds('tracks', ids, 50)), []);
-        if (!params.hasOwnProperty('isFlat') || params.isFlat) {
-            fullItems = fullItems.flat(1);
-            Order.sort(fullItems, 'album.release_date', 'desc');
-        }
-        return fullItems;
-
-        function parseValidIds() {
-            return getResponses().reduce((ids, response) => {
-                let cheerio = HtmlService.createCheerio(response);
-                if (!cheerio) return ids;
-                let titles = [];
-                let albums = [];
-                cheerio('.albumbox', '', cheerio('.discocell')).each((index, node) => {
-                    let noteEl = cheerio(node).children('.note');
-                    if (noteEl.attr('class') != 'note') return;
-                    let release_date = new Date(noteEl.children('span').text().trim());
-                    let title = noteEl.children('.albumtitle').text().formatName();
-                    if (!titles.includes(title) && RangeTracks.isBelongReleaseDate(release_date, params.date)) {
-                        titles.push(title);
-                        let album = [];
-                        cheerio('.trackrow', '', node).each((index, row) => {
-                            album.push(cheerio(row).children('.play').attr('trackid'));
-                        });
-                        albums.push(album);
-                    }
-                });
-                ids.push(albums);
-                return ids
-            }, []);
-        }
-
-        function getResponses() {
-            let country = User.country;
-            let hideStr = ['compilation', 'appears_on', 'album', 'single']
-                .filter(item => !params.type.includes(item)).map(item => `&hide=${item}`).join('');
-            let urls = params.artists.map(artist => `https://everynoise.com/artistprofile.cgi?id=${artist.id}${hideStr}&country=${country || 'RU'}`);
-            return CustomUrlFetchApp.fetchAll(urls);
-        }
-    }
-})()
 
 const Player = (function () {
     return {
