@@ -257,7 +257,7 @@ const Source = (function () {
         getTracks, getTracksRandom, getPlaylistTracks, getTopTracks, getTopArtists, getFollowedTracks, getSavedTracks,
         getSavedAlbumTracks, getSavedAlbums, getRecomTracks, getArtists, getArtistsAlbums, getArtistsTracks,
         getAlbumTracks, getAlbumsTracks, getArtistsTopTracks, getRelatedArtists, getCategoryTracks,
-        getListCategory, mineTracks, craftTracks, extractTracks, createUrlForRecomTracks, getReleasesByArtists,
+        getListCategory, mineTracks, craftTracks, extractTracks, createUrlForRecomTracks, getRecentReleasesByArtists,
     };
 
     function getTopTracks(timeRange) {
@@ -428,41 +428,54 @@ const Source = (function () {
         return playlistArray;
     }
 
-    function getReleasesByArtists(params) {
-        let years = parseYears(params.date);
-        let requestCount = years[1] - years[0] + 1;
-        let keywords = params.artists.map(artist => `"${artist.name}" AND year:${years.join('-')}`);
-        let artistsWithoutRelease = [];
-        let trackGroups = Search.findAlbums(keywords, requestCount).reduce((responses, albums, i) => {
-            if (albums.length > 0) {
-                Filter.dedupAlbums(albums);
-                Filter.removeArtists(albums, params.artists, true);
-                if (albums.length == 0) {
-                    artistsWithoutRelease.push(params.artists[i]);
+    function getRecentReleasesByArtists(params) {
+        let initDateStr = new Date().toISOString()
+        let startDate = params.hasOwnProperty('sinceDays') ? Filter.getDateRel(params.beforeDays, 'startDay') : params.startDate
+        let types = params.type.sort((a, b) => a.localeCompare(b))
+        let requestUrls = params.artists.map(artist => `${API_BASE_URL}/artists/${artist.id}/albums?include_groups=${types.join(",")}&limit=50&market=from_token`)
+        
+        let foundReleases = {}
+        let uncompleteRequests = []
+        SpotifyRequest.getAll(requestUrls).forEach((response, index) => {
+            let minFoundDateStrings = types.reduce((acc, type) => (acc[type] = initDateStr, acc), {})
+            let artistId = params.artists[index].id
+
+            foundReleases[artistId] = foundReleases[artistId] || {}
+            foundReleases[artistId].albums = response.items.filter(album => {
+                minFoundDateStrings[album.album_type] = album.release_date
+                return RangeTracks.isBelongReleaseDate(album.release_date, params.date)
+            })
+
+            if (response.items.length == 50 && response.next != undefined) {
+                let notFoundTypes = []
+                Object.entries(minFoundDateStrings).forEach(([albumType, dateStr]) => {
+                    let minFoundDate = new Date(dateStr)
+                    if (startDate < minFoundDate) {
+                        notFoundTypes.push(albumType)
+                    }
+                })
+                if (notFoundTypes.length > 0) {
+                    uncompleteRequests.push({ id: artistId, groups: notFoundTypes })
                 }
-                albums = albums.filter(album =>
-                    RangeTracks.isBelongReleaseDate(album.release_date, params.date)
-                    && params.type.includes(album.album_type))
-                albums.length > 0 && responses.push(Source.getAlbumsTracks(albums));
             }
-            return responses;
-        }, [])
+        })
+
+        uncompleteRequests.forEach(item => {
+            let artistAlbums = Source.getArtistsAlbums(/* artist = { id: '' }*/ item, /* params = { groups: [] }*/ item)
+            Combiner.push(foundReleases[item.id].albums, artistAlbums)
+        })
+
+        let trackGroups = Object.entries(foundReleases).map(([artistId, data]) => {
+            Filter.dedupAlbums(data.albums)
+            return Source.getAlbumsTracks(data.albums) || []
+        })
+
         if (!params.hasOwnProperty('isFlat') || params.isFlat) {
-            let tracks = trackGroups.flat(1);
-            Order.sort(tracks, 'album.release_date', 'desc');
+            let tracks = trackGroups.flat(1)
+            Order.sort(tracks, 'album.release_date', 'desc')
             return tracks
         }
         return trackGroups
-
-        function parseYears(releaseDate) {
-            let years = Object.keys(releaseDate).map(key => {
-                let bound = ['since', 'start'].some(str => key.includes(str)) ? 'startDay' : 'endDay';
-                let date = releaseDate[key] instanceof Date ? releaseDate[key] : Filter.getDateRel(releaseDate[key], bound);
-                return date.getFullYear();
-            }, []);
-            years.sort((x, y) => x - y);
-            return years;
-        }
     }
 
     function mineTracks(params) {
