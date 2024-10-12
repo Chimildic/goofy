@@ -429,6 +429,9 @@ const Source = (function () {
     }
 
     function getRecentReleasesByArtists(params) {
+        if (params.artists.length >= 300) {
+            console.warn(`При большом количестве исполнителей (запрошено ${params.artists.length}) функция может не уложиться в лимит времени выполнения\nили получить временный бан от Spotify за спам запросами.\n\nВоспользуйтесь шаблоном: https://chimildic.github.io/goofy/#/template?id=Новые-релизы-по-частям`)
+        }
         let initDateStr = new Date().toISOString()
         let startDate = params.hasOwnProperty('sinceDays') ? Filter.getDateRel(params.beforeDays, 'startDay') : params.startDate
         let types = params.type.sort((a, b) => a.localeCompare(b))

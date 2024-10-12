@@ -54,22 +54,73 @@ function updateUnknownSet() {
 }
 ```
 
-## Новый релизы
+## Новые релизы
 ```js
 /**
  * Сбор новых релизов от отслеживаемых исполнителей
  */
 function updateNewReleases() {
-  let newReleases = Source.getReleasesByArtists({
+  let newReleases = Source.getRecentReleasesByArtists({
     artists: Source.getArtists({ followed_include: true, }),
     date: { sinceDays: 7, beforeDays: 0 }, // за неделю, измените по необходимости
     type: ['album', 'single'],
-    isFlat: true,
   });
   Playlist.saveWithReplace({
     name: 'Новые релизы',
     tracks: newReleases,
   })
+}
+```
+
+## Новые релизы по частям
+```js
+/**
+ * Когда отслеживаемых исполнителей очень много, есть шанс достигнуть лимита на время выполнения или получить паузу от Spotify на сутки.
+ * Можно разделить исполнителей на чанки. Например, установив триггер "каждый час" при размере чанка 100 за сутки проверится 2400 исполнителей.
+ * Функция накапливает релизы в кэш. При желании можно подмешивать их в другие плейлисты. 
+ */
+function chunkDiscoverRecentReleases() {
+  const CHUNK_SIZE = 100 // Количество проверяемых исполнителей за один запуск
+  const FA_FILENAME = 'ChunkFollowedArtists.json'
+  const RR_FILENAME = 'ChunkDiscoverRecentReleases.json'
+
+  let followedArtists = Cache.read(FA_FILENAME)
+  if (followedArtists.length == 0) {
+    followedArtists = Source.getArtists({ followed_include: true })
+    Cache.write(FA_FILENAME, followedArtists)
+  }
+  if (followedArtists.length > 0) {
+    discover()
+    saveWithReplace() // опциальное сохранение релизов в плейлист
+  }
+
+  function discover() {
+    let discoverableArtists = followedArtists.splice(0, CHUNK_SIZE)
+    Cache.write(FA_FILENAME, followedArtists)
+
+    let remoteTracks = Source.getRecentReleasesByArtists({
+      artists: discoverableArtists,
+      date: { sinceDays: 1, beforeDays: 0 },
+      type: ['album', 'single'],
+      isFlat: true,
+    })
+
+    if (remoteTracks.length > 0) {
+      Cache.compressTracks(remoteTracks)
+      let combinedTracks = Combiner.push(remoteTracks, Cache.read(RR_FILENAME))
+      Filter.dedupTracks(combinedTracks)
+      Order.sort(combinedTracks, 'album.release_date', 'desc')
+      Cache.write(RR_FILENAME, combinedTracks)
+    }
+  }
+
+  function saveWithReplace() {
+    Playlist.saveWithReplace({
+      name: 'Новые релизы',
+      tracks: Cache.read(RR_FILENAME),
+      randomCover: 'update',
+    })
+  }
 }
 ```
 

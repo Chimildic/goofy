@@ -10,6 +10,7 @@
 - Удален модуль `EveryNoise`. Сайт перестал давать релизы сразу в HTML-странице. Теперь страница наполняется динамически, что в рамках Apps Script невозможно парсить.
 - Удалена функция `Source.getReleasesByArtists`.
 - Добавлена функция [Source.getRecentReleasesByArtists](/reference/source?id=getrecentreleasesbyartists). Алгоритм получения недавних релизов полностью переделан.
+- Добавлен [шаблон для получения недавних релизов](/template?id=Новые-релизы-по-частям) при очень большом количестве исполнителей.
 
 ## Версяи 1.8.4
 - Функции [Order.shuffle](/reference/order?id=shuffle) добавлен аргумент `factor`.
