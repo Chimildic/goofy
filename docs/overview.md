@@ -10,9 +10,9 @@
 ## Возможности
 
 - отслеживает историю прослушиваний
-- собирает рекомендации и новые релизы, включая <a target="_blank" href="https://everynoise.com/new_releases_by_genre.cgi">Every Noise</a></li>
+- собирает рекомендации и новые релизы
 - имеет большой набор фильтров
-- импортирует <a target="_blank" href="https://chimildic.github.io/goofy/#/addon?id=Импорт-треков-с-радио">FM-радио</a> и Last.fm</li>
+- импортирует <a target="_blank" href="https://chimildic.github.io/goofy/#/addon?id=Импорт-треков-с-радио">FM-радио</a> и Last.fm
 - поддерживает расширенный поиск
-- позволяет динамически менять очередь треков</li>
-- работает по расписанию и событиям <a target="_blank" href="https://github.com/Chimildic/goofy/discussions/124">Tasker</a></li>
+- позволяет динамически менять очередь треков
+- работает по расписанию и событиям <a target="_blank" href="https://github.com/Chimildic/goofy/discussions/124">Tasker</a>
