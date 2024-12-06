@@ -1,7 +1,10 @@
-function setProperties(){
+function setProperties() {
     // Описание параметров: chimildic.github.io/goofy/#/config
     UserProperties.setProperty('CLIENT_ID', 'вашеЗначение');
     UserProperties.setProperty('CLIENT_SECRET', 'вашеЗначение');
+    UserProperties.setProperty('PRIVATE_CLIENT_ID', 'вашеЗначение');
+    UserProperties.setProperty('PRIVATE_CLIENT_SECRET', 'вашеЗначение');
+
     UserProperties.setProperty('LASTFM_API_KEY', 'вашеЗначение');
     UserProperties.setProperty('MUSIXMATCH_API_KEY', 'вашеЗначение');
 
@@ -19,7 +22,12 @@ function setProperties(){
 }
 
 // Чтобы посмотреть текущие значения параметров
-// console.log(UserProperties.getProperties());
+// function logProperties() {
+//     console.log(UserProperties.getProperties())
+// }
 
 // Чтобы сбросить авторизацию и параметры
-// Admin.reset();
+// function reset() {
+//     Admin.reset()
+//     setProperties()
+// }

@@ -20,13 +20,18 @@
    
     ![Создать копию](/img/install-step-copy.png)
 
-5. Перейдите в файл `config.gs`. Вставьте `CLIENT_ID` и `CLIENT_SECRET` вместо слов `вашеЗначение`. Значения брать в созданном приложении Spotify на шаге 2 (кнопка settings).
+5. Перейдите в файл `config.gs`. Вставьте `CLIENT_ID` и `CLIENT_SECRET` вместо слов `вашеЗначение`. Значения брать в созданном приложении Spotify на шаге 2 (кнопка `Settings`).
 
    ![Client ID и Client Secret](/img/install-step-client-id2.png)
 
+6. Также укажите следующие значения:
+
+   - Для `PRIVATE_CLIENT_ID` значение `e0708753ab60499c89ce263de9b4f57a`
+   - Для `PRIVATE_CLIENT_SECRET` значение `ODBjOTI3MTY2YzY2NGVlOThhNDNhMmMwZTI5ODFiNGE`
+ 
    Сохраните изменение <kbd>Ctrl</kbd><kbd>S</kbd> или иконка дискеты на панели действий
 
-6. Запустите в редакторе выполнение функции `setProperties`. 
+7. Запустите в редакторе выполнение функции `setProperties`. 
 
    ![run setProperties](/img/install-run-setProperties.png)
 
@@ -46,7 +51,7 @@
 
    ![Выбор аккаунта](/img/install-step-grant-permissions.png)
 
-7. Окно закроется. Выберите `Начать развертывание` - `Пробные развертывания`
+8. Окно закроется. Выберите `Начать развертывание` - `Пробные развертывания`
 
    ![Развернуть веб-приложение](/img/install-step-webapp.png ':size=40%')
 
@@ -54,22 +59,12 @@
 
    ![Скопировать ссылку](/img/install-step-link.png)
 
-8. В **новой вкладке** перейдите по скопированной ссылке. На открывшийся странице скопируйте ссылку внизу страницы. Оканчивается на `usercallback`.
+9.  В **новой вкладке** перейдите по скопированной ссылке. На открывшийся странице скопируйте ссылку внизу страницы. Оканчивается на `usercallback`.
 
-   ![Callback-ссылка](/img/install-step-callback-link.png)
-
-9. Вернитесь в [Spotify Dashboad](https://developer.spotify.com/dashboard/). В настройках вашего приложения `settings` спуститесь вниз и нажмите кнопку `edit`
+10. Вернитесь в [Spotify Dashboad](https://developer.spotify.com/dashboard/). В настройках вашего приложения `settings` спуститесь вниз и нажмите кнопку `edit`
     
     Вставьте в поле `Redirect URIs` скопированную ссылку из шага 8. Нажмите кнопку `ADD` справа, затем внизу кнопку `Save`.
 
-10. Перейдите на вкладку из шага 8 и обновите страницу (`F5`).
+11. Перейдите на вкладку из шага 8 и обновите страницу (`F5`). Выдайте права доступа.
 
-    Нажмите кнопку `Выдать права доступа`.
-
-    ![Callback-ссылка](/img/install-step-callback-link.png)
-
-    Разрешите доступ к аккаунту Spotify.
-
-    ![Разрешения Spotify](/img/install-step-grant-spotify.png)
-
-    Первая установка и настройка завершены. Переходите к [первому плейлисту](/first-playlist).
+    Установка и настройка завершены. Переходите к [первому плейлисту](/first-playlist).

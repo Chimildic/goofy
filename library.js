@@ -1,7 +1,7 @@
 // Документация: https://chimildic.github.io/goofy
 // Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '1.8.5';
+const VERSION = '2.0.0';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -2965,55 +2965,85 @@ const Auth = (function () {
         'user-top-read', 'user-follow-read', 'user-follow-modify', 'playlist-read-private', 'playlist-modify-private',
         'playlist-modify-public', 'ugc-image-upload',
     ];
-    const service = createService();
-
+    const publicService = createService('spotify', false)
+    const privateService = KeyValue.CLIENT_ID == KeyValue.PRIVATE_CLIENT_ID ? publicService : createService('private-spotify', true)
     return {
-        reset, hasAccess, getAccessToken, displayAuthPage, displayAuthResult,
+        reset, hasAccess, getPublicAccessToken, getPrivateAccessToken, displayAuthPage, displayAuthResult,
     };
 
-    function createService() {
-        return OAuth2.createService('spotify')
+    function createService(name, isPrivate) {
+        let service = OAuth2.createService(name)
             .setAuthorizationBaseUrl('https://accounts.spotify.com/authorize')
             .setTokenUrl('https://accounts.spotify.com/api/token')
-            .setClientId(KeyValue.CLIENT_ID)
-            .setClientSecret(KeyValue.CLIENT_SECRET)
             .setCallbackFunction('displayAuthResult_')
+            .setRedirectUri('https://chimildic.github.io/spotify/auth')
             .setPropertyStore(UserProperties)
             .setScope(SCOPE)
             .setParam('response_type', 'code')
-            .setParam('redirect_uri', getRedirectUri());
+
+        if (isPrivate) {
+            if (KeyValue.PRIVATE_CLIENT_SECRET.length > 32) {
+                let decoded = Utilities.base64Decode(KeyValue.PRIVATE_CLIENT_SECRET)
+                KeyValue.PRIVATE_CLIENT_SECRET = Utilities.newBlob(decoded).getDataAsString()
+            }
+            service.setClientId(KeyValue.PRIVATE_CLIENT_ID)
+                .setClientSecret(KeyValue.PRIVATE_CLIENT_SECRET)
+        } else {
+            service.setClientId(KeyValue.CLIENT_ID)
+                .setClientSecret(KeyValue.CLIENT_SECRET)
+        }
+        return service
     }
 
     function displayAuthResult(request) {
-        let isAuthorized = service.handleCallback(request);
-        return HtmlService.createHtmlOutput(isAuthorized ? 'Успешно!' : 'Отказано в доступе');
+        let isAuthorized
+        if (request.parameters.serviceName == 'spotify') {
+            isAuthorized = publicService.handleCallback(request)
+        } else if (request.parameters.serviceName == 'private-spotify') {
+            isAuthorized = privateService.handleCallback(request)
+        }
+        return HtmlService.createHtmlOutput(isAuthorized ? 'Успешно' : 'Отказано в доступе');
     }
 
     function displayAuthPage() {
-        let template = '<a href="%s" target="_blank">Выдать права доступа</a><p>%s</p>';
-        let html = Utilities.formatString(template, service.getAuthorizationUrl(), getRedirectUri());
-        return HtmlService.createHtmlOutput(html);
+        let redirectTemplate = `https://chimildic.github.io/spotify/auth?baseurl=https://accounts.spotify.com/authorize&projectId=${ScriptApp.getScriptId()}&`
+        let htmlTemplate = '<p>При первой установке: добавьте нижнюю ссылку в поле Redirect URIs вашего приложения в Spotify Dashboard</p><p>%s</p><p>Для работы всех функций предоставьте доступ каждому приложению:</p><ul><li><a href="%s" target="_blank">Выдать публичные права</a></li><li><a href="%s" target="_blank">Выдать приватные права</a></li>';
+
+        let publicAuthUrl = publicService.getAuthorizationUrl()
+        let privateAuthUrl = privateService.getAuthorizationUrl()
+
+        let publicRestParams = publicAuthUrl.split('?')[1]
+        let privateRestParams = privateAuthUrl.split('?')[1]
+
+        let html = Utilities.formatString(htmlTemplate, getRedirectUri(), redirectTemplate + publicRestParams, redirectTemplate + privateRestParams)
+        return HtmlService.createHtmlOutput(html)
     }
 
     function getRedirectUri() {
-        let scriptId = encodeURIComponent(ScriptApp.getScriptId());
-        return `https://script.google.com/macros/d/${scriptId}/usercallback`;
+        let scriptId = encodeURIComponent(ScriptApp.getScriptId())
+        return `https://script.google.com/macros/d/${scriptId}/usercallback`
     }
 
     function hasAccess() {
-        return service.hasAccess();
+        return publicService.hasAccess() && privateService.hasAccess()
     }
 
-    function getAccessToken() {
-        return service.getAccessToken();
+    function getPublicAccessToken() {
+        return publicService.getAccessToken()
+    }
+
+    function getPrivateAccessToken() {
+        return privateService.getAccessToken()
     }
 
     function reset() {
-        service.reset();
+        publicService.reset()
+        privateService.reset()
     }
 })();
 
 const SpotifyRequest = (function () {
+    const PRIVATE_API = ['/playlists', '/recommendations', '/related-artists', '/audio-features', '/browse']
     return {
         get, getAll, getItemsByPath, getItemsByNext, getFullObjByIds, post, put, putImage, putItems, deleteItems, deleteRequest,
     };
@@ -3102,7 +3132,7 @@ const SpotifyRequest = (function () {
         urls.forEach((url) => {
             requests.push({
                 url: allowLocale ? appendLocale(url) : url,
-                headers: getHeaders(),
+                headers: getHeaders(url),
                 method: 'get',
             });
         });
@@ -3175,14 +3205,15 @@ const SpotifyRequest = (function () {
     }
 
     function fetch(url, params = {}) {
-        params.headers = getHeaders();
+        params.headers = getHeaders(url);
         return CustomUrlFetchApp.fetch(url, params);
     }
 
-    function getHeaders() {
+    function getHeaders(url) {
+        let isPrivate = PRIVATE_API.some(path => url.includes(path))
         return {
-            Authorization: 'Bearer ' + Auth.getAccessToken(),
-        };
+            Authorization: `Bearer ${isPrivate ? Auth.getPrivateAccessToken() : Auth.getPublicAccessToken()}`,
+        }
     }
 })();
 

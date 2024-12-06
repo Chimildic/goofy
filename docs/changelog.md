@@ -6,6 +6,9 @@
 
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+### Версия 2.0.0
+- Выполните [миграцию](/migrate2.md)
+
 ## Версия 1.8.5
 - Удален модуль `EveryNoise`. Сайт перестал давать релизы сразу в HTML-странице. Теперь страница наполняется динамически, что в рамках Apps Script невозможно парсить.
 - Удалена функция `Source.getReleasesByArtists`.
