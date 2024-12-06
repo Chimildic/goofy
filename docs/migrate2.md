@@ -9,8 +9,9 @@
 2. Выберите приложение для goofy
 3. Нажмите кнопку `Settings`
 4. Посмотрите статус в поле `App Status` (понадобится дальше)
-5. Откройте проект в Apps Script
-6. Зайдите в файл `config` и добавьте две новые строчки в функцию `setProperties`. Пример как должно выглядеть [здесь](https://github.com/Chimildic/goofy/blob/main/config.js).
+5. Спуститесь ниже и добавьте в `Redirect URLs` новую ссылку: `https://chimildic.github.io/spotify/auth`
+6. Откройте проект в Apps Script
+7. Зайдите в файл `config` и добавьте две новые строчки в функцию `setProperties`. Пример как должно выглядеть [здесь](https://github.com/Chimildic/goofy/blob/main/config.js).
 ```js
   UserProperties.setProperty('PRIVATE_CLIENT_ID', 'вашеЗначение');
   UserProperties.setProperty('PRIVATE_CLIENT_SECRET', 'вашеЗначение');
@@ -22,9 +23,9 @@
 
 - Если ваш статус `Granted quota extension`, продублируйте свои значения из строк `CLIENT_ID` и `CLIENT_SECRET`.
 
-7. Запустите функцию `setProperties`
+8. Запустите функцию `setProperties`
 
    ![run setProperties](/img/install-run-setProperties.png)
 
-8. [Обновите](https://chimildic.github.io/goofy/#/tuning?id=Обновить-библиотеку) код основной библиотеки как раньше (по умолчанию файл `library`)
-9. Обновите права доступа: `начать развертывание` > `пробные развертывания` > перейти по ссылке `веб-приложение` и следовать появившейся инструкции
+9. [Обновите](https://chimildic.github.io/goofy/#/tuning?id=Обновить-библиотеку) код основной библиотеки как раньше (по умолчанию файл `library`)
+10. Обновите права доступа: `начать развертывание` > `пробные развертывания` > перейти по ссылке `веб-приложение` и следовать появившейся инструкции

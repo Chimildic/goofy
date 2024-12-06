@@ -3007,7 +3007,7 @@ const Auth = (function () {
 
     function displayAuthPage() {
         let redirectTemplate = `https://chimildic.github.io/spotify/auth?baseurl=https://accounts.spotify.com/authorize&projectId=${ScriptApp.getScriptId()}&`
-        let htmlTemplate = '<p>При первой установке: добавьте нижнюю ссылку в поле Redirect URIs вашего приложения в Spotify Dashboard</p><p>%s</p><p>Для работы всех функций предоставьте доступ каждому приложению:</p><ul><li><a href="%s" target="_blank">Выдать публичные права</a></li><li><a href="%s" target="_blank">Выдать приватные права</a></li>';
+        let htmlTemplate = '<p>При первой установке: добавьте нижнюю ссылку в поле Redirect URIs вашего приложения в Spotify Dashboard</p><p>https://chimildic.github.io/spotify/auth</p><p>Для работы всех функций предоставьте доступ каждому приложению:</p><ul><li><a href="%s" target="_blank">Выдать публичные права</a></li><li><a href="%s" target="_blank">Выдать приватные права</a></li>';
 
         let publicAuthUrl = publicService.getAuthorizationUrl()
         let privateAuthUrl = privateService.getAuthorizationUrl()
@@ -3015,7 +3015,7 @@ const Auth = (function () {
         let publicRestParams = publicAuthUrl.split('?')[1]
         let privateRestParams = privateAuthUrl.split('?')[1]
 
-        let html = Utilities.formatString(htmlTemplate, getRedirectUri(), redirectTemplate + publicRestParams, redirectTemplate + privateRestParams)
+        let html = Utilities.formatString(htmlTemplate, redirectTemplate + publicRestParams, redirectTemplate + privateRestParams)
         return HtmlService.createHtmlOutput(html)
     }
 
