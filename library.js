@@ -2814,11 +2814,18 @@ const Search = (function () {
             return Utilities.formatString(TEMPLATE, CustomUrlFetchApp.parseQuery(queryObj));
         });
         return SpotifyRequest.getAll(urls).map((response, index) => {
-            if (response == undefined || response.items == undefined || response.items.length == 0) return {};
-            let targetStrings = response.items.map(item => {
+            if (response == undefined || response.items == undefined || response.items.length == 0) {
+                return {}
+            }
+            let targetStrings = response.items.filter(item => {
+                return item != undefined
+            }).map(item => {
                 let str = (type == 'track' ? `${item.artists[0].name} ${item.name}` : item.name).formatName();
                 return Translit.transform(str);
-            });
+            })
+            if (targetStrings.length == 0) {
+                return {}
+            }
             let result = DiceCoefficient.findBestMatch(Translit.transform(keywords[index]), targetStrings);
             return result.bestMatch.rating >= minDiceRating ? response.items[result.bestMatchIndex] : {};
         });
