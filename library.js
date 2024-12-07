@@ -313,7 +313,7 @@ const Source = (function () {
 
     function getRecomTracks(queryObj) {
         let url = createUrlForRecomTracks(queryObj);
-        return CustomUrlFetchApp.get(url).tracks;
+        return CustomUrlFetchApp.fetch(url).tracks;
     }
 
     function getFollowedTracks(params = {}) {
