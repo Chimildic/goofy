@@ -2981,7 +2981,7 @@ const Auth = (function () {
             .setScope(SCOPE)
             .setParam('response_type', 'code')
 
-        if (isPrivate) {
+        if (isPrivate && KeyValue.PRIVATE_CLIENT_SECRET != undefined) {
             if (KeyValue.PRIVATE_CLIENT_SECRET.length > 32) {
                 let decoded = Utilities.base64Decode(KeyValue.PRIVATE_CLIENT_SECRET)
                 KeyValue.PRIVATE_CLIENT_SECRET = Utilities.newBlob(decoded).getDataAsString()
