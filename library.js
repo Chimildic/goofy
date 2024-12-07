@@ -1,7 +1,7 @@
 // Документация: https://chimildic.github.io/goofy
 // Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '2.0.0';
+const VERSION = '2.0.1';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -292,15 +292,17 @@ const Source = (function () {
     }
 
     function getRelatedArtists(artists, isFlat = true) {
-        return getArtistsByPath(artists, '/artists/%s/related-artists', isFlat);
+        let template = `https://soundlens.pro/api/spotify-replacement/artists/%s/related-artists`
+        let urls = artists.reduce((urls, artist) => {
+            urls.push(Utilities.formatString(template, artist.id));
+            return urls;
+        }, []);
+        let responses = CustomUrlFetchApp.fetchAll(urls);
+        return isFlat ? responses.flat(1) : responses;
     }
 
     function getArtistsTopTracks(artists, isFlat = true) {
-        return getArtistsByPath(artists, '/artists/%s/top-tracks?market=from_token', isFlat);
-    }
-
-    function getArtistsByPath(artists, path, isFlat) {
-        let template = API_BASE_URL + path;
+        let template = API_BASE_URL + '/artists/%s/top-tracks?market=from_token';
         let urls = artists.reduce((urls, artist) => {
             urls.push(Utilities.formatString(template, artist.id));
             return urls;
@@ -311,7 +313,7 @@ const Source = (function () {
 
     function getRecomTracks(queryObj) {
         let url = createUrlForRecomTracks(queryObj);
-        return SpotifyRequest.get(url).tracks;
+        return CustomUrlFetchApp.get(url).tracks;
     }
 
     function getFollowedTracks(params = {}) {
@@ -543,7 +545,7 @@ const Source = (function () {
     }
 
     function craftTracks(tracks, params = {}) {
-        let recomTracks = SpotifyRequest.getAll(createUrls()).reduce((recomTracks, response) => {
+        let recomTracks = CustomUrlFetchApp.fetchAll(createUrls()).reduce((recomTracks, response) => {
             return Combiner.push(recomTracks, response.tracks);
         }, []);
         Filter.dedupTracks(recomTracks);
@@ -598,7 +600,7 @@ const Source = (function () {
         queryObj.limit = queryObj.limit > 100 ? 100 : queryObj.limit || 100;
         queryObj.market = queryObj.market || 'from_token';
         let query = CustomUrlFetchApp.parseQuery(queryObj);
-        return `${API_BASE_URL}/recommendations?${query}`;
+        return `https://soundlens.pro/api/spotify-replacement/recommendations?${query}`;
     }
 
     function getTracksRandom(playlistArray, countPlaylist = 1) {
@@ -1189,27 +1191,18 @@ const Filter = (function () {
         let replacementTracks = Combiner.push([], params.replace.flat(1));
         let copyTracks = Selector.sliceCopy(params.origin);
         Filter.removeTracks(copyTracks, replacementTracks, true);
-        let features = getCachedTracks(copyTracks, { features: {} }).features;
 
         let urls = [];
         copyTracks.forEach((t) => {
-            if (!features[t.id] || !features[t.id].danceability) {
-                return;
-            }
             let params = {
                 seed_tracks: t.id,
                 seed_artists: Selector.sliceFirst(t.artists.map(a => a.id), 4).join(','),
             };
-            Object.entries(features[t.id]).forEach(item => {
-                if (!isNaN(item[1])) {
-                    params['target_' + item[0]] = item[1];
-                }
-            });
             urls.push(Source.createUrlForRecomTracks(params));
         });
 
         let similarTracks = {};
-        SpotifyRequest.getAll(urls).forEach((r) => {
+        CustomUrlFetchApp.fetchAll(urls).forEach((r) => {
             let item = r.seeds.find((s) => s.type.toLowerCase() == 'track');
             similarTracks[item.id] = similarTracks[item.id] || [];
             Combiner.push(similarTracks[item.id], r.tracks);
