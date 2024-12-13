@@ -1,7 +1,7 @@
 // Документация: https://chimildic.github.io/goofy
 // Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '2.0.0';
+const VERSION = '2.0.2';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';

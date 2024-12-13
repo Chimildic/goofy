@@ -6,7 +6,7 @@
 
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
-### Версия 2.0.0
+### Версия 2.0.2
 - Выполните [миграцию](/migrate2.md)
 
 ## Версия 1.8.5

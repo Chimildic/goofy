@@ -17,15 +17,18 @@
   UserProperties.setProperty('PRIVATE_CLIENT_SECRET', 'вашеЗначение');
 ```
 
-- Если ваш статус `Development mode`, укажите:
-  - Для `PRIVATE_CLIENT_ID` значение `e0708753ab60499c89ce263de9b4f57a`
-  - Для `PRIVATE_CLIENT_SECRET` значение `ODBjOTI3MTY2YzY2NGVlOThhNDNhMmMwZTI5ODFiNGE`
+- Если ваш статус `Development mode`, перейдите по [ссылке](https://script.google.com/macros/s/AKfycbwwDT25i71nYAk1aICxnrXfFVDzctcmhRMqzugjEkpqmUWjGATAbMOCL5aqvlPXOIq4/exec), чтобы получить значения для приватного приложения.
 
-- Если ваш статус `Granted quota extension`, продублируйте свои значения из строк `CLIENT_ID` и `CLIENT_SECRET`.
+- Если ваш статус `Granted quota extension`, продублируйте свои же значения из строк `CLIENT_ID` и `CLIENT_SECRET`.
 
-8. Запустите функцию `setProperties`
+8. Скопируйте в файл `config` следующую функцию и запустите её.
 
-   ![run setProperties](/img/install-run-setProperties.png)
+```js
+function reset() {
+    Admin.reset()
+    setProperties()
+}
+```
 
 9. [Обновите](https://chimildic.github.io/goofy/#/tuning?id=Обновить-библиотеку) код основной библиотеки как раньше (по умолчанию файл `library`)
-10. Обновите права доступа: `начать развертывание` > `пробные развертывания` > перейти по ссылке `веб-приложение` и следовать появившейся инструкции
+10.  Обновите права доступа: `начать развертывание` > `пробные развертывания` > перейти по ссылке `веб-приложение` и следовать появившейся инструкции
