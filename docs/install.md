@@ -24,10 +24,7 @@
 
    ![Client ID и Client Secret](/img/install-step-client-id2.png)
 
-6. Также укажите следующие значения:
-
-   - Для `PRIVATE_CLIENT_ID` значение `e0708753ab60499c89ce263de9b4f57a`
-   - Для `PRIVATE_CLIENT_SECRET` значение `ODBjOTI3MTY2YzY2NGVlOThhNDNhMmMwZTI5ODFiNGE`
+6. Также укажите значения для `PRIVATE_CLIENT_ID` и `PRIVATE_CLIENT_SECRET` получив их [здесь](https://script.google.com/macros/s/AKfycbwwDT25i71nYAk1aICxnrXfFVDzctcmhRMqzugjEkpqmUWjGATAbMOCL5aqvlPXOIq4/exec):
  
    Сохраните изменение <kbd>Ctrl</kbd><kbd>S</kbd> или иконка дискеты на панели действий
 
