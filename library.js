@@ -1,7 +1,7 @@
 // Документация: https://chimildic.github.io/goofy
 // Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '2.0.2';
+const VERSION = '2.0.3';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -3043,7 +3043,7 @@ const Auth = (function () {
 })();
 
 const SpotifyRequest = (function () {
-    const PRIVATE_API = ['/playlists', '/recommendations', '/related-artists', '/audio-features', '/browse']
+    const PRIVATE_API = ['37i9d', new RegExp('\/users\/.*\/playlists'), 'me/playlists', '/recommendations', '/related-artists', '/audio-features', '/browse']
     return {
         get, getAll, getItemsByPath, getItemsByNext, getFullObjByIds, post, put, putImage, putItems, deleteItems, deleteRequest,
     };
@@ -3132,7 +3132,7 @@ const SpotifyRequest = (function () {
         urls.forEach((url) => {
             requests.push({
                 url: allowLocale ? appendLocale(url) : url,
-                headers: getHeaders(url),
+                headers: getHeaders(url, 'get'),
                 method: 'get',
             });
         });
@@ -3205,15 +3205,24 @@ const SpotifyRequest = (function () {
     }
 
     function fetch(url, params = {}) {
-        params.headers = getHeaders(url);
+        params.headers = getHeaders(url, params.method);
         return CustomUrlFetchApp.fetch(url, params);
     }
 
-    function getHeaders(url) {
-        let isPrivate = PRIVATE_API.some(path => url.includes(path))
+    function getHeaders(url, method = 'get') {
+        let isPrivate = method == 'get' && isBelongPrivateAPI(url)
         return {
             Authorization: `Bearer ${isPrivate ? Auth.getPrivateAccessToken() : Auth.getPublicAccessToken()}`,
         }
+    }
+
+    function isBelongPrivateAPI(url){
+        return PRIVATE_API.some(path => {
+            if (path instanceof RegExp) {
+                return path.test(url)
+            }
+            return url.includes(path)
+        })
     }
 })();
 

@@ -19,7 +19,7 @@
 
 - Если ваш статус `Development mode`, перейдите по [ссылке](https://script.google.com/macros/s/AKfycbwwDT25i71nYAk1aICxnrXfFVDzctcmhRMqzugjEkpqmUWjGATAbMOCL5aqvlPXOIq4/exec), чтобы получить значения для приватного приложения.
 
-- Если ваш статус `Granted quota extension`, продублируйте свои же значения из строк `CLIENT_ID` и `CLIENT_SECRET`.
+- Если ваш статус `Granted quota extension`, продублируйте свои же значения из строк `CLIENT_ID` и `CLIENT_SECRET`. Также вы можете помочь другим получить доступ к закрытому API. Сообщите о своем статусе в [телеграм чате](https://t.me/forum_goofy).
 
 8. Скопируйте в файл `config` следующую функцию и запустите её.
 
