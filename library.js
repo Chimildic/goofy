@@ -1,7 +1,7 @@
 // Документация: https://chimildic.github.io/goofy
 // Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '2.0.3';
+const VERSION = '2.0.4';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -257,7 +257,7 @@ const Source = (function () {
         getTracks, getTracksRandom, getPlaylistTracks, getTopTracks, getTopArtists, getFollowedTracks, getSavedTracks,
         getSavedAlbumTracks, getSavedAlbums, getRecomTracks, getArtists, getArtistsAlbums, getArtistsTracks,
         getAlbumTracks, getAlbumsTracks, getArtistsTopTracks, getRelatedArtists, getCategoryTracks,
-        getListCategory, mineTracks, craftTracks, extractTracks, createUrlForRecomTracks, getRecentReleasesByArtists,
+        getListCategory, mineTracks, craftTracks, extractTracks, createUrlForRecomTracks, getRecentReleasesByArtists, getRecomArtists
     };
 
     function getTopTracks(timeRange) {
@@ -312,6 +312,33 @@ const Source = (function () {
     function getRecomTracks(queryObj) {
         let url = createUrlForRecomTracks(queryObj);
         return SpotifyRequest.get(url).tracks;
+    }
+
+    function getRecomArtists(artists, queryObj = {}, isFlat = true) {
+        let isFullArtist = queryObj.isFullArtist
+        delete queryObj.isFullArtist
+        let urls = artists.map(artist => {
+            let params = Object.assign({}, queryObj)
+            params.limit = params.limit || 50
+            if (queryObj.seed_artists == undefined) {
+                params.seed_artists = artist.id
+            } else {
+                params.seed_artists += `,${artist.id}`
+            }
+            return createUrlForRecomTracks(params)
+        })
+        let recomTrackGroups = SpotifyRequest.getAll(urls)
+        let result = recomTrackGroups
+            .map(response => response.tracks.reduce((acc, track) => {
+                if (artists && artists.length > 0) {
+                    acc.push(track.artists[0])
+                }
+                return acc
+            }, []))
+        if (isFullArtist) {
+            result = result.map(artists => Source.getArtists({ include: artists }))
+        }
+        return isFlat ? result.flat(1) : result
     }
 
     function getFollowedTracks(params = {}) {
@@ -436,7 +463,7 @@ const Source = (function () {
         let startDate = params.hasOwnProperty('sinceDays') ? Filter.getDateRel(params.beforeDays, 'startDay') : params.startDate
         let types = params.type.sort((a, b) => a.localeCompare(b))
         let requestUrls = params.artists.map(artist => `${API_BASE_URL}/artists/${artist.id}/albums?include_groups=${types.join(",")}&limit=50&market=from_token`)
-        
+
         let foundReleases = {}
         let uncompleteRequests = []
         SpotifyRequest.getAll(requestUrls).forEach((response, index) => {
@@ -3216,7 +3243,7 @@ const SpotifyRequest = (function () {
         }
     }
 
-    function isBelongPrivateAPI(url){
+    function isBelongPrivateAPI(url) {
         return PRIVATE_API.some(path => {
             if (path instanceof RegExp) {
                 return path.test(url)

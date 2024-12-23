@@ -374,6 +374,38 @@ let tracks = Source.getPlaylistTracks('Заблокированный треки
 let tracks = Source.getPlaylistTracks('', 'id', '', 10, false);
 ```
 
+### getRecomArtists
+
+Возвращает массив рекомендованных исполнителей по заданным параметрам. Функция призвана заменить [getRelatedArtists](/reference/source?id=getrelatedartists) в связи с ошибками из-за обновленной политики Spotify. Внутри используется [getRecomTracks](/reference/source?id=getrecomtracks) по сиду исполнителя (из рекомендованных треков достаются исполнители).
+
+Аргументы
+- (массив) `artists` - перечень исполнителей, для которых получить похожих. Значимо только `id`.
+- (объект) `queryObj` - параметры для отбора рекомендаций. Соответствуют [getRecomTracks](/reference/source?id=getrecomtracks).
+- (булево) `isFlat` - если `false` результат группируется по исполнителям. Если `true` все исполнители в одном массиве. По умолчанию `true`.
+
+Пример 1 - Замена `getRelatedArtists`
+
+```js
+let followedArtists = Source.getArtists({ followed_include: true })
+Selector.keepFirst(followedArtists, 5)
+
+// Было: let recomArtists = Source.getRelatedArtists(followedArtists)
+let recomArtists = Source.getRecomArtists(followedArtists) 
+```
+
+Пример 2 - Рекомендации со смешенным сидом
+```js
+let followedArtists = Source.getArtists({ followed_include: true })
+Selector.keepFirst(followedArtists, 5)
+
+let recomArtists = Source.getRecomArtists(followedArtists, {
+  isFullArtist: false, // исполнитель из трека имеет сокращенные данные, если вам нужна популярность, жанр, количество фолловеров укажите true
+  limit: 10, // по умолчанию 50, максимум 100
+  seed_tracks: '3nzL5CIQiCEt6jRt1AlQ9d', // можно зашить дополнительный сид трека, чтобы Spotify дал рекомендацию близкую и к треку, и к исполнителю
+  min_valence: 0.65, // фишки треков также поддерживаются, но имеют меньшее значение, поскольку из результат берется исполнитель, а не конкретный трек
+}) 
+```
+
 ### getRecomTracks
 
 Возвращает массив рекомендованных треков по заданным параметрам (до 100 треков). Для новых или малоизвестных исполнителей/треков возможно будет недостаточно накопленных данных для генерации рекомендаций. 
