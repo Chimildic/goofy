@@ -433,13 +433,14 @@ const Source = (function () {
     }
 
     function getSavedAlbums() {
-        return SpotifyRequest.getItemsByPath('me/albums?limit=50', 400).map((item) => {
-            let album = item.album;
-            album.added_at = item.added_at;
-            return album;
-        });
+      return SpotifyRequest.getItemsByPath('me/albums?limit=50', 400)
+        .map((item) => {
+          let album = item?.album;
+          return album && (album.added_at = item?.added_at, album);
+        })
+        .filter(album => album !== undefined);
     }
-
+  
     function getFollowedPlaylists(type = 'followed', userId = User.id, excludePlaylist = []) {
         let playlistArray = Playlist.getPlaylistArray(userId);
         if (type != 'all') {
