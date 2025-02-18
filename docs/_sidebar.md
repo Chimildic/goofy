@@ -2,6 +2,7 @@
 - [Обзор](/)
 - [Установка](/install.md)
 - [Первый плейлист](/first-playlist.md)
+- [Audiolist](/audiolist.md)
 - **Использование**
 - [Принцип работы](/details.md)
 - [Шаблоны](/template.md)
