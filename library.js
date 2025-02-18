@@ -1,7 +1,7 @@
 // Документация: https://chimildic.github.io/goofy
 // Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '2.0.4';
+const VERSION = '2.1.0';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -9,6 +9,12 @@ const DEFAULT_DATE = new Date('2000-01-01');
 
 function doGet() {
     return Auth.hasAccess() ? displayLaunchPage_() : Auth.displayAuthPage();
+}
+
+function doPost(args) {
+    if (args.parameter.from?.includes("audiolist")) {
+        return Audiolist.onPost.bind(this)(args)
+    }
 }
 
 function displayAuthResult_(request) {
@@ -251,6 +257,74 @@ const CustomUrlFetchApp = (function () {
             ).filter(s => s.length > 0).join('&');
     }
 })();
+
+const Audiolist = (function() {
+    const MESSAGE_TYPES = { DEFAULT: 'default', ERROR: 'error', WARNINNG: 'warning' }
+    const VARIABLE_TYPES = {
+        SPOTIFY_TRACK: { entityType: 'TRACK', platform: 'SPOTIFY', classType: 'SpotifyGoofyTrack' },
+        LASTFM_TRACK: { entityType: 'TRACK', platform: 'LASTFM', classType: 'LastfmGoofyTrack' },
+    }
+
+    function responseMessage(text, type = MESSAGE_TYPES.DEFAULT) {
+        return response({ message: text, messageType: type })
+    }
+
+    function responseItems(items, type) {
+        return response({ items, variableType: type })
+    }
+
+    function response(params = {}) {
+        if (params.items != undefined) {
+            if (params.variableType == undefined) {
+                throw "Отсутствует variableType"
+            } else if (!Array.isArray(params.items)) {
+                throw "items может быть только массивом"
+            } else {
+                if (params.variableType == VARIABLE_TYPES.LASTFM_TRACK) {
+                    params.items = mapLastfmTracks(params.items)
+                }
+                params.items.forEach(i => (i.executorClassType = params.variableType.classType))
+            }
+        }
+        return ContentService.createTextOutput(JSON.stringify(params))
+    }
+
+    function mapLastfmTracks(items) {
+        return items.map(t => ({
+            artist: t.artist?.["#text"] || t.artist?.name || '',
+            album: t.album?.["#text"] || '',
+            name: t.name || '',
+            dateAt: parseInt(t.date?.uts) * 1000  || 0,
+        }))
+    }
+
+    return {
+        MESSAGE_TYPES, VARIABLE_TYPES, responseMessage, responseItems, response,
+
+        onPost(args) {
+            try {
+                this.Audiolist = Audiolist
+                let { funcName, ...data } = JSON.parse(args.postData.contents)
+                let func = funcName.split('.').reduce((acc, key) => acc?.[key], this)
+                if (func == undefined) {
+                    return Audiolist.responseMessage(`Не удалось найти функцию с именем ${data.funcName}. Проверьте регистр букв и обновите развертывание.`, Audiolist.MESSAGE_TYPES.ERROR)
+                }
+                return func(data)
+            } catch (e) {
+                return Audiolist.responseMessage(e.message, Audiolist.MESSAGE_TYPES.ERROR)
+            }
+        },
+
+        hello() {
+            return responseMessage('Hello world! Тебе удалось соединить goofy и Audiolist. Можешь запускать любые функции и отправлять ответы. Например, встроенная функция "Audiolist.history" пришлет все треки из истории прослушиваний goofy. Чтобы использовать их в следующих командах, добавь выходную переменную для команды "Функция goofy".')
+        },
+
+        history() {
+            let recentTracks = RecentTracks.get()
+            return responseItems(recentTracks, Audiolist.VARIABLE_TYPES.SPOTIFY_TRACK)
+        }
+    }
+})()
 
 const Source = (function () {
     return {
