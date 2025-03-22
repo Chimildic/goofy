@@ -1,7 +1,7 @@
 // Документация: https://chimildic.github.io/goofy
 // Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '2.1.0';
+const VERSION = '2.1.1';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -534,18 +534,19 @@ const Source = (function () {
             console.warn(`При большом количестве исполнителей (запрошено ${params.artists.length}) функция может не уложиться в лимит времени выполнения\nили получить временный бан от Spotify за спам запросами.\n\nВоспользуйтесь шаблоном: https://chimildic.github.io/goofy/#/template?id=Новые-релизы-по-частям`)
         }
         let initDateStr = new Date().toISOString()
-        let startDate = params.hasOwnProperty('sinceDays') ? Filter.getDateRel(params.beforeDays, 'startDay') : params.startDate
+        let startDate = params.date.hasOwnProperty('sinceDays') ? Filter.getDateRel(params.date.sinceDays, 'startDay') : params.date.startDate
         let types = params.type.sort((a, b) => a.localeCompare(b))
         let requestUrls = params.artists.map(artist => `${API_BASE_URL}/artists/${artist.id}/albums?include_groups=${types.join(",")}&limit=50&market=from_token`)
 
         let foundReleases = {}
         let uncompleteRequests = []
-        SpotifyRequest.getAll(requestUrls).forEach((response, index) => {
+        let responses = SpotifyRequest.getAll(requestUrls)
+        responses.forEach((response, index) => {
             let minFoundDateStrings = types.reduce((acc, type) => (acc[type] = initDateStr, acc), {})
             let artistId = params.artists[index].id
 
-            foundReleases[artistId] = foundReleases[artistId] || {}
-            foundReleases[artistId].albums = response.items.filter(album => {
+            foundReleases[artistId] = foundReleases[artistId] || []
+            foundReleases[artistId] = response.items.filter(album => {
                 minFoundDateStrings[album.album_type] = album.release_date
                 return RangeTracks.isBelongReleaseDate(album.release_date, params.date)
             })
@@ -564,14 +565,22 @@ const Source = (function () {
             }
         })
 
-        uncompleteRequests.forEach(item => {
-            let artistAlbums = Source.getArtistsAlbums(/* artist = { id: '' }*/ item, /* params = { groups: [] }*/ item)
-            Combiner.push(foundReleases[item.id].albums, artistAlbums)
+        if (params.isOnlyAlbums === true) {
+            return Object.values(foundReleases)
+        }
+        uncompleteRequests.forEach((item, index) => {
+            let response = getRecentReleasesByArtists({
+                artists: [uncompleteRequests[index]],
+                date: params.date,
+                type: uncompleteRequests[index].groups,
+                isOnlyAlbums: true,
+            })
+            Combiner.push(foundReleases[item.id], response.flat(1))
         })
 
-        let trackGroups = Object.entries(foundReleases).map(([artistId, data]) => {
-            Filter.dedupAlbums(data.albums)
-            return Source.getAlbumsTracks(data.albums) || []
+        let trackGroups = Object.values(foundReleases).map(albums => {
+            Filter.dedupAlbums(albums)
+            return Source.getAlbumsTracks(albums) || []
         })
 
         if (!params.hasOwnProperty('isFlat') || params.isFlat) {
