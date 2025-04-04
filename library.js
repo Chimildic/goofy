@@ -1,7 +1,7 @@
 // Документация: https://chimildic.github.io/goofy
 // Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '2.1.1';
+const VERSION = '2.1.2';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -307,7 +307,7 @@ const Audiolist = (function() {
                 let { funcName, ...data } = JSON.parse(args.postData.contents)
                 let func = funcName.split('.').reduce((acc, key) => acc?.[key], this)
                 if (func == undefined) {
-                    return Audiolist.responseMessage(`Не удалось найти функцию с именем ${data.funcName}. Проверьте регистр букв и обновите развертывание.`, Audiolist.MESSAGE_TYPES.ERROR)
+                    return Audiolist.responseMessage(`Не удалось найти функцию с именем ${funcName}. Проверьте регистр букв и обновите развертывание.`, Audiolist.MESSAGE_TYPES.ERROR)
                 }
                 return func(data)
             } catch (e) {
@@ -1789,6 +1789,7 @@ const Order = (function () {
     }
 
     const sort = (function () {
+        const DATE_FIELDS = ['played_at', 'added_at', 'playedAt', 'addedAt', 'dateAt', 'release_date']
         let _source, _direction, _key;
 
         return function (tracks, pathKey, direction = 'asc') {
@@ -1836,7 +1837,7 @@ const Order = (function () {
         }
 
         function sortMeta() {
-            // name, popularity, duration_ms, explicit, added_at, played_at
+            // name, popularity, duration_ms, explicit, dates
             let hasKey = _source.every((t) => t[_key] != undefined);
             if (!hasKey) {
                 let items = getCachedTracks(_source, { meta: {} }).meta;
@@ -1848,7 +1849,7 @@ const Order = (function () {
             }
             if (_key == 'name') {
                 _source.sort((x, y) => compareString(x, y));
-            } else if (_key == 'added_at' || _key == 'played_at') {
+            } else if (DATE_FIELDS.includes(_key)) {
                 _source.sort((x, y) => compareDate(x, y));
             } else {
                 _source.sort((x, y) => compareNumber(x, y));
@@ -1891,12 +1892,21 @@ const Order = (function () {
         }
 
         function compareDate(x, y) {
-            let xDate = x[_key] ? new Date(x[_key]) : DEFAULT_DATE;
-            let yDate = y[_key] ? new Date(y[_key]) : DEFAULT_DATE;
+            let xDate = new Date(getDateValue(x)) 
+            let yDate = new Date(getDateValue(y))
             if (_direction == 'asc') {
                 return xDate.getTime() - yDate.getTime();
             }
             return yDate.getTime() - xDate.getTime();
+        }
+
+        function getDateValue(obj) {
+            for (let fieldName of DATE_FIELDS) {
+                if (obj.hasOwnProperty(fieldName)) {
+                    return obj[fieldName]
+                }
+            }
+            return DEFAULT_DATE
         }
     })();
 
