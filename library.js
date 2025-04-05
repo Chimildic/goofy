@@ -328,7 +328,7 @@ const Audiolist = (function() {
 
 const Source = (function () {
     return {
-        getTracks, getTracksRandom, getPlaylistTracks, getTopTracks, getTopArtists, getFollowedTracks, getSavedTracks,
+        getTracks, getTracksRandom, getPlaylistTracks, getTopTracks, getTopArtists, getFollowedTracks, getFollowedPlaylists, getSavedTracks,
         getSavedAlbumTracks, getSavedAlbums, getRecomTracks, getArtists, getArtistsAlbums, getArtistsTracks,
         getAlbumTracks, getAlbumsTracks, getArtistsTopTracks, getRelatedArtists, getCategoryTracks,
         getListCategory, mineTracks, craftTracks, extractTracks, createUrlForRecomTracks, getRecentReleasesByArtists, getRecomArtists
