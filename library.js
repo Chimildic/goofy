@@ -943,11 +943,9 @@ const RecentTracks = (function () {
     function appendTracks(filename, tracks) {
         Cache.compressTracks(tracks);
         tracks.forEach((t) => {
-            if (t.hasOwnProperty('added_at')) {
-                t.played_at = t.added_at;
-                delete t.added_at;
-            } else if (!t.hasOwnProperty('played_at')) {
-                t.played_at = new Date().toISOString();
+            t.played_at = Order.getDateValue(t)
+            if (t.played_at == DEFAULT_DATE) {
+                t.played_at = new Date().toISOString()
             }
         });
         let fileItems = Cache.read(filename);
@@ -1772,6 +1770,7 @@ const Selector = (function () {
 })();
 
 const Order = (function () {
+    const DATE_FIELDS = ['played_at', 'added_at', 'playedAt', 'addedAt', 'dateAt', 'release_date']
 
     function shuffle(array, factor = 1.0) {
         let indexArray = Array.from(Array(array.length).keys()).sort(_ => Math.random() - 0.5)
@@ -1789,7 +1788,6 @@ const Order = (function () {
     }
 
     const sort = (function () {
-        const DATE_FIELDS = ['played_at', 'added_at', 'playedAt', 'addedAt', 'dateAt', 'release_date']
         let _source, _direction, _key;
 
         return function (tracks, pathKey, direction = 'asc') {
@@ -1900,15 +1898,16 @@ const Order = (function () {
             return yDate.getTime() - xDate.getTime();
         }
 
-        function getDateValue(obj) {
-            for (let fieldName of DATE_FIELDS) {
-                if (obj.hasOwnProperty(fieldName)) {
-                    return obj[fieldName]
-                }
-            }
-            return DEFAULT_DATE
-        }
     })();
+    
+    function getDateValue(obj) {
+        for (let fieldName of DATE_FIELDS) {
+            if (obj.hasOwnProperty(fieldName)) {
+                return obj[fieldName]
+            }
+        }
+        return DEFAULT_DATE
+    }
 
     function separateArtists(items, space, isRandom = false) {
         if (isRandom) {
@@ -1958,7 +1957,7 @@ const Order = (function () {
     }
 
     return {
-        shuffle, reverse, sort, separateArtists, separateYears,
+        shuffle, reverse, sort, separateArtists, separateYears, getDateValue
     };
 })();
 
