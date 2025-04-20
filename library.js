@@ -880,16 +880,19 @@ const RecentTracks = (function () {
         get, update, compress, appendTracks,
     };
 
-    function get(limit) {
-        let tracks = [];
+    function get(limit, isDedup = true) {
+        let tracks = []
         if (ON_SPOTIFY_RECENT_TRACKS && ON_LASTFM_RECENT_TRACKS) {
-            tracks = Cache.read(BOTH_SOURCE_FILENAME);
+            tracks = Cache.read(BOTH_SOURCE_FILENAME)
+            return Selector.sliceFirst(tracks, limit)
         } else if (ON_SPOTIFY_RECENT_TRACKS) {
-            tracks = Cache.read(SPOTIFY_FILENAME);
+            tracks = Cache.read(SPOTIFY_FILENAME)
         } else if (ON_LASTFM_RECENT_TRACKS) {
-            tracks = Cache.read(LASTFM_FILENAME);
+            tracks = Cache.read(LASTFM_FILENAME)
         }
-        return Selector.sliceFirst(tracks, limit);
+        isDedup && Filter.dedupTracks(tracks)
+        Selector.keepFirst(tracks, limit)
+        return tracks
     }
 
     function update() {
@@ -958,13 +961,13 @@ const RecentTracks = (function () {
     }
 
     function appendTracks(filename, tracks) {
-        Cache.compressTracks(tracks);
         tracks.forEach((t) => {
             t.played_at = Order.getDateValue(t)
             if (t.played_at == DEFAULT_DATE) {
                 t.played_at = new Date().toISOString()
             }
         });
+        Cache.compressTracks(tracks);
         let fileItems = Cache.read(filename);
         Combiner.push(fileItems, tracks);
         Order.sort(fileItems, 'meta.played_at', 'desc');
@@ -3543,6 +3546,10 @@ const Cache = (function () {
             delete item.disc_number;
             delete item.available_markets;
             delete item.track;
+            delete item.playedAt;
+            delete item.addedAt;
+            delete item.dateAt;
+            delete item.executorClassType;
 
             compressAlbum(item.album);
             compressArtists(item.artists);
