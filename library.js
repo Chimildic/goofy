@@ -263,6 +263,7 @@ const Audiolist = (function() {
     const VARIABLE_TYPES = {
         SPOTIFY_TRACK: { entityType: 'TRACK', platform: 'SPOTIFY', classType: 'SpotifyGoofyTrack' },
         LASTFM_TRACK: { entityType: 'TRACK', platform: 'LASTFM', classType: 'LastfmGoofyTrack' },
+        TEXT_TRACK: { entityType: 'TRACK', platform: 'TEXT', classType: 'TrackFromText' }
     }
 
     function responseMessage(text, type = MESSAGE_TYPES.DEFAULT) {
@@ -282,6 +283,8 @@ const Audiolist = (function() {
             } else {
                 if (params.variableType == VARIABLE_TYPES.LASTFM_TRACK) {
                     params.items = mapLastfmTracks(params.items)
+                } else if (params.variableType == VARIABLE_TYPES.TEXT_TRACK) {
+                    params.items = mapTextTracks(params.items)
                 }
                 params.items.forEach(i => (i.executorClassType = params.variableType.classType))
             }
@@ -290,12 +293,26 @@ const Audiolist = (function() {
     }
 
     function mapLastfmTracks(items) {
-        return items.map(t => ({
-            artist: t.artist?.["#text"] || t.artist?.name || '',
-            album: t.album?.["#text"] || '',
-            name: t.name || '',
-            dateAt: parseInt(t.date?.uts) * 1000  || 0,
+        return items.map(item => ({
+            artist: item.artist?.["#text"] || item.artist?.name || '',
+            album: item.album?.["#text"] || '',
+            name: item.name || '',
+            dateAt: parseInt(item.date?.uts) * 1000  || 0,
         }))
+    }
+
+    function mapTextTracks(items) {
+        return items.map(item => {
+            let query = ''
+            if (typeof item == 'string') {
+                query = item
+            } else {
+                let artists = item.artists?.map(a => a.name).join(', ') || item.artist?.["#text"] || item.artist?.name || ''
+                let title = item?.name || item?.title || ''
+                query = `${artists} - ${title}`
+            }
+            return { query }
+        })
     }
 
     return {
