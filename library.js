@@ -1,7 +1,7 @@
 // Документация: https://chimildic.github.io/goofy
 // Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '2.1.2';
+const VERSION = '2.2.0';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -13,7 +13,7 @@ function doGet() {
 
 function doPost(args) {
     if (args.parameter.from?.includes("audiolist")) {
-        return Audiolist.onPost.bind(this)(args)
+        return Audiolist.onPost.bind(this)(args) || Audiolist.response()
     }
 }
 
