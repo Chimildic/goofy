@@ -95,20 +95,24 @@ function complexExample(data) {
 
 На стороне Audiolist есть поле `параметры` в `ini` формате. На стороне goofy данные парсятся в объект по пути `data.ini`. Необработанные данные по пути `data.iniRaw`.
 
-В `ini` формате на каждой строке находятся пары вида `ключ=значение`. Имя ключа произвольно, но без пробелов и на английском. 
-Допустим нужно передать id плейлиста, число и сообщение, тогда `параметры` должны выглядеть так:
+В `ini` формате на каждой строке находятся пары вида `ключ=значение`. Имя ключа произвольно, но без пробелов и на английском. Регистр букв важен.
+
+Например, задача получить от goofy 50 треков из файла с кэшем. Чтобы функция получилась универсальной, имя файла и количество треков сделаем параметрами.
 
 ```
-playlistId=abc
-size=10
-message=Произвольный текст сообщения
+filename=SavedTracks
+size=50
 ```
 
 ```js
-function doSomithingWithINI(data) {
-    let playlistId = data.ini.playlistId
-    let size = data.ini.size
-    // ...
+function getTracksFromCache(data) {
+    let tracks = Cache.read(data.ini.filename)
+    return Audiolist.response({
+        message: `${data.ini.size} треков из файла "${data.ini.filename}"`,
+        messageType: Audiolist.MESSAGE_TYPES.DEFAULT,
+        variableType: Audiolist.VARIABLE_TYPES.SPOTIFY_TRACK,
+        items: Selector.sliceFirst(tracks, data.ini.size),
+    })
 }
 ```
 
