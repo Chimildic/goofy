@@ -258,7 +258,7 @@ const CustomUrlFetchApp = (function () {
     }
 })();
 
-const Audiolist = (function() {
+const Audiolist = (function () {
     const MESSAGE_TYPES = { DEFAULT: 'default', ERROR: 'error', WARNINNG: 'warning' }
     const VARIABLE_TYPES = {
         SPOTIFY_TRACK: { entityType: 'TRACK', platform: 'SPOTIFY', classType: 'SpotifyGoofyTrack' },
@@ -297,7 +297,7 @@ const Audiolist = (function() {
             artist: item.artist?.["#text"] || item.artist?.name || '',
             album: item.album?.["#text"] || '',
             name: item.name || '',
-            dateAt: parseInt(item.date?.uts) * 1000  || 0,
+            dateAt: parseInt(item.date?.uts) * 1000 || 0,
         }))
     }
 
@@ -315,6 +315,69 @@ const Audiolist = (function() {
         })
     }
 
+    function parseINI(iniRaw) {
+        if (iniRaw == undefined || iniRaw.length == 0) {
+            return undefined
+        }
+        let ini = {}
+        let currentSection = ini
+        let lines = iniRaw.split(/\r?\n/)
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].trim()
+            if (!line) {
+                currentSection = ini
+            } else if (line.startsWith(';')) {
+                continue
+            } else if (line.startsWith('[')) {
+                let sectionName = line.slice(1, -1)
+                let sectionParts = sectionName.split('.')
+                for (let part of sectionParts) {
+                    if (!currentSection[part]) {
+                        currentSection[part] = {}
+                    }
+                    currentSection = currentSection[part]
+                }
+            } else {
+                let [keyRaw, valueRaw] = line.split('=').map(s => s.trim())
+                if (keyRaw && valueRaw) {
+                    setValue(currentSection, keyRaw, valueRaw)
+                }
+            }
+        }
+        return ini
+
+        function setValue(currentSection, keyRaw, valueRaw) {
+            let value
+            if (valueRaw === 'true') {
+                value = true
+            } else if (valueRaw === 'false') {
+                value = false
+            } else if (!isNaN(Number(valueRaw))) {
+                value = Number(valueRaw)
+            } else {
+                let escaped = valueRaw.replace(/\\,/g, "__ESCAPED_COMMA__")
+                let items = escaped.split(',').map(item => item.trim().replace(/__ESCAPED_COMMA__/g, ","))
+                if (items.length > 1) {
+                    value = items
+                } else {
+                    value = valueRaw.replace(/\\n/g, '\n')
+                }
+            }
+
+            let keyParts = keyRaw.split('.')
+            let target = currentSection
+            for (let i = 0; i < keyParts.length - 1; i++) {
+                let part = keyParts[i]
+                if (!target[part]) {
+                    target[part] = {}
+                }
+                target = target[part]
+            }
+            let lastKey = keyParts[keyParts.length - 1]
+            target[lastKey] = value
+        }
+    }
+
     return {
         MESSAGE_TYPES, VARIABLE_TYPES, responseMessage, responseItems, response,
 
@@ -326,6 +389,7 @@ const Audiolist = (function() {
                 if (func == undefined) {
                     return Audiolist.responseMessage(`Не удалось найти функцию с именем ${funcName}. Проверьте регистр букв и обновите развертывание.`, Audiolist.MESSAGE_TYPES.ERROR)
                 }
+                data.ini = parseINI(data.iniRaw)
                 return func(data)
             } catch (e) {
                 return Audiolist.responseMessage(e.message, Audiolist.MESSAGE_TYPES.ERROR)
@@ -1910,7 +1974,7 @@ const Order = (function () {
         }
 
         function compareDate(x, y) {
-            let xDate = new Date(getDateValue(x)) 
+            let xDate = new Date(getDateValue(x))
             let yDate = new Date(getDateValue(y))
             if (_direction == 'asc') {
                 return xDate.getTime() - yDate.getTime();
@@ -1919,7 +1983,7 @@ const Order = (function () {
         }
 
     })();
-    
+
     function getDateValue(obj) {
         for (let fieldName of DATE_FIELDS) {
             if (obj.hasOwnProperty(fieldName)) {
