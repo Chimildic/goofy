@@ -6,7 +6,7 @@
 
 1. Перейдите в [Spotify Dashboard](https://developer.spotify.com/dashboard/) и нажмите `Log in`.
 
-2. Нажмите кнопку `create app` и заполните форму как на скриншоте:
+2. Нажмите кнопку `create app` и заполните форму. Ссылка для редиректа: `https://chimildic.github.io/spotify/auth`
 
    ![Создание приложения](/img/install-step-create-app.png ':size=40%')
 
@@ -24,7 +24,9 @@
 
    ![Client ID и Client Secret](/img/install-step-client-id2.png)
 
-6. Также укажите значения для `PRIVATE_CLIENT_ID` и `PRIVATE_CLIENT_SECRET` получив их [здесь](https://script.google.com/macros/s/AKfycbwwDT25i71nYAk1aICxnrXfFVDzctcmhRMqzugjEkpqmUWjGATAbMOCL5aqvlPXOIq4/exec):
+6. Также укажите значения для `PRIVATE_CLIENT_ID` и `PRIVATE_CLIENT_SECRET` получив их [здесь](https://script.google.com/macros/s/AKfycbwwDT25i71nYAk1aICxnrXfFVDzctcmhRMqzugjEkpqmUWjGATAbMOCL5aqvlPXOIq4/exec). 
+   Если приватные ключи недоступны, скопируйте свои обычные `CLIENT_ID` и `CLIENT_SECRET`. В этом случае недоступны рекомендации от Spotify из-за их обновленных правил.
+   Если рекомендации важны, попросите увеличить лимит в [телеграм чате](https://t.me/forum_goofy).
  
    Сохраните изменение <kbd>Ctrl</kbd><kbd>S</kbd> или иконка дискеты на панели действий
 
@@ -52,12 +54,6 @@
 
    ![Развернуть веб-приложение](/img/install-step-webapp.png ':size=40%')
 
-   Перейдите по ссылке из `веб-приложения`.
+   Перейдите по ссылке из `веб-приложения`. Выдайте права доступа.
 
-9.  Вернитесь в [Spotify Dashboad](https://developer.spotify.com/dashboard/). В настройках вашего приложения `settings` спуститесь вниз и нажмите кнопку `edit`
-    
-    Вставьте в поле `Redirect URIs` ссылку `https://chimildic.github.io/spotify/auth`. Нажмите кнопку `ADD` справа, затем внизу кнопку `Save`.
-
-10. Перейдите на вкладку из шага 8 и обновите страницу (`F5`). Выдайте права доступа.
-
-    Установка и настройка завершены. Переходите к [первому плейлисту](/first-playlist).
+   Установка и настройка завершены. Переходите к [первому плейлисту](/first-playlist).
