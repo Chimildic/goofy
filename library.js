@@ -1,7 +1,7 @@
 // Документация: https://chimildic.github.io/goofy
 // Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '2.2.0';
+const VERSION = '2.2.1';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -390,6 +390,10 @@ const Audiolist = (function () {
                     return Audiolist.responseMessage(`Не удалось найти функцию с именем ${funcName}. Проверьте регистр букв и обновите развертывание.`, Audiolist.MESSAGE_TYPES.ERROR)
                 }
                 data.ini = parseINI(data.iniRaw)
+                data.items = data.vars?.[0] // Обратная совместимость
+                data.getItems = function (name) {
+                    return data.variables.find((variable) => variable.name == name).items
+                }
                 return func(data)
             } catch (e) {
                 return Audiolist.responseMessage(e.message, Audiolist.MESSAGE_TYPES.ERROR)
