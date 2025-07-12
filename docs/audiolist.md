@@ -73,7 +73,7 @@ function doSomethingItems() {
 
 ### Получение треков
 
-Доступна отправка нескольких переменных из Audiolist. В goofy это будет массив объектов по пути `data.variables`. Для получения массива треков по имени переменной используйте функцию `getItems`.
+Доступна отправка нескольких переменных из Audiolist. В goofy это будет массив объектов по пути `data.inputVariables`. Для получения массива треков по имени переменной используйте функцию `getItems`.
 
 ```js
 function complexExample(data) {
@@ -101,17 +101,17 @@ function complexExample(data) {
 
 ```
 filename=SavedTracks
-size=50
+count=50
 ```
 
 ```js
 function getTracksFromCache(data) {
     let tracks = Cache.read(data.ini.filename)
     return Audiolist.response({
-        message: `${data.ini.size} треков из файла "${data.ini.filename}"`,
+        message: `${data.ini.count} треков из файла "${data.ini.filename}"`,
         messageType: Audiolist.MESSAGE_TYPES.DEFAULT,
         variableType: Audiolist.VARIABLE_TYPES.SPOTIFY_TRACK,
-        items: Selector.sliceFirst(tracks, data.ini.size),
+        items: Selector.sliceFirst(tracks, data.ini.count),
     })
 }
 ```

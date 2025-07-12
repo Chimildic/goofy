@@ -1,7 +1,7 @@
 // Документация: https://chimildic.github.io/goofy
 // Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '2.2.1';
+const VERSION = '2.3.0';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -266,6 +266,10 @@ const Audiolist = (function () {
         TEXT_TRACK: { entityType: 'TRACK', platform: 'TEXT', classType: 'TrackFromText' }
     }
 
+    VARIABLE_TYPES.find = function (type) {
+        return Object.values(VARIABLE_TYPES).find((value) => value.platform == type.platform && value.entityType == type.entityType)
+    }
+
     function responseMessage(text, type = MESSAGE_TYPES.DEFAULT) {
         return response({ message: text, messageType: type })
     }
@@ -392,11 +396,12 @@ const Audiolist = (function () {
                 data.ini = parseINI(data.iniRaw)
                 data.items = data.vars?.[0] // Обратная совместимость
                 data.getItems = function (name) {
-                    return data.variables.find((variable) => variable.name == name).items
+                    return data.inputVariables.find((variable) => variable.name == name).items
                 }
                 return func(data)
             } catch (e) {
-                return Audiolist.responseMessage(e.message, Audiolist.MESSAGE_TYPES.ERROR)
+                console.error(e.stack)
+                return Audiolist.responseMessage(e.stack, Audiolist.MESSAGE_TYPES.ERROR)
             }
         },
 
@@ -407,6 +412,28 @@ const Audiolist = (function () {
         history() {
             let recentTracks = RecentTracks.get()
             return responseItems(recentTracks, Audiolist.VARIABLE_TYPES.SPOTIFY_TRACK)
+        },
+
+        readCache(data) {
+            let items = Cache.read(data.ini.filename)
+            let count = data.ini.count == undefined ? items.length : data.ini.count
+            return Audiolist.response({
+                message: `${count} - элементов из файла "${data.ini.filename}"`,
+                messageType: Audiolist.MESSAGE_TYPES.DEFAULT,
+                variableType: VARIABLE_TYPES.find(data.outputVariable.type),
+                items: Selector.sliceFirst(items, count),
+            })
+        },
+
+        writeCache(data) {
+            let targetType = data.inputVariables[0].type
+            let inputItemsGroup = data.inputVariables
+                .filter(variable => variable.type.platform == targetType.platform && variable.type.entityType == targetType.entityType)
+                .map(variable => variable.items)
+            let items = Combiner.push([], ...inputItemsGroup)
+            Cache.compressTracks(items)
+            Cache.write(data.ini.filename, items)
+            return Audiolist.responseMessage(`${items.length} - размер файла "${data.ini.filename}"`)
         }
     }
 })()
