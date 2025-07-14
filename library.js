@@ -391,7 +391,7 @@ const Audiolist = (function () {
     }
 
     return {
-        MESSAGE_TYPES, VARIABLE_TYPES, responseMessage, responseItems, response, combineInputVariables,
+        MESSAGE_TYPES, VARIABLE_TYPES, responseMessage, responseItems, response,
 
         onPost(args) {
             try {
@@ -406,6 +406,9 @@ const Audiolist = (function () {
                 data.getItems = function (name) {
                     return data.inputVariables.find((variable) => variable.name == name).items
                 }
+                data.combineItems = function (targetType) {
+                    return combineInputVariables(data, targetType)
+                }
                 return func(data)
             } catch (e) {
                 console.error(e.stack)
@@ -413,8 +416,8 @@ const Audiolist = (function () {
             }
         },
 
-        hello() {
-            return responseMessage('Hello world! Тебе удалось соединить goofy и Audiolist. Можешь запускать любые функции и отправлять ответы. Например, встроенная функция "Audiolist.history" пришлет все треки из истории прослушиваний goofy. Чтобы использовать их в следующих командах, добавь выходную переменную для команды "Функция goofy".')
+        hello(data) {
+            return responseMessage(`Hello World, ${data.ini.username || User.getUser()?.display_name || 'Username'}! Тебе удалось соединить goofy и Audiolist. Можешь запускать любые функции и отправлять ответы. Например, встроенная функция "Audiolist.getRecentTracks" пришлет все треки из истории прослушиваний goofy. Чтобы использовать эти треки в следующих командах, добавь переменную результата для команды "Функция goofy".`)
         },
 
         history(data) {
@@ -438,7 +441,7 @@ const Audiolist = (function () {
                 Filter.rangeDateRel(recentItems, data.ini.sinceDays, data.ini.beforeDays)
             }
 
-            let itemsFromAudiolist = combineInputVariables(data, VARIABLE_TYPES.SPOTIFY_TRACK)
+            let itemsFromAudiolist = data.combineItems(VARIABLE_TYPES.SPOTIFY_TRACK)
             Filter.removeTracks(itemsFromAudiolist, recentItems)
             if (itemsFromAudiolist.length > 0) {
                 RecentTracks.appendTracks(filename, itemsFromAudiolist)
@@ -467,10 +470,19 @@ const Audiolist = (function () {
         },
 
         writeCache(data) {
-            let items = combineInputVariables(data)
+            let items = data.combineItems()
             Cache.compressTracks(items)
             Cache.write(data.ini.filename, items)
             return Audiolist.responseMessage(`${items.length} - элементов в файле "${data.ini.filename}"`)
+        },
+
+        appendCache(data) {
+            let items = data.combineItems()
+            if (items.length > 0) {
+                Cache.compressTracks(items)
+                Cache.append(data.ini.filename, items, data.ini.place)
+            }
+            return Audiolist.responseMessage(items.length > 0 ? `+${items.length} в "${data.ini.filename}"` : `В файл "${data.ini.filename}" ничего не добавлено`)
         }
     }
 })()
@@ -3502,6 +3514,7 @@ const User = (function () {
     return {
         get id() { return KeyValue['userId'] },
         get country() { return getUser().country },
+        getUser,
     };
 
     function setProfile() {
