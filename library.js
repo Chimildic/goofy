@@ -321,7 +321,7 @@ const Audiolist = (function () {
 
     function parseINI(iniRaw) {
         if (iniRaw == undefined || iniRaw.length == 0) {
-            return undefined
+            return {}
         }
         let ini = {}
         let currentSection = ini
@@ -382,8 +382,16 @@ const Audiolist = (function () {
         }
     }
 
+    function combineInputVariables(data, targetType) {
+        targetType = targetType || data.inputVariables[0].type
+        let inputItemsGroup = data.inputVariables
+            .filter(variable => variable.type.platform == targetType.platform && variable.type.entityType == targetType.entityType)
+            .map(variable => variable.items)
+        return Combiner.push([], ...inputItemsGroup)
+    }
+
     return {
-        MESSAGE_TYPES, VARIABLE_TYPES, responseMessage, responseItems, response,
+        MESSAGE_TYPES, VARIABLE_TYPES, responseMessage, responseItems, response, combineInputVariables,
 
         onPost(args) {
             try {
@@ -394,7 +402,7 @@ const Audiolist = (function () {
                     return Audiolist.responseMessage(`Не удалось найти функцию с именем ${funcName}. Проверьте регистр букв и обновите развертывание.`, Audiolist.MESSAGE_TYPES.ERROR)
                 }
                 data.ini = parseINI(data.iniRaw)
-                data.items = data.vars?.[0] // Обратная совместимость
+                data.items = data.inputVariables?.[0] // Обратная совместимость
                 data.getItems = function (name) {
                     return data.inputVariables.find((variable) => variable.name == name).items
                 }
@@ -409,31 +417,60 @@ const Audiolist = (function () {
             return responseMessage('Hello world! Тебе удалось соединить goofy и Audiolist. Можешь запускать любые функции и отправлять ответы. Например, встроенная функция "Audiolist.history" пришлет все треки из истории прослушиваний goofy. Чтобы использовать их в следующих командах, добавь выходную переменную для команды "Функция goofy".')
         },
 
-        history() {
-            let recentTracks = RecentTracks.get()
-            return responseItems(recentTracks, Audiolist.VARIABLE_TYPES.SPOTIFY_TRACK)
+        history(data) {
+            return this.getRecentTracks(data)
+        },
+
+        getRecentTracks(data) {
+            let items = RecentTracks.get(data.ini.limit)
+            if (data.ini.sinceDays != undefined) {
+                Filter.rangeDateRel(items, data.ini.sinceDays, data.ini.beforeDays)
+            }
+            return responseItems(Selector.sliceFirst(items, data.ini.limit), VARIABLE_TYPES.SPOTIFY_TRACK)
+        },
+
+        syncRecentTracks(data) {
+            RecentTracks.update()
+
+            let filename = data.ini.filename || "SpotifyRecentTracks"
+            let recentItems = Cache.read(filename)
+            if (data.ini.sinceDays != undefined) {
+                Filter.rangeDateRel(recentItems, data.ini.sinceDays, data.ini.beforeDays)
+            }
+
+            let itemsFromAudiolist = combineInputVariables(data, VARIABLE_TYPES.SPOTIFY_TRACK)
+            Filter.removeTracks(itemsFromAudiolist, recentItems)
+            if (itemsFromAudiolist.length > 0) {
+                RecentTracks.appendTracks(filename, itemsFromAudiolist)
+            }
+
+            return Audiolist.response({
+                message: itemsFromAudiolist.length > 0 ? `+${itemsFromAudiolist.length} в "${filename}"` : `Нет новых треков для "${filename}"`,
+                messageType: Audiolist.MESSAGE_TYPES.DEFAULT,
+                variableType: Audiolist.VARIABLE_TYPES.SPOTIFY_TRACK,
+                items: recentItems,
+            })
         },
 
         readCache(data) {
             let items = Cache.read(data.ini.filename)
-            let count = data.ini.count == undefined ? items.length : data.ini.count
+            let limit = data.ini?.limit == undefined ? items.length : data.ini.limit
+            if (data.ini?.sinceDays != undefined) {
+                Filter.rangeDateRel(items, data.ini?.sinceDays, data.ini?.beforeDays)
+            }
             return Audiolist.response({
-                message: `${count} - элементов из файла "${data.ini.filename}"`,
+                message: `${limit} - элементов из файла "${data.ini.filename}"`,
                 messageType: Audiolist.MESSAGE_TYPES.DEFAULT,
-                variableType: VARIABLE_TYPES.find(data.outputVariable.type),
-                items: Selector.sliceFirst(items, count),
+                variableType: Audiolist.VARIABLE_TYPES.find(data.outputVariable.type),
+                items: Selector.sliceFirst(items, limit),
             })
         },
 
         writeCache(data) {
-            let targetType = data.inputVariables[0].type
-            let inputItemsGroup = data.inputVariables
-                .filter(variable => variable.type.platform == targetType.platform && variable.type.entityType == targetType.entityType)
-                .map(variable => variable.items)
-            let items = Combiner.push([], ...inputItemsGroup)
+            let items = combineInputVariables(data)
             Cache.compressTracks(items)
             Cache.write(data.ini.filename, items)
-            return Audiolist.responseMessage(`${items.length} - размер файла "${data.ini.filename}"`)
+            return Audiolist.responseMessage(`${items.length} - элементов в файле "${data.ini.filename}"`)
         }
     }
 })()
