@@ -3517,13 +3517,14 @@ const Cache = (function () {
     return {
         get RootFolder() { return ROOT_FOLDER; },
         get UserFolder() { return USER_FOLDER; },
-        read, write, append, copy, remove, rename, compressTracks, compressArtists,
+        write: writeWithLock,
+        read, append, copy, remove, rename, compressTracks, compressArtists,
     };
 
     function read(filepath) {
         let content = Storage.getContent(filepath);
         if (!content) {
-            content = getContentFromFile();
+            content = withFileLock(filepath, getContentFromFile);
             Storage.setContent(filepath, content);
         }
         return Selector.sliceCopy(content);
@@ -3546,33 +3547,6 @@ const Cache = (function () {
         }
     }
 
-    function append(filepath, content, place = 'end', limit = 200000) {
-        if (!content || content.length == 0) return;
-        let currentContent = read(filepath);
-        let ext = obtainFileExtension(filepath);
-        return ext == 'json' ? appendJSON() : appendString();
-
-        function appendJSON() {
-            return place == 'begin'
-                ? appendNewData(content, currentContent)
-                : appendNewData(currentContent, content);
-
-            function appendNewData(xData, yData) {
-                let allData = [];
-                Combiner.push(allData, xData, yData);
-                Selector.keepFirst(allData, limit);
-                write(filepath, allData);
-                return allData.length;
-            }
-        }
-
-        function appendString() {
-            let raw = place == 'begin' ? (content + currentContent) : (currentContent + content);
-            write(filepath, raw);
-            return raw.length;
-        }
-    }
-
     function write(filepath, content) {
         let file = findFile(filepath) || createFile(filepath);
         let ext = obtainFileExtension(filepath);
@@ -3591,6 +3565,69 @@ const Cache = (function () {
                 Admin.pause(5);
                 trySetContent();
             }
+        }
+    }
+
+    function append(filepath, content, place = 'end', limit = 400000) {
+        if (!content || content.length == 0) return;
+        let currentContent = read(filepath);
+        let ext = obtainFileExtension(filepath);
+        return ext == 'json' ? appendJSON() : appendString();
+
+        function appendJSON() {
+            return place == 'begin'
+                ? appendNewData(content, currentContent)
+                : appendNewData(currentContent, content);
+
+            function appendNewData(xData, yData) {
+                let allData = [];
+                Combiner.push(allData, xData, yData);
+                Selector.keepFirst(allData, limit);
+                writeWithLock(filepath, allData);
+                return allData.length;
+            }
+        }
+
+        function appendString() {
+            let raw = place == 'begin' ? (content + currentContent) : (currentContent + content);
+            writeWithLock(filepath, raw);
+            return raw.length;
+        }
+    }
+
+    function writeWithLock(filepath, content) {
+        return withFileLock(filepath, write, arguments)
+    }
+
+    function withFileLock(filename, targetFunction, args) {
+        const LOCK_KEY = 'filelock_' + filename
+        const LOCK_TIMEOUT_MINUTES = 6
+
+        while (true) {
+            let scriptLock = LockService.getScriptLock()
+
+            try {
+                scriptLock.waitLock(15000)
+                let properties = PropertiesService.getScriptProperties()
+                let lockTimestamp = properties.getProperty(LOCK_KEY)
+                let currentTime = new Date().getTime()
+
+                if (lockTimestamp === null || ((currentTime - parseInt(lockTimestamp, 10)) / 60000) > LOCK_TIMEOUT_MINUTES) {
+                    properties.setProperty(LOCK_KEY, currentTime.toString())
+                    break
+                }
+            } finally {
+                scriptLock.releaseLock()
+            }
+
+            Admin.printInfo(`Лок у файла "${filename}". Ожидание 2с.`)
+            Utilities.sleep(2000)
+        }
+
+        try {
+            return targetFunction.apply(null, args);
+        } finally {
+            PropertiesService.getScriptProperties().deleteProperty(LOCK_KEY)
         }
     }
 
