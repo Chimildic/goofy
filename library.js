@@ -420,10 +420,6 @@ const Audiolist = (function () {
             return responseMessage(`Hello World, ${data.ini.username || User.getUser()?.display_name || 'Username'}! Тебе удалось соединить goofy и Audiolist. Можешь запускать любые функции и отправлять ответы. Например, встроенная функция "Audiolist.getRecentTracks" пришлет все треки из истории прослушиваний goofy. Чтобы использовать эти треки в следующих командах, добавь переменную результата для команды "Функция goofy".`)
         },
 
-        history(data) {
-            return this.getRecentTracks(data)
-        },
-
         getRecentTracks(data) {
             let items = RecentTracks.get(data.ini.limit)
             if (data.ini.sinceDays != undefined) {
