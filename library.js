@@ -402,7 +402,7 @@ const Audiolist = (function () {
                     return Audiolist.responseMessage(`Не удалось найти функцию с именем ${funcName}. Проверьте регистр букв и обновите развертывание.`, Audiolist.MESSAGE_TYPES.ERROR)
                 }
                 data.ini = parseINI(data.iniRaw)
-                data.items = data.inputVariables?.[0] // Обратная совместимость
+                data.items = data.inputVariables?.[0]?.items // Обратная совместимость
                 data.getItems = function (name) {
                     return data.inputVariables.find((variable) => variable.name == name).items
                 }
