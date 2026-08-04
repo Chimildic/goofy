@@ -1,7 +1,7 @@
 // Документация: https://chimildic.github.io/goofy
 // Телеграм: https://t.me/forum_goofy
 // Форум: https://github.com/Chimildic/goofy/discussions
-const VERSION = '3.0.0';
+const VERSION = '3.0.1';
 const UserProperties = PropertiesService.getUserProperties();
 const KeyValue = UserProperties.getProperties();
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -1463,18 +1463,14 @@ const Filter = (function () {
 
         let urls = [];
         copyTracks.forEach((t) => {
-            if (!features[t.id] || !features[t.id].danceability) {
+            if (features[t.id] == undefined) {
                 return;
             }
             let params = {
                 seed_tracks: t.id,
                 seed_artists: Selector.sliceFirst(t.artists.map(a => a.id), 4).join(','),
+                target_popularity: features[t.id].popularity ?? 60,
             };
-            Object.entries(features[t.id]).forEach(item => {
-                if (!isNaN(item[1])) {
-                    params['target_' + item[0]] = item[1];
-                }
-            });
             urls.push(Source.createUrlForRecomTracks(params));
         });
 

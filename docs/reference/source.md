@@ -23,7 +23,6 @@ let recomTracks = Source.craftTracks(tracks, {
     key: 'seed_artists',
     query: {
         limit: 20, // по умолчанию и максимум 100
-        min_energy: 0.4,
         min_popularity: 60,
         // target_popularity: 60,
     }
@@ -419,11 +418,11 @@ let recomArtists = Source.getRecomArtists(followedArtists, {
   - seed_artists - [идентификаторы исполнителей](/reference/desc?id=Идентификатор), разделенных запятой.
   - seed_tracks - [идентификаторы треков](/reference/desc?id=Идентификатор), разделенных запятой.
   - seed_genres - жанры, разделенные запятой. Допустимые значения смотреть [здесь](/reference/desc?id=Жанры-для-отбора-рекомендаций).
+
+Следующие ключи перестали работать с августа 2026 года потому что Spotify отключил их со своей стороны (но работает c `popularity`):
 - max_* - предельное значение одной из [особенностей (features) трека](/reference/desc?id=Особенности-трека-features).
 - min_* - минимальное значение одной из [особенностей (features) трека](/reference/desc?id=Особенности-трека-features).
 - target_* - целевое значение одной из [особенностей (features) трека](/reference/desc?id=Особенности-трека-features). Выбираются наиболее близкие по значению.
-
-?> Кроме того, в `features` доступен ключ `populatiry`. Например, `target_popularity`. В документации к API Spotify это скрыто.
 
 !> При указании конкретного жанра в `seed_genres` необязательно придут треки данного жанра. Такой сид является отправной точкой для рекомендаций.
 
@@ -433,17 +432,13 @@ let queryObj = {
     seed_artists: '',
     seed_genres: '',
     seed_tracks: '',
-    max_*: 0,
-    min_*: 0,
-    target_*: 0,
 };
 ```
 
-Пример 1 - Получить рекомендации по жанру инди и альтернативы с позитивным настроением:
+Пример 1 - Получить рекомендации по жанру инди и альтернативы:
 ```js
 let tracks = Source.getRecomTracks({
     seed_genres: 'indie,alternative',
-    min_valence: 0.65,
 });
 ```
 

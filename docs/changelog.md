@@ -6,6 +6,9 @@
 
 [Скопируйте обновленный код](https://script.google.com/d/1DnC4H7yjqPV2unMZ_nmB-1bDSJT9wQUJ7Wq-ijF4Nc7Fl3qnbT0FkPSr/edit?usp=sharing).
 
+### Версия 3.0.1
+- Фикс для функции `replaceWithSimilar`. Spotify отключил возможность получать рекомендации по ключам `min_`, `max_`, `target_` в комбинации с фичами (energy, acousticness и др.). Остались `seed_` и `popularity`. 
+
 ### Версия 3.0.0
 - Новая [миграция](/migrate?id=Версия-30) в связи с ужесточением политики Spotify API
 - Удалена функция `detectLanguage` так как сервис Musixmatch больше не дает бесплатное API
